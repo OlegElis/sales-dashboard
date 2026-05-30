@@ -1057,7 +1057,8 @@ function render(){
           // сброс
           allRows2.forEach(r=>{r.classList.remove('row-selected','row-dimmed');});
           activeMop=null;
-          allMops.forEach(m=>selectedMops.add(m));
+          selectedMops.clear();
+          (periodMops.length?periodMops:allMops).forEach(m=>selectedMops.add(m));
         } else {
           allRows2.forEach(r=>{
             r.classList.toggle('row-selected',r===tr);
