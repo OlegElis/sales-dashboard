@@ -24,9 +24,12 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 .filters{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:14px;}
 .f-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .f-label{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--t3);font-family:sans-serif;flex-shrink:0;width:60px;}
+.period-wrap{display:flex;flex-direction:column;gap:6px;}
 .month-btns{display:flex;gap:5px;flex-wrap:wrap;}
 .mbtn{font-size:12px;font-family:sans-serif;padding:5px 12px;border-radius:99px;border:1px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;}
 .mbtn.active{background:var(--bbg);color:var(--blue);border-color:transparent;font-weight:500;}
+.ybtn{font-size:12px;font-family:sans-serif;padding:4px 14px;border-radius:99px;border:1px solid var(--border2);background:transparent;color:var(--t3);cursor:pointer;transition:all .15s;font-weight:500;}
+.ybtn.active{background:var(--text);color:#fff;border-color:transparent;}
 .f-divider{width:1px;height:32px;background:var(--border);flex-shrink:0;}
 
 /* DROPDOWN CHECKBOX */
@@ -276,7 +279,10 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
 <div class="filters">
   <div class="f-row">
     <div class="f-label">Период</div>
-    <div class="month-btns" id="month-btns"></div>
+    <div class="period-wrap">
+      <div class="month-btns" id="year-btns"></div>
+      <div class="month-btns" id="month-btns"></div>
+    </div>
     <div class="f-divider"></div>
     <div class="dropdown" id="mop-dropdown">
       <div class="dd-btn" id="dd-btn" onclick="toggleDropdown()">
@@ -462,18 +468,42 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
   return{zp,pills};
 }
 
+function getAvailableYears(){
+  const today=new Date();
+  const startYear=2024;
+  const years=[];
+  for(let y=startYear;y<=today.getFullYear();y++)years.push(y);
+  return years;
+}
+
+function buildYearBtns(){
+  const wrap=document.getElementById('year-btns');
+  wrap.innerHTML='';
+  getAvailableYears().forEach(y=>{
+    const btn=document.createElement('div');
+    btn.className='ybtn'+(y===activeYear?' active':'');
+    btn.textContent=y;
+    btn.onclick=()=>{
+      activeYear=y;
+      const today=new Date();
+      // если выбранный год — текущий, ставим текущий месяц, иначе декабрь
+      activeMonth=(y===today.getFullYear())?today.getMonth()+1:12;
+      buildYearBtns();buildMonthBtns();render();
+    };
+    wrap.appendChild(btn);
+  });
+}
+
 function buildMonthBtns(){
   const wrap=document.getElementById('month-btns');
   wrap.innerHTML='';
   const today=new Date();
-  // показываем 6 последних месяцев
-  for(let i=5;i>=0;i--){
-    const d=new Date(today.getFullYear(),today.getMonth()-i,1);
-    const y=d.getFullYear(),m=d.getMonth()+1;
+  const maxM=(activeYear===today.getFullYear())?today.getMonth()+1:12;
+  for(let m=1;m<=maxM;m++){
     const btn=document.createElement('div');
-    btn.className='mbtn'+(y===activeYear&&m===activeMonth?' active':'');
-    btn.textContent=MONTHS_RU[m-1].slice(0,3)+' '+String(y).slice(2);
-    btn.onclick=()=>{activeYear=y;activeMonth=m;buildMonthBtns();render();};
+    btn.className='mbtn'+(m===activeMonth?' active':'');
+    btn.textContent=MONTHS_RU[m-1].slice(0,3);
+    btn.onclick=()=>{activeMonth=m;buildMonthBtns();render();};
     wrap.appendChild(btn);
   }
 }
@@ -696,7 +726,7 @@ function renderChart(){
 }
 
 async function init(){
-  buildMonthBtns();
+  buildYearBtns();buildMonthBtns();
   let id=SHEET_ID;
   if(id==='ВСТАВЬ_ID'){const s=localStorage.getItem('dash_sid');if(s)id=s;else{document.getElementById('cfg').classList.add('show');document.getElementById('sdot').className='dot error';document.getElementById('stxt').textContent='Нужно настроить';return;}}
   try{
