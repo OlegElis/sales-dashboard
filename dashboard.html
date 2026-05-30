@@ -441,6 +441,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
               </span>
               <div class="mop-dd-panel" id="mop-dd-panel"></div>
             </th>
+            <th class="r">Встреч</th>
             <th class="r">Сделок</th>
             <th class="r">Сумма</th>
             <th class="r">Ср. чек</th>
@@ -448,7 +449,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
             <th class="r">ЗП (расч.)</th>
           </tr>
         </thead>
-        <tbody id="rtbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3);">Загрузка данных...</td></tr></tbody>
+        <tbody id="rtbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:var(--t3);">Загрузка данных...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -891,24 +892,41 @@ function render(){
   // Если вручную всё снято — оставляем пустым (покажем "нет данных")
   buildMopChips();
 
-  // Агрегат по МОПам
+  // Встречи — созданные обращения в выбранном периоде (все, не только оплаченные)
+  const meetingData={};
+  allRows.forEach(r=>{
+    const name=r[COL.responsible];
+    if(!name||!selectedMops.has(name))return;
+    const dc=parseDate(r[COL.dateCreated]);
+    if(!dc||dc.getFullYear()!==y||dc.getMonth()+1!==m)return;
+    if(dc.getDate()>daysPassed)return;
+    meetingData[name]=(meetingData[name]||0)+1;
+  });
+
+  // Агрегат по МОПам (оплаченные сделки)
   const mopData={};
   filtered.forEach(r=>{
     const name=r[COL.responsible]||'Неизвестный';
-    if(!mopData[name])mopData[name]={deals:0,sum:0,rows:[]};
+    if(!mopData[name])mopData[name]={deals:0,sum:0,rows:[],meetings:0};
     mopData[name].deals++;
     mopData[name].sum+=parseSum(r[COL.sum]);
     mopData[name].rows.push(r);
   });
+  // Добавляем встречи в mopData (в т.ч. для менеджеров только со встречами)
+  Object.keys(meetingData).forEach(name=>{
+    if(!mopData[name])mopData[name]={deals:0,sum:0,rows:[],meetings:0};
+    mopData[name].meetings=meetingData[name];
+  });
 
   const mops=Object.keys(mopData);
-  let totalDeals=0,totalSum=0,totalZP=0;
+  let totalDeals=0,totalSum=0,totalZP=0,totalMeetings=0;
   const mopResults=[];
 
   mops.forEach(name=>{
     const d=mopData[name];
     totalDeals+=d.deals;
     totalSum+=d.sum;
+    totalMeetings+=(d.meetings||0);
     const conv=calcConversions(allRows,name,y,m);
     const{zp,pills,bd}=calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays);
     totalZP+=zp;
@@ -961,7 +979,7 @@ function render(){
   const tbody=document.getElementById('rtbody');
   tbody.innerHTML='';
   if(mopResults.length===0){
-    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3);font-family:inherit;">Нет данных за выбранный период</td></tr>';
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--t3);font-family:inherit;">Нет данных за выбранный период</td></tr>';
   } else {
     mopResults.forEach(({name,d,conv,zp,pills,bd},i)=>{
       const c=getMopColor(name);
@@ -971,6 +989,7 @@ function render(){
       tr.innerHTML=`
         <td><span class="rank">${i+1}</span></td>
         <td><span class="av" style="background:${c.bg};color:${c.tc}">${initials(name)}</span>${name}</td>
+        <td class="r" style="color:var(--t2);">${d.meetings||0}</td>
         <td class="r" style="color:${d.deals>=PLAN.deals?'var(--green)':'var(--red)'};font-weight:500;">${d.deals}</td>
         <td class="r">${fmtM(d.sum)}</td>
         <td class="r" style="color:${d.deals>0&&Math.round(d.sum/d.deals)>=PLAN.avgCheck?'var(--green)':'var(--t2)'}">${d.deals>0?fmtK(Math.round(d.sum/d.deals)):'—'}</td>
@@ -992,6 +1011,7 @@ function render(){
     const avgConv24=mopResults.length>0?Math.round(mopResults.reduce((s,r)=>s+r.conv.conv24,0)/mopResults.length):0;
     trTotal.innerHTML=`
       <td></td><td>Итого</td>
+      <td class="r">${totalMeetings}</td>
       <td class="r"><b>${totalDeals}</b></td>
       <td class="r">${fmtM(totalSum)}</td>
       <td class="r">${totalDeals>0?fmtK(Math.round(totalSum/totalDeals)):'—'}</td>
