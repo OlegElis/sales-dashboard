@@ -1454,8 +1454,9 @@ function openDayModal(day){
     return dp&&dp.getFullYear()===y&&dp.getMonth()+1===m&&dp.getDate()===day;
   });
 
-  // ID встреч для проверки "в один день"
+  // ID встреч и сделок для проверки "в один день"
   const meetingIds=new Set(meetings.map(r=>r[COL.id]));
+  const dealIds=new Set(deals.map(r=>r[COL.id]));
 
   document.getElementById('day-modal-title').textContent=dateStr;
   document.getElementById('day-modal-sub').textContent=
@@ -1468,7 +1469,8 @@ function openDayModal(day){
         <th>#</th><th>ID</th><th>ФИО клиента</th><th class="r">Сумма</th><th>Менеджер</th><th>Направление</th>
       </tr></thead>
       <tbody>${rows.map((r,i)=>{
-        const isSameDay=isPaid&&meetingIds.has(r[COL.id]);
+        // день в день: встреча создана и сделка оплачена в этот же день
+        const isSameDay=isPaid?meetingIds.has(r[COL.id]):dealIds.has(r[COL.id]);
         const dir=(r[COL.direction]||'').trim();
         const dirCls=dir==='#1'?'pg':['#2','#3','#4'].includes(dir)?'pa':'';
         const sum=isPaid?`<b>${fmt(parseSum(r[COL.sum]))} ₽</b>`:'—';
