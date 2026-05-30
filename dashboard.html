@@ -215,6 +215,27 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   font-size:10px;font-family:inherit;color:var(--t3);
 }
 
+/* DAY MODAL */
+.day-overlay{position:fixed;inset:0;z-index:8887;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.day-overlay.open{opacity:1;pointer-events:all;}
+.day-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:22px 26px 20px;width:100%;max-width:700px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.13);transform:translateY(10px);transition:transform .2s;}
+.day-overlay.open .day-card{transform:translateY(0);}
+.day-card-title{font-size:17px;font-weight:600;margin-bottom:4px;}
+.day-card-sub{font-size:11px;color:var(--t3);margin-bottom:16px;}
+.day-section{margin-bottom:18px;}
+.day-section-title{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.day-table{width:100%;border-collapse:collapse;font-size:12px;}
+.day-table th{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-weight:500;padding:4px 8px;text-align:left;border-bottom:1px solid var(--border);}
+.day-table th.r{text-align:right;}
+.day-table td{padding:6px 8px;border-bottom:.5px solid var(--border);vertical-align:middle;}
+.day-table td.r{text-align:right;}
+.day-table tr:last-child td{border-bottom:none;}
+.day-table tr.same-day{background:#FFF9E6;}
+.day-table tr.same-day td:first-child::before{content:'⚡';margin-right:4px;font-size:10px;}
+.day-empty{font-size:12px;color:var(--t3);padding:10px 0;text-align:center;}
+.day-close{margin-top:16px;width:100%;padding:8px;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rs);font-size:12px;color:var(--t2);cursor:pointer;}
+.day-close:hover{background:var(--border2);}
+
 /* ZP MODAL */
 .zp-overlay{position:fixed;inset:0;z-index:8888;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .zp-overlay.open{opacity:1;pointer-events:all;}
@@ -1167,6 +1188,11 @@ function renderDailyChart(){
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
+      onClick:(e,elements)=>{
+        if(!elements.length)return;
+        const day=parseInt(labels[elements[0].index]);
+        if(day)openDayModal(day);
+      },
       plugins:{
         legend:{display:false},
         tooltip:{
@@ -1186,7 +1212,8 @@ function renderDailyChart(){
         y:{beginAtZero:true,ticks:{font:{size:10},color:'#888',stepSize:1},grid:{color:'rgba(0,0,0,0.04)'},title:{display:true,text:'шт/день',font:{size:9},color:'#aaa'}},
         y2:{position:'right',beginAtZero:true,ticks:{font:{size:10},color:'#185FA5'},grid:{display:false},title:{display:true,text:'накопл.',font:{size:9},color:'#aaa'}},
         x:{ticks:{font:{size:9},color:'#888',autoSkip:true,maxTicksLimit:16},grid:{color:'rgba(0,0,0,0.03)'}}
-      }
+      },
+      onHover:(e)=>{e.native.target.style.cursor=e.chart.getElementsAtEventForMode(e.native,'nearest',{intersect:true},false).length?'pointer':'default';}
     }
   });
 }
@@ -1387,10 +1414,82 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
   document.getElementById('zp-overlay').classList.add('open');
 }
 function closeZpModal(){document.getElementById('zp-overlay').classList.remove('open');}
+
+// DAY MODAL
+function openDayModal(day){
+  const y=activeYear,m=activeMonth;
+  const dateStr=`${day} ${MONTHS_RU[m-1]} ${y}`;
+
+  // Встречи — созданы в этот день
+  const meetings=allRows.filter(r=>{
+    const dc=parseDate(r[COL.dateCreated]);
+    return dc&&dc.getFullYear()===y&&dc.getMonth()+1===m&&dc.getDate()===day;
+  });
+
+  // Сделки — оплачены в этот день
+  const deals=allRows.filter(r=>{
+    if(!isPaidRow(r))return false;
+    const dp=parseDate(r[COL.datePaid]);
+    return dp&&dp.getFullYear()===y&&dp.getMonth()+1===m&&dp.getDate()===day;
+  });
+
+  // ID встреч для проверки "в один день"
+  const meetingIds=new Set(meetings.map(r=>r[COL.id]));
+
+  document.getElementById('day-modal-title').textContent=dateStr;
+  document.getElementById('day-modal-sub').textContent=
+    `Встреч: ${meetings.length} · Сделок: ${deals.length}${deals.length&&meetings.filter(r=>meetingIds.has(r[COL.id])&&deals.find(d=>d[COL.id]===r[COL.id])).length?` · ⚡ ${deals.filter(d=>meetingIds.has(d[COL.id])).length} встреча→сделка в один день`:''}`;
+
+  function renderTable(rows, isPaid){
+    if(!rows.length) return `<div class="day-empty">Нет данных</div>`;
+    return`<table class="day-table">
+      <thead><tr>
+        <th>#</th><th>ID</th><th>ФИО клиента</th><th class="r">Сумма</th><th>Менеджер</th><th>Направление</th>
+      </tr></thead>
+      <tbody>${rows.map((r,i)=>{
+        const isSameDay=isPaid&&meetingIds.has(r[COL.id]);
+        const dir=(r[COL.direction]||'').trim();
+        const dirCls=dir==='#1'?'pg':['#2','#3','#4'].includes(dir)?'pa':'';
+        const sum=isPaid?`<b>${fmt(parseSum(r[COL.sum]))} ₽</b>`:'—';
+        const manager=(r[COL.responsible]||'').split(' ').slice(0,2).join(' ');
+        return`<tr class="${isSameDay?'same-day':''}">
+          <td style="color:var(--t3)">${i+1}</td>
+          <td style="font-size:10px">${r[COL.id]||'—'}</td>
+          <td>${(r[COL.clientName]||'—').trim()}</td>
+          <td class="r">${sum}</td>
+          <td style="font-size:11px">${manager}</td>
+          <td><span class="pill ${dirCls}" style="font-size:9px">${dir||'—'}</span></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+
+  document.getElementById('day-meetings-wrap').innerHTML=renderTable(meetings,false);
+  document.getElementById('day-deals-wrap').innerHTML=renderTable(deals,true);
+  document.getElementById('day-overlay').classList.add('open');
+}
+function closeDayModal(){document.getElementById('day-overlay').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeZpModal();closeDayModal();}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeZpModal();});
 
 init();
 </script>
+
+<div class="day-overlay" id="day-overlay" onclick="if(event.target===this)closeDayModal()">
+  <div class="day-card">
+    <div class="day-card-title" id="day-modal-title"></div>
+    <div class="day-card-sub" id="day-modal-sub"></div>
+    <div class="day-section">
+      <div class="day-section-title">Встречи (создано)</div>
+      <div id="day-meetings-wrap"></div>
+    </div>
+    <div class="day-section">
+      <div class="day-section-title">Сделки (оплачено)</div>
+      <div id="day-deals-wrap"></div>
+    </div>
+    <button class="day-close" onclick="closeDayModal()">Закрыть</button>
+  </div>
+</div>
 
 <div class="zp-overlay" id="zp-overlay" onclick="if(event.target===this)closeZpModal()">
   <div class="zp-card">
