@@ -482,13 +482,6 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
       </div>
       <div class="ai-text empty" id="ai-text">Нажмите «Обновить анализ» для получения оценки от Claude</div>
       <div class="ai-error" id="ai-error" style="display:none"></div>
-      <div id="ai-key-section" style="display:none;">
-        <div style="font-size:10px;color:var(--t3);margin-top:8px;">Введите Anthropic API-ключ (хранится локально):</div>
-        <div class="ai-key-row">
-          <input class="ai-key-input" id="ai-key-input" type="password" placeholder="sk-ant-...">
-          <button class="ai-key-save" onclick="saveAiKey()">Сохранить</button>
-        </div>
-      </div>
     </div>
 
     <div class="plan-block" style="margin-bottom:0;">
@@ -1236,34 +1229,14 @@ async function init(){
 }
 function saveId(){const v=document.getElementById('sid-input').value.trim();if(!v)return;localStorage.setItem('dash_sid',v);document.getElementById('cfg').classList.remove('show');init();}
 
-// AI SUMMARY
-function saveAiKey(){
-  const v=document.getElementById('ai-key-input').value.trim();
-  if(!v)return;
-  localStorage.setItem('claude_api_key',v);
-  document.getElementById('ai-key-section').style.display='none';
-  document.getElementById('ai-error').style.display='none';
-  generateAiSummary();
-}
-
-async function generateAiSummary(){
-  const key=localStorage.getItem('claude_api_key');
-  if(!key){
-    document.getElementById('ai-key-section').style.display='block';
-    document.getElementById('ai-error').style.display='none';
-    return;
-  }
+// AI SUMMARY (шаблонный анализ)
+function generateAiSummary(){
   const btn=document.getElementById('ai-btn');
   const dot=document.getElementById('ai-dot');
   const textEl=document.getElementById('ai-text');
-  const errEl=document.getElementById('ai-error');
   btn.disabled=true;
   dot.className='ai-dot active';
-  textEl.className='ai-text empty';
-  textEl.textContent='Анализирую данные...';
-  errEl.style.display='none';
 
-  // Собираем данные
   const y=activeYear,m=activeMonth;
   const mdays=daysInMonth(y,m);
   const today=new Date();
@@ -1278,69 +1251,86 @@ async function generateAiSummary(){
     if(dp.getDate()>daysPassed)return false;
     return true;
   });
+
   const totalDeals=filtered.length;
   const totalSum=filtered.reduce((s,r)=>s+parseSum(r[COL.sum]),0);
   const avgCheck=totalDeals>0?Math.round(totalSum/totalDeals):0;
+  const planPct=Math.round(totalDeals/PLAN_TOTAL*100);
+  const checkDiff=avgCheck-PLAN.avgCheck;
 
-  // Топ-менеджеры
+  // Топ менеджеров
   const mopCnt={};
   filtered.forEach(r=>{const n=r[COL.responsible];if(n)mopCnt[n]=(mopCnt[n]||0)+1;});
-  const topMops=Object.entries(mopCnt).sort((a,b)=>b[1]-a[1]).slice(0,3)
-    .map(([n,c])=>`${n} (${c} сд.)`).join(', ');
+  const sorted=Object.entries(mopCnt).sort((a,b)=>b[1]-a[1]);
+  const leader=sorted[0];
+  const outsider=sorted[sorted.length-1];
 
-  const period=MONTHS_RU[m-1]+' '+y+(activeDay?`, по ${activeDay}-е число`:'');
-  const planPct=Math.round(totalDeals/PLAN_TOTAL*100);
-  const sumPlan=PLAN_TOTAL*PLAN.avgCheck;
-  const sumPct=Math.round(totalSum/sumPlan*100);
+  // Конверсии (средние за период)
+  const allConv1=[],allConv24=[];
+  (periodMops.length?periodMops:allMops).forEach(name=>{
+    const c=calcConversions(allRows,name,y,m);
+    if(c.c1>0)allConv1.push(c.conv1);
+    if(c.c24>0)allConv24.push(c.conv24);
+  });
+  const avgC1=allConv1.length?Math.round(allConv1.reduce((a,b)=>a+b,0)/allConv1.length):0;
+  const avgC24=allConv24.length?Math.round(allConv24.reduce((a,b)=>a+b,0)/allConv24.length):0;
 
-  const prompt=`Ты аналитик отдела продаж. Напиши краткий (3-4 предложения) деловой анализ на русском языке исполнения плана за ${period}.
+  const period=MONTHS_RU[m-1]+' '+y;
+  const daysNote=isCurrentMonth&&!activeDay?` (${daysPassed} из ${mdays} дней)`:'';
 
-Данные:
-- Сделок закрыто: ${totalDeals} из ${PLAN_TOTAL} (${planPct}%)
-- Выручка: ${fmtM(totalSum)} из ${fmtM(sumPlan)} (${sumPct}%)
-- Средний чек: ${fmtK(avgCheck)} (план ${fmtK(PLAN.avgCheck)})
-- Дней прошло: ${daysPassed} из ${mdays}
-- Лидеры: ${topMops||'нет данных'}
+  // Формируем текст
+  const parts=[];
 
-Будь конкретным, дай оценку и одну рекомендацию. Без заголовков, без списков — только текст.`;
-
-  try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'content-type':'application/json',
-        'x-api-key':key,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({
-        model:'claude-haiku-4-5',
-        max_tokens:300,
-        messages:[{role:'user',content:prompt}]
-      })
-    });
-    if(!resp.ok){
-      const e=await resp.json().catch(()=>({}));
-      throw new Error(e.error?.message||'HTTP '+resp.status);
-    }
-    const data=await resp.json();
-    const text=data.content?.[0]?.text||'Нет ответа';
-    textEl.className='ai-text';
-    textEl.textContent=text;
-  }catch(e){
-    textEl.textContent='';
-    textEl.className='ai-text empty';
-    errEl.style.display='block';
-    if(e.message?.includes('401')||e.message?.includes('invalid')){
-      errEl.textContent='Неверный API-ключ. Введите новый:';
-      document.getElementById('ai-key-section').style.display='block';
-    } else {
-      errEl.textContent='Ошибка: '+e.message;
-    }
-  }finally{
-    btn.disabled=false;
-    dot.className='ai-dot';
+  // 1. Общий итог
+  if(planPct>=100){
+    parts.push(`📈 ${period}${daysNote}: отдел перевыполнил план — ${totalDeals} сделок при плане ${PLAN_TOTAL} (${planPct}%).`);
+  } else if(planPct>=90){
+    parts.push(`${period}${daysNote}: план выполнен на ${planPct}% — закрыто ${totalDeals} из ${PLAN_TOTAL} сделок. Результат близкий к целевому.`);
+  } else if(planPct>=70){
+    parts.push(`⚠️ ${period}${daysNote}: план выполнен на ${planPct}% — ${totalDeals} из ${PLAN_TOTAL} сделок. Отставание требует внимания.`);
+  } else {
+    parts.push(`🔴 ${period}${daysNote}: план выполнен лишь на ${planPct}% — ${totalDeals} из ${PLAN_TOTAL} сделок. Существенное отставание от цели.`);
   }
+
+  // 2. Средний чек
+  if(checkDiff>=0){
+    parts.push(`Средний чек выше плана: ${fmtK(avgCheck)} (+${fmtK(checkDiff)} к норме ${fmtK(PLAN.avgCheck)}).`);
+  } else {
+    parts.push(`Средний чек ниже плана: ${fmtK(avgCheck)} (норма ${fmtK(PLAN.avgCheck)}, отклонение ${fmtK(checkDiff)}).`);
+  }
+
+  // 3. Лидер и отстающий
+  if(leader){
+    const ln=leader[0].split(' ');
+    const lname=ln[0]+' '+(ln[1]?ln[1][0]+'.':(ln[2]?ln[2][0]+'.':''));
+    let mopNote=`Лидер месяца — ${lname} (${leader[1]} сд.).`;
+    if(outsider&&outsider[0]!==leader[0]&&outsider[1]<PLAN.deals){
+      const on=outsider[0].split(' ');
+      const oname=on[0]+' '+(on[1]?on[1][0]+'.':(on[2]?on[2][0]+'.':''));
+      mopNote+=` Требует поддержки — ${oname} (${outsider[1]} сд.).`;
+    }
+    parts.push(mopNote);
+  }
+
+  // 4. Конверсии
+  const c1note=avgC1>=PLAN.conv1?'в норме':'ниже плана';
+  const c24note=avgC24>=PLAN.conv24?'в норме':'ниже плана';
+  parts.push(`Конверсия #1: ${avgC1}% (${c1note}), #2–4: ${avgC24}% (${c24note}).`);
+
+  // 5. Рекомендация для текущего месяца
+  if(isCurrentMonth&&totalDeals<PLAN_TOTAL){
+    const remain=PLAN_TOTAL-totalDeals;
+    const dLeft=mdays-daysPassed;
+    if(dLeft>0){
+      const need=(remain/dLeft).toFixed(1);
+      parts.push(`До конца месяца ${dLeft} дн. Нужно ${need} сд/день чтобы выйти на план.`);
+    }
+  }
+
+  textEl.className='ai-text';
+  textEl.textContent=parts.join(' ');
+  btn.disabled=false;
+  dot.className='ai-dot';
 }
 
 // ZP MODAL
