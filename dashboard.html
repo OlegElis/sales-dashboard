@@ -37,7 +37,10 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 .dd-arrow.open{transform:rotate(180deg);}
 .dd-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:6px;z-index:100;min-width:220px;max-height:280px;overflow-y:auto;}
 .dd-panel.open{display:block;}
-.dd-all{font-size:11px;color:var(--t3);padding:4px 6px;margin-bottom:4px;display:flex;align-items:center;gap:6px;cursor:pointer;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;}
+.dd-all-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;}
+.dd-all{font-size:11px;color:var(--t3);display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 6px;}
+.dd-clear-btn{font-size:11px;font-family:sans-serif;color:var(--t3);cursor:pointer;padding:4px 6px;border-radius:var(--rs);transition:color .15s;}
+.dd-clear-btn:hover{color:var(--red);}
 .dd-item{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:var(--rs);cursor:pointer;font-size:12px;color:var(--t2);}
 .dd-item:hover{background:var(--s2);}
 .dd-item input{accent-color:var(--blue);width:13px;height:13px;margin:0;cursor:pointer;flex-shrink:0;}
@@ -281,8 +284,11 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
         <span class="dd-arrow" id="dd-arrow">▼</span>
       </div>
       <div class="dd-panel" id="dd-panel">
-        <div class="dd-all" onclick="toggleAllMops()">
-          <input type="checkbox" id="cb-all" checked> Выбрать всех
+        <div class="dd-all-row">
+          <div class="dd-all" onclick="toggleAllMops()">
+            <input type="checkbox" id="cb-all" checked> Выбрать всех
+          </div>
+          <span class="dd-clear-btn" onclick="deselectAllMops()">Снять все</span>
         </div>
         <div id="dd-items"></div>
       </div>
@@ -479,13 +485,11 @@ function buildDropdown(){
     const c=getMopColor(name);
     const div=document.createElement('div');
     div.className='dd-item';
-    const checked=selectedMops.size===0||selectedMops.has(name);
+    const checked=selectedMops.has(name);
     div.innerHTML=`<input type="checkbox" ${checked?'checked':''} data-name="${name}"><div class="dd-av" style="background:${c.bg};color:${c.tc}">${initials(name)}</div><span>${name}</span>`;
     div.querySelector('input').onchange=e=>{
-      if(selectedMops.size===0)allMops.forEach(m=>selectedMops.add(m));
       if(e.target.checked)selectedMops.add(name);
       else selectedMops.delete(name);
-      if(selectedMops.size===allMops.length)selectedMops.clear();
       updateDdLabel();
       render();
     };
@@ -496,9 +500,9 @@ function buildDropdown(){
 
 function updateDdLabel(){
   const total=allMops.length;
-  const sel=selectedMops.size===0?total:selectedMops.size;
-  document.getElementById('dd-label').textContent=sel===total?'Все менеджеры':sel+' из '+total;
-  document.getElementById('cb-all').checked=selectedMops.size===0||selectedMops.size===total;
+  const sel=selectedMops.size;
+  document.getElementById('dd-label').textContent=sel===total?'Все менеджеры':sel===0?'Никто не выбран':sel+' из '+total;
+  document.getElementById('cb-all').checked=sel===total;
 }
 
 function toggleDropdown(){
@@ -508,10 +512,15 @@ function toggleDropdown(){
   arrow.classList.toggle('open');
 }
 function toggleAllMops(){
-  const allChecked=selectedMops.size===0||selectedMops.size===allMops.length;
-  if(!allChecked){
+  if(selectedMops.size===allMops.length){
     selectedMops.clear();
+  } else {
+    allMops.forEach(m=>selectedMops.add(m));
   }
+  buildDropdown();render();
+}
+function deselectAllMops(){
+  selectedMops.clear();
   buildDropdown();render();
 }
 document.addEventListener('click',e=>{
@@ -536,7 +545,7 @@ function render(){
   document.getElementById('days-txt').textContent=daysPassed+' из '+mdays+' дней';
 
   // Фильтрация строк
-  const activeMops=selectedMops.size===0?new Set(allMops):selectedMops;
+  const activeMops=selectedMops;
   const filtered=allRows.filter(r=>{
     if(!isPaidRow(r))return false;
     const dp=parseDate(r[COL.datePaid]);
@@ -656,7 +665,7 @@ function render(){
 }
 
 function renderChart(){
-  const activeMops=selectedMops.size===0?new Set(allMops):selectedMops;
+  const activeMops=selectedMops;
   const md={},ms={};
   allRows.forEach(r=>{
     if(!isPaidRow(r))return;
@@ -697,6 +706,7 @@ async function init(){
     allRows.forEach(r=>{if(r[COL.responsible]&&isPaidRow(r))mopSet.add(r[COL.responsible]);});
     allMops=Array.from(mopSet).sort();
     allMops.forEach(m=>getMopColor(m));
+    selectedMops=new Set(allMops);
     buildDropdown();
     render();
     document.getElementById('sdot').className='dot';
