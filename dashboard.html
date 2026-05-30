@@ -1466,7 +1466,7 @@ function openDayModal(day){
     if(!rows.length) return `<div class="day-empty">Нет данных</div>`;
     return`<table class="day-table">
       <thead><tr>
-        <th>#</th><th>ID</th><th>ФИО клиента</th><th class="r">Сумма</th><th>Менеджер</th><th>Направление</th>
+        <th>#</th><th>ID</th><th>ФИО клиента</th><th class="r">Сумма</th><th>Менеджер</th><th></th>
       </tr></thead>
       <tbody>${rows.map((r,i)=>{
         // день в день: встреча создана и сделка оплачена в этот же день
