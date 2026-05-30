@@ -1069,9 +1069,10 @@ function renderDailyChart(){
     }
   }
 
-  // Суммарный план для выбранных менеджеров
+  // Суммарный план: PLAN_TOTAL пропорционально выбранным менеджерам
+  const totalMops=periodMops.length||allMops.length||1;
   const activeMopCount=selectedMops.size||1;
-  const effectivePlan=activeMopCount*PLAN.deals;
+  const effectivePlan=Math.round(PLAN_TOTAL*(activeMopCount/totalMops));
 
   // Плановая линия: нарастающим итогом
   const planPerDay=effectivePlan/mdays;
