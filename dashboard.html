@@ -423,12 +423,8 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
       </div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div class="status-pill"><div class="dot loading" id="sdot"></div><span id="stxt">Загрузка...</span></div>
-        <button class="ai-btn" id="ai-btn" onclick="generateAiSummary()" style="display:none;">✦ AI-анализ</button>
-      </div>
+      <div class="status-pill"><div class="dot loading" id="sdot"></div><span id="stxt">Загрузка...</span></div>
       <div style="font-size:10px;color:var(--t3);" id="supd"></div>
-      <div id="ai-text" style="font-size:11px;color:var(--t2);max-width:420px;text-align:right;line-height:1.5;display:none;"></div>
     </div>
   </div>
 </div>
@@ -1236,8 +1232,6 @@ async function init(){
     document.getElementById('sdot').className='dot';
     document.getElementById('stxt').textContent='Данные актуальны';
     document.getElementById('supd').textContent='Обновлено: '+new Date().toLocaleString('ru-RU');
-    document.getElementById('ai-btn').style.display='flex';
-    generateAiSummary();
   }catch(e){
     document.getElementById('sdot').className='dot error';
     document.getElementById('stxt').textContent='Ошибка загрузки';
