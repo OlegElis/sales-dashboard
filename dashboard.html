@@ -336,11 +336,11 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
     </div>
     <div class="f-divider"></div>
     <div class="mop-dd" id="mop-dd">
-      <div class="mop-dd-btn" id="mop-dd-btn" onclick="toggleMopDd()">
+      <div class="mop-dd-btn" id="mop-dd-btn" onclick="toggleMopDd(event)">
         <span id="mop-dd-label">Все менеджеры</span>
         <span class="mop-dd-arrow" id="mop-dd-arrow">▼</span>
       </div>
-      <div class="mop-dd-panel" id="mop-dd-panel" onclick="event.stopPropagation()"></div>
+      <div class="mop-dd-panel" id="mop-dd-panel"></div>
     </div>
   </div>
   <div class="days-row">
@@ -745,6 +745,7 @@ function toggleMopDd(e){
   document.getElementById('mop-dd-panel').classList.toggle('open');
   document.getElementById('mop-dd-arrow').classList.toggle('open');
 }
+document.getElementById('mop-dd-panel').addEventListener('click',e=>e.stopPropagation());
 document.addEventListener('click',e=>{
   if(!document.getElementById('mop-dd').contains(e.target)){
     document.getElementById('mop-dd-panel').classList.remove('open');
