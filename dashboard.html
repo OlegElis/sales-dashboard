@@ -513,7 +513,7 @@ const pctColor=p=>p>=90?'var(--green)':p>=70?'var(--amber)':'var(--red)';
 const dealColor=(v,plan)=>v>=plan?'var(--green)':v>=plan*.8?'var(--amber)':'var(--red)';
 const pillCls=p=>p>=25?'pg':p>=15?'pa':'pr';
 
-let allRows=[],allMops=[],selectedMops=new Set();
+let allRows=[],allMops=[],periodMops=[],selectedMops=new Set();
 let activeYear=2026,activeMonth=5,activeDay=null;
 let myChart=null;
 
@@ -780,9 +780,10 @@ function buildMopChips(){
   allItem.className='mop-dd-item';
   const allCb=document.createElement('input');
   allCb.type='checkbox';
-  allCb.checked=selectedMops.size===allMops.length;
+  const mopList=periodMops.length?periodMops:allMops;
+  allCb.checked=selectedMops.size===mopList.length;
   allCb.onchange=()=>{
-    if(allCb.checked)allMops.forEach(m=>selectedMops.add(m));
+    if(allCb.checked)mopList.forEach(m=>selectedMops.add(m));
     else selectedMops.clear();
     buildMopChips();render();
   };
@@ -794,7 +795,7 @@ function buildMopChips(){
   const sep=document.createElement('div');sep.className='mop-dd-sep';
   panel.appendChild(sep);
 
-  allMops.forEach(name=>{
+  mopList.forEach(name=>{
     const item=document.createElement('div');
     item.className='mop-dd-item';
     const cb=document.createElement('input');
@@ -862,6 +863,21 @@ function render(){
     if(!activeMops.has(r[COL.responsible]))return false;
     return true;
   });
+
+  // Менеджеры с данными в этом периоде (без учёта фильтра)
+  const periodMopSet=new Set();
+  allRows.forEach(r=>{
+    if(!isPaidRow(r))return;
+    const dp=parseDate(r[COL.datePaid]);
+    if(!dp||dp.getFullYear()!==y||dp.getMonth()+1!==m)return;
+    if(dp.getDate()>daysPassed)return;
+    if(r[COL.responsible])periodMopSet.add(r[COL.responsible]);
+  });
+  periodMops=Array.from(periodMopSet).sort();
+  // Снять выбранных которых нет в периоде
+  selectedMops.forEach(m=>{if(!periodMopSet.has(m))selectedMops.delete(m);});
+  if(selectedMops.size===0)periodMops.forEach(m=>selectedMops.add(m));
+  buildMopChips();
 
   // Агрегат по МОПам
   const mopData={};
