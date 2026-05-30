@@ -301,7 +301,7 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 <script>
 const SHEET_ID = '15jO2Z5AYdp-9qmd79XCVNQBIwvR3KZPxWVgJP5zV8-0';
 const SHEET_NAME = 'RawData_BFL';
-const PLAN = { deals:16, avgCheck:225000, conv1:25, conv24:25 };
+const PLAN = { deals:16, avgCheck:225000, conv1:25, conv24:65 };
 const PLAN_TOTAL = 120;
 const COL = {
   id:0, sum:5, direction:7, responsible:8,
@@ -545,28 +545,28 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
     }
     zp+=kC1;
 
-    // Конв. #2–4
+    // Конв. #2–4 (план 65%, порог 45%, штраф 900/ед, бонус 750/ед)
     const dc24=conv24-PLAN.conv24;
     let kC24;
-    if(conv24<15){
+    if(conv24<45){
       kC24=0;
-      row('Конв. #2–4',`${conv24}% < 15% → 0`,0,'pr');
+      row('Конв. #2–4',`${conv24}% < 45% → 0`,0,'pr');
     } else if(dc24<0){
-      kC24=Math.max(0,18000+dc24*1800);
-      row('Конв. #2–4',`18 000 + (${dc24})×1 800 = ${fmt(18000+dc24*1800)}${kC24===0?' → мин. 0':''}`,kC24,'pa');
+      kC24=Math.max(0,18000+dc24*900);
+      row('Конв. #2–4',`18 000 + (${dc24})×900 = ${fmt(18000+dc24*900)}${kC24===0?' → мин. 0':''}`,kC24,'pa');
     } else {
       kC24=18000+dc24*750;
       row('Конв. #2–4',`18 000 + ${dc24}×750`,kC24,'pg');
     }
     zp+=kC24;
 
-    // Средний чек
+    // Средний чек (план 225к, штраф 168/тыс, бонус 1000/тыс)
     const avg=Math.round(sumTotal/deals);
     const davg=Math.round((avg-PLAN.avgCheck)/1000);
     let kAvg;
     if(davg<0){
-      kAvg=0; // ниже плана — не штрафуем, просто не начисляем
-      row('Ср. чек',`${fmtK(avg)} < ${fmtK(PLAN.avgCheck)} → 0`,0,'pa');
+      kAvg=Math.max(-12000, davg*168); // штраф, но не более суммы базового бонуса
+      row('Ср. чек',`${fmtK(avg)} < ${fmtK(PLAN.avgCheck)}: (${davg})×168`,kAvg,'pr');
     } else {
       kAvg=12000+davg*1000;
       row('Ср. чек',`12 000 + ${davg}×1 000`,kAvg,'pg');
