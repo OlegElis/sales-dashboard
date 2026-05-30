@@ -92,17 +92,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 /* ЕДИНЫЙ ДВУХКОЛОНОЧНЫЙ ГРИД — 4 ячейки: 2 строки × 2 колонки */
 .page-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr;gap:12px;}
-/* строка 1: фильтры | статистика — выравниваются автоматически */
+/* строка 1: фильтры | стрип статистики — одинаковая высота автоматически */
 .page-grid>.filters{grid-column:1;grid-row:1;}
-.page-grid>.stats-right{grid-column:2;grid-row:1;}
-/* строка 2: таблица | графики */
+.page-grid>.stats-strip{grid-column:2;grid-row:1;margin-bottom:0;}
+/* строка 2: таблица | прогресс+графики */
 .col-table{grid-column:1;grid-row:2;display:flex;flex-direction:column;}
 .col-table .rtable-wrap{flex:1;overflow-y:auto;}
 .col-charts{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:10px;}
 .col-charts .chart-block{flex:1;min-height:0;}
 .rtable-wrap{display:flex;flex-direction:column;}
 .rtable{flex:1;}
-.stats-right{display:flex;flex-direction:column;gap:8px;}
 
 /* RATING TABLE */
 .rtable-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
@@ -419,24 +418,16 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
     </div>
   </div>
 
-  <!-- [1,2] Статистика + прогресс -->
-  <div class="stats-right">
-    <div class="stats-strip" style="margin-bottom:0;grid-template-columns:repeat(4,1fr);">
-      <div class="stat-cell"><div class="stat-lbl">Сделок</div><div class="stat-val" id="m-deals">—</div><div class="stat-sub" id="m-deals-sub"></div></div>
-      <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
-      <div class="stat-cell"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">—</div><div class="stat-sub" id="m-avg-sub"></div></div>
-      <div class="stat-cell"><div class="stat-lbl">ФОТ</div><div class="stat-val" id="m-fot">—</div><div class="stat-sub" id="m-fot-sub"></div></div>
-      <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">День мес.</div><div class="stat-val" id="cd-day">—</div></div>
-      <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">До плана</div><div class="stat-val" id="cd-need">—</div></div>
-      <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Нужно/день</div><div class="stat-val" id="cd-perday">—</div></div>
-      <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Темп/день</div><div class="stat-val" id="cd-pace">—</div></div>
-    </div>
-    <div class="plan-block" style="margin-bottom:0;flex:1;">
-      <div class="block-title">Прогресс к плану</div>
-      <div class="plan-row"><div class="plan-lbl">Кол-во сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-deals" style="background:#378ADD;width:0%"></div></div><div class="plan-nums" id="pn-deals">—</div><div class="plan-pct" id="pp-deals">—</div></div>
-      <div class="plan-row"><div class="plan-lbl">Сумма сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-sum" style="background:#639922;width:0%"></div></div><div class="plan-nums" id="pn-sum">—</div><div class="plan-pct" id="pp-sum">—</div></div>
-      <div class="plan-row"><div class="plan-lbl">Средний чек</div><div class="plan-bw"><div class="plan-bf" id="bar-avg" style="background:#BA7517;width:0%"></div></div><div class="plan-nums" id="pn-avg">—</div><div class="plan-pct" id="pp-avg">—</div></div>
-    </div>
+  <!-- [1,2] Только статистика (8 ячеек) -->
+  <div class="stats-strip" style="grid-template-columns:repeat(4,1fr);height:100%;">
+    <div class="stat-cell"><div class="stat-lbl">Сделок</div><div class="stat-val" id="m-deals">—</div><div class="stat-sub" id="m-deals-sub"></div></div>
+    <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
+    <div class="stat-cell"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">—</div><div class="stat-sub" id="m-avg-sub"></div></div>
+    <div class="stat-cell"><div class="stat-lbl">ФОТ</div><div class="stat-val" id="m-fot">—</div><div class="stat-sub" id="m-fot-sub"></div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">День мес.</div><div class="stat-val" id="cd-day">—</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">До плана</div><div class="stat-val" id="cd-need">—</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Нужно/день</div><div class="stat-val" id="cd-perday">—</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Темп/день</div><div class="stat-val" id="cd-pace">—</div></div>
   </div>
 
   <!-- [2,1] Таблица менеджеров -->
@@ -464,8 +455,14 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
     </div>
   </div>
 
-  <!-- [2,2] Графики -->
+  <!-- [2,2] Прогресс + Графики -->
   <div class="col-charts">
+    <div class="plan-block" style="margin-bottom:0;">
+      <div class="block-title">Прогресс к плану</div>
+      <div class="plan-row"><div class="plan-lbl">Кол-во сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-deals" style="background:#378ADD;width:0%"></div></div><div class="plan-nums" id="pn-deals">—</div><div class="plan-pct" id="pp-deals">—</div></div>
+      <div class="plan-row"><div class="plan-lbl">Сумма сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-sum" style="background:#639922;width:0%"></div></div><div class="plan-nums" id="pn-sum">—</div><div class="plan-pct" id="pp-sum">—</div></div>
+      <div class="plan-row"><div class="plan-lbl">Средний чек</div><div class="plan-bw"><div class="plan-bf" id="bar-avg" style="background:#BA7517;width:0%"></div></div><div class="plan-nums" id="pn-avg">—</div><div class="plan-pct" id="pp-avg">—</div></div>
+    </div>
     <div class="chart-block">
       <div class="block-title">Динамика по месяцам</div>
       <div class="chart-legend">
