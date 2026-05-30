@@ -84,10 +84,17 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 .pace-val{font-size:15px;color:#633806;font-weight:500;}
 .pace-val.ok{color:var(--green);}
 
+/* TOP INFO GRID */
+.top-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+
 /* TWO-COLUMN MAIN GRID */
-.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;}
+.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;}
 .col-charts{display:flex;flex-direction:column;gap:10px;}
-.col-table{display:flex;flex-direction:column;gap:0;}
+.col-charts .chart-block{flex:1;min-height:0;}
+.col-table{display:flex;flex-direction:column;}
+.col-table .rtable-wrap{flex:1;overflow-y:auto;}
+.rtable-wrap{display:flex;flex-direction:column;}
+.rtable{flex:1;}
 
 /* RATING TABLE */
 .rtable-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
@@ -215,11 +222,11 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 
 @media(max-width:900px){
   .main-grid{grid-template-columns:1fr;}
+  .top-grid{grid-template-columns:1fr;}
   .stats-strip{grid-template-columns:repeat(4,1fr);}
 }
 @media(max-width:560px){
   .stats-strip{grid-template-columns:repeat(2,1fr);}
-  .stat-cell{border-bottom:1px solid var(--border);}
 }
 </style>
 </head>
@@ -342,30 +349,51 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   </div>
 </div>
 
-<!-- КОМПАКТНАЯ СТАТИСТИКА -->
-<div class="stats-strip">
-  <div class="stat-cell"><div class="stat-lbl">Сделок</div><div class="stat-val" id="m-deals">—</div><div class="stat-sub" id="m-deals-sub"></div></div>
-  <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
-  <div class="stat-cell"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">—</div><div class="stat-sub" id="m-avg-sub"></div></div>
-  <div class="stat-cell"><div class="stat-lbl">ФОТ</div><div class="stat-val" id="m-fot">—</div><div class="stat-sub" id="m-fot-sub"></div></div>
-  <div class="stat-cell"><div class="stat-lbl">День мес.</div><div class="stat-val" id="cd-day">—</div></div>
-  <div class="stat-cell"><div class="stat-lbl">До плана</div><div class="stat-val" id="cd-need">—</div></div>
-  <div class="stat-cell"><div class="stat-lbl">Нужно/день</div><div class="stat-val" id="cd-perday">—</div></div>
-  <div class="stat-cell"><div class="stat-lbl">Темп/день</div><div class="stat-val ok" id="cd-pace">—</div></div>
+<!-- ВЕРХНИЙ ДВУХКОЛОНОЧНЫЙ БЛОК: статистика + прогресс -->
+<div class="top-grid">
+  <!-- Левая: 8 метрик -->
+  <div class="stats-strip" style="margin-bottom:0;grid-template-columns:repeat(4,1fr);grid-template-rows:auto auto;">
+    <div class="stat-cell"><div class="stat-lbl">Сделок</div><div class="stat-val" id="m-deals">—</div><div class="stat-sub" id="m-deals-sub"></div></div>
+    <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
+    <div class="stat-cell"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">—</div><div class="stat-sub" id="m-avg-sub"></div></div>
+    <div class="stat-cell"><div class="stat-lbl">ФОТ</div><div class="stat-val" id="m-fot">—</div><div class="stat-sub" id="m-fot-sub"></div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">День мес.</div><div class="stat-val" id="cd-day">—</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">До плана</div><div class="stat-val" id="cd-need">—</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Нужно/день</div><div class="stat-val" id="cd-perday">—</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Темп/день</div><div class="stat-val" id="cd-pace">—</div></div>
+  </div>
+  <!-- Правая: прогресс-бары -->
+  <div class="plan-block" style="margin-bottom:0;">
+    <div class="block-title">Прогресс к плану</div>
+    <div class="plan-row"><div class="plan-lbl">Кол-во сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-deals" style="background:#378ADD;width:0%"></div></div><div class="plan-nums" id="pn-deals">—</div><div class="plan-pct" id="pp-deals">—</div></div>
+    <div class="plan-row"><div class="plan-lbl">Сумма сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-sum" style="background:#639922;width:0%"></div></div><div class="plan-nums" id="pn-sum">—</div><div class="plan-pct" id="pp-sum">—</div></div>
+    <div class="plan-row"><div class="plan-lbl">Средний чек</div><div class="plan-bw"><div class="plan-bf" id="bar-avg" style="background:#BA7517;width:0%"></div></div><div class="plan-nums" id="pn-avg">—</div><div class="plan-pct" id="pp-avg">—</div></div>
+  </div>
 </div>
 
-<!-- ПРОГРЕСС ПЛАН -->
-<div class="plan-block">
-  <div class="block-title">Прогресс к плану</div>
-  <div class="plan-row"><div class="plan-lbl">Кол-во сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-deals" style="background:#378ADD;width:0%"></div></div><div class="plan-nums" id="pn-deals">—</div><div class="plan-pct" id="pp-deals">—</div></div>
-  <div class="plan-row"><div class="plan-lbl">Сумма сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-sum" style="background:#639922;width:0%"></div></div><div class="plan-nums" id="pn-sum">—</div><div class="plan-pct" id="pp-sum">—</div></div>
-  <div class="plan-row"><div class="plan-lbl">Средний чек</div><div class="plan-bw"><div class="plan-bf" id="bar-avg" style="background:#BA7517;width:0%"></div></div><div class="plan-nums" id="pn-avg">—</div><div class="plan-pct" id="pp-avg">—</div></div>
-</div>
-
-<!-- ДВУХКОЛОНОЧНЫЙ ГРИД -->
+<!-- ДВУХКОЛОНОЧНЫЙ ГРИД: таблица | графики -->
 <div class="main-grid">
 
-  <!-- ЛЕВАЯ: ГРАФИКИ -->
+  <!-- ЛЕВАЯ: ТАБЛИЦА МЕНЕДЖЕРОВ -->
+  <div class="col-table">
+    <div class="rtable-wrap">
+      <table class="rtable" id="rtable">
+        <thead>
+          <tr>
+            <th style="width:22px">#</th>
+            <th>Менеджер</th>
+            <th class="r">Сделок</th>
+            <th class="r">Сумма</th>
+            <th class="r">Конв.</th>
+            <th class="r">ЗП (расч.) ↗</th>
+          </tr>
+        </thead>
+        <tbody id="rtbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3);font-family:sans-serif;">Загрузка данных...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ПРАВАЯ: ГРАФИКИ -->
   <div class="col-charts">
     <div class="chart-block">
       <div class="block-title">Динамика по месяцам</div>
@@ -393,25 +421,6 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
       <div style="position:relative;width:100%;height:160px;">
         <canvas id="dailyChart"></canvas>
       </div>
-    </div>
-  </div>
-
-  <!-- ПРАВАЯ: ТАБЛИЦА МЕНЕДЖЕРОВ -->
-  <div class="col-table">
-    <div class="rtable-wrap">
-      <table class="rtable" id="rtable">
-        <thead>
-          <tr>
-            <th style="width:22px">#</th>
-            <th>Менеджер</th>
-            <th class="r">Сделок</th>
-            <th class="r">Сумма</th>
-            <th class="r">Конв.</th>
-            <th class="r">ЗП (расч.) ↗</th>
-          </tr>
-        </thead>
-        <tbody id="rtbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3);font-family:sans-serif;">Загрузка данных...</td></tr></tbody>
-      </table>
     </div>
   </div>
 
