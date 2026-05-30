@@ -482,8 +482,10 @@ function buildDropdown(){
     const checked=selectedMops.size===0||selectedMops.has(name);
     div.innerHTML=`<input type="checkbox" ${checked?'checked':''} data-name="${name}"><div class="dd-av" style="background:${c.bg};color:${c.tc}">${initials(name)}</div><span>${name}</span>`;
     div.querySelector('input').onchange=e=>{
+      if(selectedMops.size===0)allMops.forEach(m=>selectedMops.add(m));
       if(e.target.checked)selectedMops.add(name);
       else selectedMops.delete(name);
+      if(selectedMops.size===allMops.length)selectedMops.clear();
       updateDdLabel();
       render();
     };
@@ -507,10 +509,7 @@ function toggleDropdown(){
 }
 function toggleAllMops(){
   const allChecked=selectedMops.size===0||selectedMops.size===allMops.length;
-  if(allChecked){
-    // снять всех — оставить только первого (нельзя снять всех)
-    selectedMops=new Set(allMops);
-  } else {
+  if(!allChecked){
     selectedMops.clear();
   }
   buildDropdown();render();
