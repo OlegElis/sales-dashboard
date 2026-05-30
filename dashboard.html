@@ -34,12 +34,12 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 
 /* MOP DROPDOWN */
 .mop-dd{position:relative;font-family:sans-serif;}
-.mop-dd-btn{font-size:12px;padding:5px 10px 5px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--s2);color:var(--t2);cursor:pointer;display:flex;align-items:center;gap:8px;min-width:160px;user-select:none;}
+.mop-dd-btn{font-size:12px;padding:5px 10px 5px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--s2);color:var(--t2);cursor:pointer;display:flex;align-items:center;gap:8px;min-width:200px;user-select:none;}
 .mop-dd-btn:hover{border-color:var(--blue);}
 .mop-dd-btn span{flex:1;}
 .mop-dd-arrow{font-size:9px;color:var(--t3);transition:transform .15s;}
 .mop-dd-arrow.open{transform:rotate(180deg);}
-.mop-dd-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:200px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:200;overflow:hidden;}
+.mop-dd-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:240px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:200;overflow:hidden;}
 .mop-dd-panel.open{display:block;}
 .mop-dd-item{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:12px;color:var(--t2);transition:background .1s;}
 .mop-dd-item:hover{background:var(--s2);}
@@ -739,8 +739,7 @@ function render(){
     totalDeals+=d.deals;
     totalSum+=d.sum;
     const conv=calcConversions(allRows,name,y,m);
-    // для оклада используем реальный период (без влияния фильтра дня)
-    const{zp,pills}=calcZP(d.deals,d.sum,conv.conv1,conv.conv24,autoDay,mdays);
+    const{zp,pills}=calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays);
     totalZP+=zp;
     mopResults.push({name,d,conv,zp,pills,rows:d.rows});
   });
