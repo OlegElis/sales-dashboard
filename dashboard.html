@@ -446,7 +446,13 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
         <thead>
           <tr>
             <th style="width:22px">#</th>
-            <th>Менеджер <span style="font-weight:400;opacity:.6;font-size:8px;">↕ клик — фильтр</span></th>
+            <th style="position:relative;">
+              <span id="mop-th" onclick="toggleMopDd()" style="cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:5px;">
+                Менеджер <span id="mop-th-arrow" style="font-size:9px;color:var(--t3);transition:transform .15s;">▼</span>
+                <span id="mop-th-badge" style="display:none;background:var(--blue);color:#fff;border-radius:99px;font-size:8px;padding:1px 5px;font-weight:600;"></span>
+              </span>
+              <div class="mop-dd-panel" id="mop-dd-panel"></div>
+            </th>
             <th class="r">Сделок</th>
             <th class="r">Сумма</th>
             <th class="r">Конверсия</th>
@@ -813,20 +819,24 @@ function buildMopChips(){
 
 function updateMopLabel(){
   const n=selectedMops.size,t=allMops.length;
-  const lbl=document.getElementById('mop-dd-label');
   const panel=document.getElementById('mop-dd-panel');
-  if(lbl)lbl.textContent=n===t?'Все менеджеры':n===1?[...selectedMops][0].split(' ')[0]:n+' менеджера';
   if(panel){const cb=panel.querySelectorAll('input')[0];if(cb)cb.checked=(n===t);}
+  // бейдж в заголовке
+  const badge=document.getElementById('mop-th-badge');
+  if(badge){
+    if(n<t){badge.style.display='inline';badge.textContent=n+'/'+ t;}
+    else{badge.style.display='none';}
+  }
 }
 
 let _ddOpenedAt=0;
 function toggleMopDd(){
   const panel=document.getElementById('mop-dd-panel');
-  const arrow=document.getElementById('mop-dd-arrow');
   if(!panel)return;
   const opening=!panel.classList.contains('open');
   panel.classList.toggle('open');
-  if(arrow)arrow.classList.toggle('open');
+  const arrow=document.getElementById('mop-th-arrow');
+  if(arrow)arrow.style.transform=opening?'rotate(180deg)':'';
   if(opening)_ddOpenedAt=Date.now();
 }
 document.addEventListener('click',()=>{
@@ -943,24 +953,11 @@ function render(){
           <span style="font-size:9px;color:var(--t3);font-family:inherit;">#1 </span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span>
           <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2–4 </span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
         </td>
-        <td class="r zp-cell" style="color:${zpColor};font-weight:500;cursor:pointer;" title="Открыть расчёт ЗП">${fmt(zp)} ₽ <span style="font-size:10px;opacity:.5">↗</span></td>
+        <td class="r" style="color:${zpColor};font-weight:500;">${fmt(zp)} ₽</td>
       `;
-      // клик по строке = фильтр по менеджеру
+      // клик по строке = карточка ЗП
       tr.style.cursor='pointer';
-      tr.onclick=(e)=>{
-        // клик по ячейке ЗП = карточка
-        if(e.target.closest('.zp-cell')){openZpModal(name,zp,bd,conv,d,d.rows);return;}
-        // иначе — фильтр
-        if(activeMop===name){
-          activeMop=null;
-          allMops.forEach(m=>selectedMops.add(m));
-        } else {
-          activeMop=name;
-          selectedMops.clear();
-          selectedMops.add(name);
-        }
-        buildMopChips();render();
-      };
+      tr.onclick=()=>openZpModal(name,zp,bd,conv,d,d.rows);
       tbody.appendChild(tr);
     });
     // Итого
