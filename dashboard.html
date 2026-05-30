@@ -32,9 +32,19 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 .ybtn.active{background:var(--text);color:#fff;border-color:transparent;}
 .f-divider{width:1px;height:32px;background:var(--border);flex-shrink:0;}
 
-/* MOP SELECT */
-.mop-select{font-size:12px;font-family:sans-serif;padding:5px 10px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--s2);color:var(--t2);cursor:pointer;outline:none;min-width:160px;}
-.mop-select:focus{border-color:var(--blue);}
+/* MOP DROPDOWN */
+.mop-dd{position:relative;font-family:sans-serif;}
+.mop-dd-btn{font-size:12px;padding:5px 10px 5px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--s2);color:var(--t2);cursor:pointer;display:flex;align-items:center;gap:8px;min-width:160px;user-select:none;}
+.mop-dd-btn:hover{border-color:var(--blue);}
+.mop-dd-btn span{flex:1;}
+.mop-dd-arrow{font-size:9px;color:var(--t3);transition:transform .15s;}
+.mop-dd-arrow.open{transform:rotate(180deg);}
+.mop-dd-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:200px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:200;overflow:hidden;}
+.mop-dd-panel.open{display:block;}
+.mop-dd-item{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:12px;color:var(--t2);transition:background .1s;}
+.mop-dd-item:hover{background:var(--s2);}
+.mop-dd-item input[type=checkbox]{accent-color:var(--blue);width:13px;height:13px;cursor:pointer;flex-shrink:0;}
+.mop-dd-sep{height:1px;background:var(--border);margin:2px 0;}
 
 /* DAYS FILTER */
 .days-row{display:flex;align-items:flex-start;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
@@ -317,9 +327,13 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
       <div class="month-btns" id="month-btns"></div>
     </div>
     <div class="f-divider"></div>
-    <select id="mop-select" class="mop-select">
-      <option value="">Все менеджеры</option>
-    </select>
+    <div class="mop-dd" id="mop-dd">
+      <div class="mop-dd-btn" id="mop-dd-btn" onclick="toggleMopDd()">
+        <span id="mop-dd-label">Все менеджеры</span>
+        <span class="mop-dd-arrow" id="mop-dd-arrow">▼</span>
+      </div>
+      <div class="mop-dd-panel" id="mop-dd-panel"></div>
+    </div>
   </div>
   <div class="days-row">
     <div class="days-label">День</div>
@@ -624,29 +638,66 @@ function buildDayBtns(){
   }
 }
 
-let activeMop=null;
-
 function buildMopChips(){
-  const sel=document.getElementById('mop-select');
-  sel.innerHTML='<option value="">Все менеджеры</option>';
-  allMops.forEach(name=>{
-    const opt=document.createElement('option');
-    opt.value=name;
-    opt.textContent=name;
-    if(name===activeMop)opt.selected=true;
-    sel.appendChild(opt);
-  });
-  sel.onchange=()=>{
-    activeMop=sel.value||null;
-    if(activeMop){
-      selectedMops.clear();
-      selectedMops.add(activeMop);
-    } else {
-      allMops.forEach(m=>selectedMops.add(m));
-    }
-    render();
+  const panel=document.getElementById('mop-dd-panel');
+  panel.innerHTML='';
+
+  // «Все» — вверху
+  const allItem=document.createElement('div');
+  allItem.className='mop-dd-item';
+  const allCb=document.createElement('input');
+  allCb.type='checkbox';
+  allCb.checked=selectedMops.size===allMops.length;
+  allCb.onchange=()=>{
+    if(allCb.checked)allMops.forEach(m=>selectedMops.add(m));
+    else selectedMops.clear();
+    buildMopChips();render();
   };
+  allItem.appendChild(allCb);
+  allItem.appendChild(Object.assign(document.createElement('span'),{textContent:'Все менеджеры',style:'font-weight:500'}));
+  allItem.onclick=e=>{if(e.target!==allCb){allCb.checked=!allCb.checked;allCb.onchange();}};
+  panel.appendChild(allItem);
+
+  const sep=document.createElement('div');sep.className='mop-dd-sep';
+  panel.appendChild(sep);
+
+  allMops.forEach(name=>{
+    const item=document.createElement('div');
+    item.className='mop-dd-item';
+    const cb=document.createElement('input');
+    cb.type='checkbox';
+    cb.checked=selectedMops.has(name);
+    cb.onchange=()=>{
+      if(cb.checked)selectedMops.add(name);
+      else if(selectedMops.size>1)selectedMops.delete(name);
+      else{cb.checked=true;return;}
+      updateMopLabel();render();
+    };
+    item.appendChild(cb);
+    item.appendChild(Object.assign(document.createElement('span'),{textContent:name}));
+    item.onclick=e=>{if(e.target!==cb){cb.checked=!cb.checked;cb.onchange();}};
+    panel.appendChild(item);
+  });
+  updateMopLabel();
 }
+
+function updateMopLabel(){
+  const n=selectedMops.size,t=allMops.length;
+  document.getElementById('mop-dd-label').textContent=
+    n===t?'Все менеджеры':n===1?[...selectedMops][0].split(' ')[0]:n+' менеджера';
+  document.getElementById('mop-dd-panel').querySelectorAll('input')[0].checked=(n===t);
+}
+
+function toggleMopDd(){
+  document.getElementById('mop-dd-panel').classList.toggle('open');
+  document.getElementById('mop-dd-arrow').classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  if(!document.getElementById('mop-dd').contains(e.target)){
+    document.getElementById('mop-dd-panel').classList.remove('open');
+    document.getElementById('mop-dd-arrow').classList.remove('open');
+  }
+});
 
 function render(){
   const y=activeYear,m=activeMonth;
@@ -944,7 +995,7 @@ async function init(){
     allMops.forEach(m=>getMopColor(m));
     selectedMops=new Set(allMops);
     activeMop=null;
-    buildMopChips(); // строит select
+    buildMopChips();
     render();
     document.getElementById('sdot').className='dot';
     document.getElementById('stxt').textContent='Данные актуальны';
