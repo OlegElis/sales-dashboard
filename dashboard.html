@@ -528,36 +528,41 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
   }
   zp+=kpiD;
 
+  // Коэффициент пропорции дней (для конверсий — как оклад)
+  const dayK=periodDays/monthDays;
+
   // Конверсии и чек — только если есть сделки
   if(deals>0){
     // Конв. #1
     const dc1=conv1-PLAN.conv1;
-    let kC1;
+    let kC1raw;
     if(conv1<15){
-      kC1=0;
+      kC1raw=0;
       row('Конв. #1',`${conv1}% < 15% → 0`,0,'pr');
     } else if(dc1<0){
-      kC1=Math.max(0,18000+dc1*1800);
-      row('Конв. #1',`18 000 + (${dc1})×1 800 = ${fmt(18000+dc1*1800)}${kC1===0?' → мин. 0':''}`,kC1,'pa');
+      kC1raw=Math.max(0,18000+dc1*1800);
+      row('Конв. #1',`(18 000 + (${dc1})×1 800) ÷ ${monthDays} × ${periodDays}`,Math.round(kC1raw*dayK),'pa');
     } else {
-      kC1=18000+dc1*750;
-      row('Конв. #1',`18 000 + ${dc1}×750`,kC1,'pg');
+      kC1raw=18000+dc1*750;
+      row('Конв. #1',`(18 000 + ${dc1}×750) ÷ ${monthDays} × ${periodDays}`,Math.round(kC1raw*dayK),'pg');
     }
+    const kC1=Math.round(kC1raw*dayK);
     zp+=kC1;
 
     // Конв. #2–4 (план 65%, порог 45%, штраф 900/ед, бонус 750/ед)
     const dc24=conv24-PLAN.conv24;
-    let kC24;
+    let kC24raw;
     if(conv24<45){
-      kC24=0;
+      kC24raw=0;
       row('Конв. #2–4',`${conv24}% < 45% → 0`,0,'pr');
     } else if(dc24<0){
-      kC24=Math.max(0,18000+dc24*900);
-      row('Конв. #2–4',`18 000 + (${dc24})×900 = ${fmt(18000+dc24*900)}${kC24===0?' → мин. 0':''}`,kC24,'pa');
+      kC24raw=Math.max(0,18000+dc24*900);
+      row('Конв. #2–4',`(18 000 + (${dc24})×900) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pa');
     } else {
-      kC24=18000+dc24*750;
-      row('Конв. #2–4',`18 000 + ${dc24}×750`,kC24,'pg');
+      kC24raw=18000+dc24*750;
+      row('Конв. #2–4',`(18 000 + ${dc24}×750) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pg');
     }
+    const kC24=Math.round(kC24raw*dayK);
     zp+=kC24;
 
     // Средний чек (план 225к, штраф 168/тыс, бонус 1000/тыс)
