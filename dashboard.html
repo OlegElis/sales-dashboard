@@ -367,7 +367,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   </table>
 </div>
 
-<div class="chart-block">
+<div class="chart-block" style="margin-bottom:14px;">
   <div class="block-title">Динамика по месяцам</div>
   <div class="chart-legend">
     <span><span class="leg-sq" style="background:#B5D4F4"></span>Сделок (шт)</span>
@@ -375,6 +375,23 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   </div>
   <div style="position:relative;width:100%;height:180px;">
     <canvas id="dynChart" role="img" aria-label="Динамика сделок по месяцам">Данные загружаются.</canvas>
+  </div>
+</div>
+
+<div class="chart-block">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+    <div>
+      <div class="block-title" style="margin-bottom:4px;">Динамика по дням — <span id="daily-title">текущий месяц</span></div>
+      <div class="chart-legend">
+        <span><span class="leg-sq" style="background:#B5D4F4"></span>Факт (шт/день)</span>
+        <span><span class="leg-sq" style="background:#EAF3DE;border:1.5px solid #3B6D11"></span>Прогноз</span>
+        <span><span class="leg-ln" style="background:#E24B4A;border-top:2px dashed #E24B4A"></span>План/день</span>
+      </div>
+    </div>
+    <div id="daily-forecast-pill" style="font-family:sans-serif;font-size:11px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;"></div>
+  </div>
+  <div style="position:relative;width:100%;height:200px;">
+    <canvas id="dailyChart" role="img" aria-label="Динамика сделок по дням">Данные загружаются.</canvas>
   </div>
 </div>
 
@@ -715,6 +732,8 @@ function render(){
   renderChart();
 }
 
+let myChartDaily=null;
+
 function renderChart(){
   const activeMops=selectedMops;
   const md={},ms={};
@@ -743,6 +762,116 @@ function renderChart(){
         y2:{position:'right',min:150,max:350,ticks:{font:{size:10},color:'#BA7517',callback:v=>v+' тыс.'},grid:{display:false}},
         x:{ticks:{font:{size:10},color:'#888',autoSkip:false,maxRotation:45},grid:{display:false}}
       }}
+  });
+  renderDailyChart();
+}
+
+function renderDailyChart(){
+  const y=activeYear,m=activeMonth;
+  const today=new Date();
+  const isCurrentMonth=(y===today.getFullYear()&&m===today.getMonth()+1);
+  const mdays=daysInMonth(y,m);
+  // Сколько дней прошло в выбранном месяце
+  const daysPassed=isCurrentMonth?today.getDate():mdays;
+
+  // Сделки по дням
+  const dailyDeals={};
+  allRows.forEach(r=>{
+    if(!isPaidRow(r))return;
+    if(!selectedMops.has(r[COL.responsible]))return;
+    const dp=parseDate(r[COL.datePaid]);
+    if(!dp||dp.getFullYear()!==y||dp.getMonth()+1!==m)return;
+    const day=dp.getDate();
+    dailyDeals[day]=(dailyDeals[day]||0)+1;
+  });
+
+  // Накопленный факт
+  const factArr=[];
+  let cumFact=0;
+  for(let d=1;d<=mdays;d++){
+    if(d<=daysPassed){
+      cumFact+=(dailyDeals[d]||0);
+      factArr.push(cumFact);
+    }else{
+      factArr.push(null);
+    }
+  }
+
+  // Темп: сделок в день (за прошедшие дни)
+  const rate=daysPassed>0?cumFact/daysPassed:0;
+  const forecastTotal=Math.round(rate*mdays);
+
+  // Прогнозная линия: от последней точки факта до конца месяца
+  const forecastArr=[];
+  for(let d=1;d<=mdays;d++){
+    if(d<daysPassed){
+      forecastArr.push(null);
+    }else{
+      forecastArr.push(Math.round(rate*d));
+    }
+  }
+
+  // Плановая линия: план/день * день
+  const planPerDay=PLAN.deals/mdays;
+  const planArr=Array.from({length:mdays},(_,i)=>+(planPerDay*(i+1)).toFixed(1));
+
+  const labels=Array.from({length:mdays},(_,i)=>String(i+1));
+
+  // Заголовок и пилл прогноза
+  document.getElementById('daily-title').textContent=
+    MONTHS_RU[m-1]+' '+y+(isCurrentMonth?' (текущий)':'');
+
+  const pill=document.getElementById('daily-forecast-pill');
+  if(isCurrentMonth){
+    const diff=forecastTotal-PLAN.deals;
+    const cls=diff>=0?'pg':diff>=-3?'pa':'pr';
+    const sign=diff>=0?'+':'';
+    pill.innerHTML=`
+      <span style="color:var(--t3);">Темп: <b style="color:var(--text)">${rate.toFixed(1)}</b> сд/день</span>
+      <span class="pill ${cls}">Прогноз ${forecastTotal} сд (${sign}${diff} к плану)</span>
+    `;
+  }else{
+    pill.innerHTML=`<span style="color:var(--t3);font-family:sans-serif;font-size:11px;">Итого за месяц: <b style="color:var(--text)">${cumFact}</b> сделок</span>`;
+  }
+
+  if(myChartDaily)myChartDaily.destroy();
+  myChartDaily=new Chart(document.getElementById('dailyChart'),{
+    data:{labels,datasets:[
+      {type:'bar',label:'Факт',data:factArr.map((v,i)=>i<daysPassed?(dailyDeals[i+1]||0):null),
+        backgroundColor:'#B5D4F4',borderColor:'#378ADD',borderWidth:1.5,yAxisID:'y'},
+      {type:'line',label:'Накоплено',data:factArr,
+        borderColor:'#185FA5',backgroundColor:'rgba(24,95,165,0.07)',
+        pointRadius:2,pointBackgroundColor:'#185FA5',tension:.3,yAxisID:'y2',fill:true},
+      {type:'line',label:'Прогноз',data:forecastArr,
+        borderColor:'#3B6D11',backgroundColor:'rgba(59,109,17,0.07)',
+        pointRadius:1,borderDash:[5,4],tension:.3,yAxisID:'y2',fill:false},
+      {type:'line',label:'План',data:planArr,
+        borderColor:'#E24B4A',backgroundColor:'transparent',
+        pointRadius:0,borderDash:[3,3],borderWidth:1.5,tension:0,yAxisID:'y2'}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            title:items=>'День '+items[0].label,
+            label:item=>{
+              if(item.dataset.label==='Факт')return'Сделок за день: '+(item.raw??0);
+              if(item.dataset.label==='Накоплено')return'Накоплено: '+item.raw;
+              if(item.dataset.label==='Прогноз')return'Прогноз (накопл.): '+item.raw;
+              if(item.dataset.label==='План')return'План (накопл.): '+item.raw?.toFixed(1);
+              return'';
+            }
+          }
+        }
+      },
+      scales:{
+        y:{beginAtZero:true,ticks:{font:{size:10},color:'#888',stepSize:1},grid:{color:'rgba(0,0,0,0.04)'},title:{display:true,text:'шт/день',font:{size:9},color:'#aaa'}},
+        y2:{position:'right',beginAtZero:true,ticks:{font:{size:10},color:'#185FA5'},grid:{display:false},title:{display:true,text:'накопл.',font:{size:9},color:'#aaa'}},
+        x:{ticks:{font:{size:9},color:'#888',autoSkip:true,maxTicksLimit:16},grid:{color:'rgba(0,0,0,0.03)'}}
+      }
+    }
   });
 }
 
