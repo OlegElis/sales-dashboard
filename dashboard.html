@@ -739,7 +739,8 @@ function render(){
     totalDeals+=d.deals;
     totalSum+=d.sum;
     const conv=calcConversions(allRows,name,y,m);
-    const{zp,pills}=calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays);
+    // для оклада используем реальный период (без влияния фильтра дня)
+    const{zp,pills}=calcZP(d.deals,d.sum,conv.conv1,conv.conv24,autoDay,mdays);
     totalZP+=zp;
     mopResults.push({name,d,conv,zp,pills,rows:d.rows});
   });
