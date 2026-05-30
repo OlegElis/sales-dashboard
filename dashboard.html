@@ -34,12 +34,12 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 
 /* MOP CHIPS */
 .mop-chips{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
-.mop-chip-all{font-size:11px;font-family:sans-serif;padding:4px 10px;border-radius:99px;border:1px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;white-space:nowrap;font-weight:500;}
+.mop-chip-all{font-size:12px;font-family:sans-serif;padding:5px 12px;border-radius:99px;border:1px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;white-space:nowrap;font-weight:500;}
 .mop-chip-all.active{background:var(--text);color:#fff;border-color:transparent;}
-.mop-chip{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;cursor:pointer;transition:all .15s;position:relative;border:2px solid transparent;flex-shrink:0;}
-.mop-chip:hover{transform:scale(1.12);}
-.mop-chip.inactive{opacity:.3;filter:grayscale(1);}
-.mop-chip.active{border-color:var(--text);}
+.mop-chip{font-size:12px;font-family:sans-serif;padding:5px 12px;border-radius:99px;border:1px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px;}
+.mop-chip:hover{border-color:var(--blue);color:var(--blue);}
+.mop-chip.active{border-color:transparent;font-weight:600;}
+.mop-chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 
 /* DAYS FILTER */
 .days-row{display:flex;align-items:flex-start;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
@@ -627,36 +627,50 @@ function buildDayBtns(){
   }
 }
 
+// activeMop: null = все, string = один выбранный
+let activeMop=null;
+
+function lastName(name){
+  // Берём первое слово (фамилию)
+  return name.trim().split(/\s+/)[0];
+}
+
 function buildMopChips(){
   const wrap=document.getElementById('mop-chips');
   wrap.innerHTML='';
-  const allSelected=selectedMops.size===allMops.length;
 
   // Кнопка «Все»
   const all=document.createElement('div');
-  all.className='mop-chip-all'+(allSelected?' active':'');
+  all.className='mop-chip-all'+(activeMop===null?' active':'');
   all.textContent='Все';
   all.onclick=()=>{
+    activeMop=null;
     allMops.forEach(m=>selectedMops.add(m));
     buildMopChips();render();
   };
   wrap.appendChild(all);
 
-  // Чип каждого менеджера
+  // Кнопка каждого менеджера
   allMops.forEach(name=>{
     const c=getMopColor(name);
+    const isActive=activeMop===name;
     const chip=document.createElement('div');
-    const active=selectedMops.has(name);
-    chip.className='mop-chip'+(active?'':' inactive');
-    chip.style.background=c.bg;
-    chip.style.color=c.tc;
-    chip.textContent=initials(name);
+    chip.className='mop-chip'+(isActive?' active':'');
+    if(isActive){
+      chip.style.background=c.bg;
+      chip.style.color=c.tc;
+      chip.style.borderColor=c.tc+'55';
+    }
+    chip.innerHTML=`<span class="mop-chip-dot" style="background:${c.tc}"></span>${lastName(name)}`;
     chip.title=name;
     chip.onclick=()=>{
-      if(selectedMops.has(name)){
-        // нельзя снять если это последний выбранный
-        if(selectedMops.size>1)selectedMops.delete(name);
+      if(activeMop===name){
+        // повторный клик — сброс на «Все»
+        activeMop=null;
+        allMops.forEach(m=>selectedMops.add(m));
       } else {
+        activeMop=name;
+        selectedMops.clear();
         selectedMops.add(name);
       }
       buildMopChips();render();
@@ -960,6 +974,7 @@ async function init(){
     allMops=Array.from(mopSet).sort();
     allMops.forEach(m=>getMopColor(m));
     selectedMops=new Set(allMops);
+    activeMop=null;
     buildMopChips();
     render();
     document.getElementById('sdot').className='dot';
