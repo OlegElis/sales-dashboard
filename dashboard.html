@@ -3,18 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Дашборд отдела продаж — ГК ОПОРА</title>
+<title>Пульс отдела продаж — ГК ОПОРА</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root{--bg:#f5f4f0;--surface:#fff;--s2:#f0ede8;--border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.15);--text:#1a1a18;--t2:#6b6a65;--t3:#9b9a95;--green:#3B6D11;--gbg:#EAF3DE;--amber:#854F0B;--abg:#FAEEDA;--aborder:#FAC775;--red:#A32D2D;--rbg:#FCEBEB;--blue:#185FA5;--bbg:#E6F1FB;--r:12px;--rs:8px;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;}
 
 /* HEADER */
-.hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px;}
-.hdr-org{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3);margin-bottom:3px;font-family:sans-serif;}
-.hdr-title{font-size:24px;letter-spacing:-0.02em;}
-.status-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-family:sans-serif;color:var(--t2);background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:4px 12px;}
+.hdr{margin-bottom:14px;}
+.hdr-breadcrumb{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.02em;margin-bottom:6px;}
+.hdr-breadcrumb-sep{color:var(--border2);font-size:13px;}
+.hdr-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-bottom:10px;border-bottom:1.5px solid var(--border2);}
+.hdr-title{font-size:22px;font-weight:600;letter-spacing:-.03em;color:var(--text);}
+.hdr-title span{font-weight:300;color:var(--t2);}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t2);background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:4px 12px;}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
 .dot.loading{background:var(--amber);animation:pulse 1s infinite;}
 .dot.error{background:var(--red);}
@@ -311,13 +316,19 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
 </script>
 
 <div class="hdr">
-  <div>
-    <div class="hdr-org">ГК ОПОРА / Банкротство физических лиц</div>
-    <div class="hdr-title">Отдел продаж</div>
+  <div class="hdr-breadcrumb">
+    <span>УПР.Финансы</span>
+    <span class="hdr-breadcrumb-sep">/</span>
+    <span>БФЛ</span>
+    <span class="hdr-breadcrumb-sep">/</span>
+    <span>Банкротство физических лиц</span>
   </div>
-  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
-    <div class="status-pill"><div class="dot loading" id="sdot"></div><span id="stxt">Загрузка...</span></div>
-    <div style="font-size:10px;font-family:sans-serif;color:var(--t3);" id="supd"></div>
+  <div class="hdr-bottom">
+    <div class="hdr-title">Пульс отдела продаж <span>(ГК ОПОРА)</span></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+      <div class="status-pill"><div class="dot loading" id="sdot"></div><span id="stxt">Загрузка...</span></div>
+      <div style="font-size:10px;color:var(--t3);" id="supd"></div>
+    </div>
   </div>
 </div>
 
