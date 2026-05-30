@@ -570,16 +570,18 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
     const davg=Math.round((avg-PLAN.avgCheck)/1000);
     let kAvg;
     const AVG_MIN=150000;
+    let kAvgRaw;
     if(avg<AVG_MIN){
-      kAvg=0;
+      kAvgRaw=0;
       row('Ср. чек',`${fmtK(avg)} < 150 тыс. → 0`,0,'pr');
     } else if(davg<0){
-      kAvg=12000+davg*160; // при avg=150к = 0 точно
-      row('Ср. чек',`12 000 + (${davg})×160`,kAvg,'pa');
+      kAvgRaw=12000+davg*160;
+      row('Ср. чек',`(12 000 + (${davg})×160) ÷ ${monthDays} × ${periodDays}`,Math.round(kAvgRaw*dayK),'pa');
     } else {
-      kAvg=12000+davg*1000;
-      row('Ср. чек',`12 000 + ${davg}×1 000`,kAvg,'pg');
+      kAvgRaw=12000+davg*1000;
+      row('Ср. чек',`(12 000 + ${davg}×1 000) ÷ ${monthDays} × ${periodDays}`,Math.round(kAvgRaw*dayK),'pg');
     }
+    kAvg=Math.round(kAvgRaw*dayK);
     zp+=kAvg;
   }
 
