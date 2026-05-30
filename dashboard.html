@@ -379,7 +379,12 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
       <svg width="64" height="28" viewBox="0 0 64 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Логотип пульс">
         <polyline points="0,14 10,14 14,4 18,24 22,8 26,18 30,14 36,14 40,3 44,25 48,10 52,18 56,14 64,14" stroke="#A32D2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
       </svg>
-      <div class="hdr-title">Пульс отдела продаж <span>(ГК ОПОРА)</span></div>
+      <div>
+        <div class="hdr-title">Пульс отдела продаж <span>(ГК ОПОРА)</span></div>
+        <div style="font-size:11px;color:var(--t3);margin-top:3px;letter-spacing:.01em;">
+          Руководитель: <span style="color:var(--t2);font-weight:500;">Кривчикова Мария Ивановна</span>
+        </div>
+      </div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
       <div class="status-pill"><div class="dot loading" id="sdot"></div><span id="stxt">Загрузка...</span></div>
