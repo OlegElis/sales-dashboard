@@ -565,8 +565,8 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
     const davg=Math.round((avg-PLAN.avgCheck)/1000);
     let kAvg;
     if(davg<0){
-      kAvg=Math.max(-12000, davg*168); // штраф, но не более суммы базового бонуса
-      row('Ср. чек',`${fmtK(avg)} < ${fmtK(PLAN.avgCheck)}: (${davg})×168`,kAvg,'pr');
+      kAvg=Math.max(-12000, davg*160);
+      row('Ср. чек',`${fmtK(avg)} < ${fmtK(PLAN.avgCheck)}: (${davg})×160`,kAvg,'pr');
     } else {
       kAvg=12000+davg*1000;
       row('Ср. чек',`12 000 + ${davg}×1 000`,kAvg,'pg');
