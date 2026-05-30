@@ -211,7 +211,15 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 .zp-close{margin-top:20px;width:100%;padding:9px;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rs);font-size:12px;font-family:sans-serif;color:var(--t2);cursor:pointer;transition:background .15s;}
 .zp-close:hover{background:var(--border2);}
 .rtable tbody tr{cursor:pointer;}
-.zp-deals-title{font-size:9px;font-family:sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin:16px 0 8px;}
+.zp-section-title{font-size:9px;font-family:sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin:14px 0 6px;}
+.zp-formula-table{width:100%;border-collapse:collapse;font-family:sans-serif;font-size:12px;}
+.zp-formula-table td{padding:5px 0;border-bottom:.5px solid var(--border);vertical-align:middle;}
+.zp-formula-table tr:last-child td{border-bottom:none;}
+.zp-formula-lbl{color:var(--text);width:110px;font-weight:500;}
+.zp-formula-expr{color:var(--t2);font-size:11px;}
+.zp-formula-amt{text-align:right;white-space:nowrap;font-weight:600;min-width:80px;}
+.zp-formula-total td{padding-top:8px;border-top:1.5px solid var(--border2);border-bottom:none;font-weight:700;font-size:14px;}
+.zp-deals-title{font-size:9px;font-family:sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin:14px 0 6px;}
 .zp-deals-table{width:100%;border-collapse:collapse;font-family:sans-serif;font-size:11px;}
 .zp-deals-table th{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-weight:500;padding:4px 8px;border-bottom:1px solid var(--border);text-align:left;}
 .zp-deals-table th.r{text-align:right;}
@@ -496,36 +504,80 @@ function calcConversions(rows,mopName,year,month){
 }
 
 function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
+  const bd=[]; // breakdown: {label,formula,amount,cls}
+  function row(label,formula,amount,cls){bd.push({label,formula,amount,cls});}
+
+  // Оклад
   const oklad=Math.round(30000/monthDays*periodDays);
+  row('Оклад',`30 000 ÷ ${monthDays} × ${periodDays}`,oklad,'pg');
   let zp=oklad;
-  const pills=[{t:'Оклад '+fmt(oklad),cls:'pg'}];
+
+  // KPI сделки
   const diff=deals-PLAN.deals;
   let kpiD;
-  if(deals===0){kpiD=0;pills.push({t:'Нет сделок',cls:'pr'});}
-  else if(diff>=0){kpiD=72000+diff*5000;pills.push({t:'KPI '+fmt(kpiD),cls:'pg'});if(diff>0)pills.push({t:'+'+diff+'×5000',cls:'pg'});}
-  else{kpiD=Math.max(0,72000+diff*4500);pills.push({t:'KPI '+fmt(kpiD),cls:diff<-4?'pr':'pa'});pills.push({t:diff+'×4500='+fmt(diff*4500),cls:'pr'});}
+  if(deals===0){
+    kpiD=0;
+    row('KPI (сделки)','Нет сделок → 0',0,'pr');
+  } else if(diff>=0){
+    kpiD=72000+diff*5000;
+    const extra=diff>0?` + ${diff}×5 000`:'' ;
+    row('KPI (сделки)',`72 000${extra}`,kpiD,'pg');
+  } else {
+    kpiD=Math.max(0,72000+diff*4500);
+    row('KPI (сделки)',`72 000 + (${diff})×4 500 = ${fmt(72000+diff*4500)}${kpiD===0?' → мин. 0':''}`,kpiD,diff<-4?'pr':'pa');
+  }
   zp+=kpiD;
+
+  // Конверсии и чек — только если есть сделки
   if(deals>0){
+    // Конв. #1
     const dc1=conv1-PLAN.conv1;
     let kC1;
-    if(conv1<15){kC1=0;pills.push({t:'Конв.#1<15%→0',cls:'pr'});}
-    else if(dc1<0){kC1=Math.max(0,18000+dc1*1800);pills.push({t:'Конв.#1 '+fmt(kC1),cls:'pa'});}
-    else{kC1=18000+dc1*750;pills.push({t:'Конв.#1 '+fmt(kC1),cls:'pg'});}
+    if(conv1<15){
+      kC1=0;
+      row('Конв. #1',`${conv1}% < 15% → 0`,0,'pr');
+    } else if(dc1<0){
+      kC1=Math.max(0,18000+dc1*1800);
+      row('Конв. #1',`18 000 + (${dc1})×1 800 = ${fmt(18000+dc1*1800)}${kC1===0?' → мин. 0':''}`,kC1,'pa');
+    } else {
+      kC1=18000+dc1*750;
+      row('Конв. #1',`18 000 + ${dc1}×750`,kC1,'pg');
+    }
     zp+=kC1;
+
+    // Конв. #2–4
     const dc24=conv24-PLAN.conv24;
     let kC24;
-    if(conv24<15){kC24=0;pills.push({t:'Конв.#2-4<15%→0',cls:'pr'});}
-    else if(dc24<0){kC24=Math.max(0,18000+dc24*1800);pills.push({t:'Конв.#2-4 '+fmt(kC24),cls:'pa'});}
-    else{kC24=18000+dc24*750;pills.push({t:'Конв.#2-4 '+fmt(kC24),cls:'pg'});}
+    if(conv24<15){
+      kC24=0;
+      row('Конв. #2–4',`${conv24}% < 15% → 0`,0,'pr');
+    } else if(dc24<0){
+      kC24=Math.max(0,18000+dc24*1800);
+      row('Конв. #2–4',`18 000 + (${dc24})×1 800 = ${fmt(18000+dc24*1800)}${kC24===0?' → мин. 0':''}`,kC24,'pa');
+    } else {
+      kC24=18000+dc24*750;
+      row('Конв. #2–4',`18 000 + ${dc24}×750`,kC24,'pg');
+    }
     zp+=kC24;
-    const avg=sumTotal/deals;
+
+    // Средний чек
+    const avg=Math.round(sumTotal/deals);
     const davg=Math.round((avg-PLAN.avgCheck)/1000);
     let kAvg;
-    if(davg<0){kAvg=davg*160;pills.push({t:'Чек '+fmt(kAvg),cls:'pr'});}
-    else{kAvg=12000+davg*1000;pills.push({t:'Чек +'+fmt(kAvg),cls:'pg'});}
+    if(davg<0){
+      kAvg=0; // ниже плана — не штрафуем, просто не начисляем
+      row('Ср. чек',`${fmtK(avg)} < ${fmtK(PLAN.avgCheck)} → 0`,0,'pa');
+    } else {
+      kAvg=12000+davg*1000;
+      row('Ср. чек',`12 000 + ${davg}×1 000`,kAvg,'pg');
+    }
     zp+=kAvg;
   }
-  return{zp,pills};
+
+  zp=Math.max(0,zp);
+  // pills для таблицы (совместимость)
+  const pills=bd.map(r=>({t:`${r.label}: ${fmt(r.amount)} ₽`,cls:r.cls}));
+  return{zp,pills,bd};
 }
 
 function getAvailableYears(){
@@ -739,9 +791,9 @@ function render(){
     totalDeals+=d.deals;
     totalSum+=d.sum;
     const conv=calcConversions(allRows,name,y,m);
-    const{zp,pills}=calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays);
+    const{zp,pills,bd}=calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays);
     totalZP+=zp;
-    mopResults.push({name,d,conv,zp,pills,rows:d.rows});
+    mopResults.push({name,d,conv,zp,pills,bd,rows:d.rows});
   });
 
   // Сортировка по сделкам убыв
@@ -809,7 +861,7 @@ function render(){
         </td>
         <td class="r" style="color:${zpColor};font-weight:500;">${fmt(zp)} ₽</td>
       `;
-      tr.onclick=()=>openZpModal(name,zp,pills,conv,d,d.rows);
+      tr.onclick=()=>openZpModal(name,zp,bd,conv,d,d.rows);
       tbody.appendChild(tr);
     });
     // Итого
@@ -1009,7 +1061,7 @@ async function init(){
 function saveId(){const v=document.getElementById('sid-input').value.trim();if(!v)return;localStorage.setItem('dash_sid',v);document.getElementById('cfg').classList.remove('show');init();}
 
 // ZP MODAL
-function openZpModal(name,zp,pills,conv,d,dealRows){
+function openZpModal(name,zp,bd,conv,d,dealRows){
   const c=getMopColor(name);
   const zpColor=zp>=150000?'var(--green)':zp>=100000?'var(--amber)':'var(--red)';
   document.getElementById('zp-av').style.background=c.bg;
@@ -1028,8 +1080,19 @@ function openZpModal(name,zp,pills,conv,d,dealRows){
     <div class="zp-row"><span class="zp-row-lbl">Конверсия #1</span><span class="zp-row-val">${conv.conv1}% (план ${PLAN.conv1}%)</span></div>
     <div class="zp-row"><span class="zp-row-lbl">Конверсия #2–4</span><span class="zp-row-val">${conv.conv24}% (план ${PLAN.conv24}%)</span></div>
   `;
-  // пиллы составляющих
-  document.getElementById('zp-pills').innerHTML=pills.map(p=>`<span class="pill ${p.cls}">${p.t}</span>`).join('');
+  // таблица формул
+  const ftable=document.getElementById('zp-formula-table');
+  ftable.innerHTML=(bd||[]).map(r=>{
+    const amtColor=r.cls==='pg'?'var(--green)':r.cls==='pr'?'var(--red)':'var(--amber)';
+    return`<tr>
+      <td class="zp-formula-lbl">${r.label}</td>
+      <td class="zp-formula-expr">${r.formula}</td>
+      <td class="zp-formula-amt" style="color:${amtColor}">${fmt(r.amount)} ₽</td>
+    </tr>`;
+  }).join('')+`<tr class="zp-formula-total">
+    <td colspan="2">Итого</td>
+    <td class="zp-formula-amt" style="color:${zp>=150000?'var(--green)':zp>=100000?'var(--amber)':'var(--red)'}">${fmt(zp)} ₽</td>
+  </tr>`;
 
   // таблица сделок
   const tbody=document.getElementById('zp-deals-tbody');
@@ -1079,7 +1142,8 @@ init();
     <div class="zp-total" id="zp-total"></div>
     <div class="zp-divider"></div>
     <div class="zp-rows" id="zp-detail-rows"></div>
-    <div class="zp-pills" id="zp-pills"></div>
+    <div class="zp-section-title">Расчёт составляющих</div>
+    <table class="zp-formula-table" id="zp-formula-table"></table>
     <div class="zp-deals-title">Сделки, вошедшие в расчёт</div>
     <table class="zp-deals-table">
       <thead>
