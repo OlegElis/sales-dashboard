@@ -772,6 +772,7 @@ function buildDayBtns(){
 
 function buildMopChips(){
   const panel=document.getElementById('mop-dd-panel');
+  if(!panel)return;
   panel.innerHTML='';
 
   // «Все» — вверху
@@ -815,24 +816,26 @@ function buildMopChips(){
 
 function updateMopLabel(){
   const n=selectedMops.size,t=allMops.length;
-  document.getElementById('mop-dd-label').textContent=
-    n===t?'Все менеджеры':n===1?[...selectedMops][0].split(' ')[0]:n+' менеджера';
-  document.getElementById('mop-dd-panel').querySelectorAll('input')[0].checked=(n===t);
+  const lbl=document.getElementById('mop-dd-label');
+  const panel=document.getElementById('mop-dd-panel');
+  if(lbl)lbl.textContent=n===t?'Все менеджеры':n===1?[...selectedMops][0].split(' ')[0]:n+' менеджера';
+  if(panel){const cb=panel.querySelectorAll('input')[0];if(cb)cb.checked=(n===t);}
 }
 
 let _ddOpenedAt=0;
 function toggleMopDd(){
   const panel=document.getElementById('mop-dd-panel');
   const arrow=document.getElementById('mop-dd-arrow');
+  if(!panel)return;
   const opening=!panel.classList.contains('open');
   panel.classList.toggle('open');
-  arrow.classList.toggle('open');
+  if(arrow)arrow.classList.toggle('open');
   if(opening)_ddOpenedAt=Date.now();
 }
 document.addEventListener('click',()=>{
-  if(Date.now()-_ddOpenedAt<200)return; // игнорируем клик, который открыл
-  document.getElementById('mop-dd-panel').classList.remove('open');
-  document.getElementById('mop-dd-arrow').classList.remove('open');
+  if(Date.now()-_ddOpenedAt<200)return;
+  document.getElementById('mop-dd-panel')?.classList.remove('open');
+  document.getElementById('mop-dd-arrow')?.classList.remove('open');
 });
 
 function render(){
