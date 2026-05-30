@@ -1131,7 +1131,7 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
         <td style="white-space:nowrap">${dateStr}</td>
         <td style="font-size:11px">${client}</td>
         <td class="r" style="font-weight:500;white-space:nowrap">${fmt(sum)} ₽</td>
-        <td><span class="pill ${dirCls}" style="font-size:9px">${dir}</span></td>
+        <td style="text-align:center"><span class="pill ${dirCls}" style="font-size:9px">${dir}</span></td>
       </tr>`;
     }).join('');
   }
@@ -1168,7 +1168,7 @@ init();
           <th>Дата</th>
           <th>ФИО клиента</th>
           <th class="r">Сумма</th>
-          <th>Направление</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="zp-deals-tbody"></tbody>
