@@ -34,12 +34,12 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 
 /* MOP DROPDOWN */
 .mop-dd{position:relative;font-family:sans-serif;}
-.mop-dd-btn{font-size:12px;padding:5px 10px 5px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--s2);color:var(--t2);cursor:pointer;display:flex;align-items:center;gap:8px;min-width:160px;white-space:nowrap;user-select:none;}
+.mop-dd-btn{font-size:12px;padding:5px 10px 5px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--s2);color:var(--t2);cursor:pointer;display:flex;align-items:center;gap:8px;min-width:260px;white-space:nowrap;user-select:none;}
 .mop-dd-btn:hover{border-color:var(--blue);}
 .mop-dd-btn span{flex:1;}
 .mop-dd-arrow{font-size:9px;color:var(--t3);transition:transform .15s;}
 .mop-dd-arrow.open{transform:rotate(180deg);}
-.mop-dd-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:240px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:200;overflow:hidden;}
+.mop-dd-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:280px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:200;overflow:hidden;}
 .mop-dd-panel.open{display:block;}
 .mop-dd-item{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:12px;color:var(--t2);transition:background .1s;}
 .mop-dd-item:hover{background:var(--s2);}
@@ -195,7 +195,7 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 /* ZP MODAL */
 .zp-overlay{position:fixed;inset:0;z-index:8888;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .zp-overlay.open{opacity:1;pointer-events:all;}
-.zp-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:28px 28px 24px;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,0.13);transform:translateY(10px);transition:transform .2s;}
+.zp-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:28px 32px 24px;width:100%;max-width:640px;box-shadow:0 8px 40px rgba(0,0,0,0.13);transform:translateY(10px);transition:transform .2s;}
 .zp-overlay.open .zp-card{transform:translateY(0);}
 .zp-head{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
 .zp-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
@@ -304,7 +304,7 @@ const SHEET_NAME = 'RawData_BFL';
 const PLAN = { deals:16, avgCheck:225000, conv1:25, conv24:65 };
 const PLAN_TOTAL = 120;
 const COL = {
-  id:0, sum:5, direction:7, responsible:8,
+  id:0, clientName:3, sum:5, direction:7, responsible:8,
   dateCreated:17, datePaid:20, stage:31
 };
 function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
@@ -1122,14 +1122,14 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
       const dateStr=dp?dp.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}):'—';
       const sum=parseSum(r[COL.sum]);
       const dir=(r[COL.direction]||'—').trim();
-      const id=r[COL.id]||'—';
+      const client=(r[COL.clientName]||'—').trim();
       const dirCls=dir==='#1'?'pg':['#2','#3','#4'].includes(dir)?'pa':'';
       return`<tr>
-        <td style="color:var(--t3)">${i+1}</td>
-        <td style="font-family:monospace;font-size:10px;">${id}</td>
+        <td style="color:var(--t3);white-space:nowrap">${i+1}</td>
+        <td style="font-size:11px">${client}</td>
         <td><span class="pill ${dirCls}" style="font-size:9px">${dir}</span></td>
-        <td>${dateStr}</td>
-        <td class="r" style="font-weight:500">${fmt(sum)} ₽</td>
+        <td style="white-space:nowrap">${dateStr}</td>
+        <td class="r" style="font-weight:500;white-space:nowrap">${fmt(sum)} ₽</td>
       </tr>`;
     }).join('');
   }
@@ -1162,7 +1162,7 @@ init();
       <thead>
         <tr>
           <th>#</th>
-          <th>ID сделки</th>
+          <th>ФИО клиента</th>
           <th>Направление</th>
           <th>Дата оплаты</th>
           <th class="r">Сумма</th>
