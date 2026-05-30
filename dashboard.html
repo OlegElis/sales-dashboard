@@ -943,10 +943,16 @@ function render(){
   const mopData={};
   filtered.forEach(r=>{
     const name=r[COL.responsible]||'Неизвестный';
-    if(!mopData[name])mopData[name]={deals:0,sum:0,rows:[],meetings:0};
+    if(!mopData[name])mopData[name]={deals:0,sum:0,rows:[],meetings:0,sameDayDeals:0};
     mopData[name].deals++;
     mopData[name].sum+=parseSum(r[COL.sum]);
     mopData[name].rows.push(r);
+    // Проверяем: создана и оплачена в один день?
+    const dp=parseDate(r[COL.datePaid]);
+    const dc=parseDate(r[COL.dateCreated]);
+    if(dp&&dc&&dp.getDate()===dc.getDate()&&dp.getMonth()===dc.getMonth()&&dp.getFullYear()===dc.getFullYear()){
+      mopData[name].sameDayDeals++;
+    }
   });
   // Добавляем встречи в mopData (в т.ч. для менеджеров только со встречами)
   Object.keys(meetingData).forEach(name=>{
@@ -1026,7 +1032,7 @@ function render(){
         <td><span class="rank">${i+1}</span></td>
         <td><span class="av" style="background:${c.bg};color:${c.tc}">${initials(name)}</span>${name}</td>
         <td class="r" style="color:var(--t2);">${d.meetings||0}</td>
-        <td class="r" style="color:${d.deals>=PLAN.deals?'var(--green)':'var(--red)'};font-weight:500;">${d.deals}</td>
+        <td class="r" style="color:${d.deals>=PLAN.deals?'var(--green)':'var(--red)'};font-weight:500;white-space:nowrap;">${d.deals}${d.sameDayDeals>0?` <span style="font-size:10px;color:#854F0B;font-weight:400">⚡${d.sameDayDeals}</span>`:''}</td>
         <td class="r">${fmtM(d.sum)}</td>
         <td class="r" style="color:${d.deals>0&&Math.round(d.sum/d.deals)>=PLAN.avgCheck?'var(--green)':'var(--t2)'}">${d.deals>0?fmtK(Math.round(d.sum/d.deals)):'—'}</td>
         <td class="r" style="white-space:nowrap;">
