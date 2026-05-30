@@ -868,9 +868,9 @@ function renderDailyChart(){
   const activeMopCount=selectedMops.size||1;
   const effectivePlan=activeMopCount*PLAN.deals;
 
-  // Плановая линия: суммарный план / кол-во дней * день (нарастающим итогом)
-  const planPerDay=effectivePlan/mdays;
-  const planArr=Array.from({length:mdays},(_,i)=>+(planPerDay*(i+1)).toFixed(1));
+  // Плановая линия: горизонтальная — сколько сделок нужно в день
+  const planPerDay=+(effectivePlan/mdays).toFixed(2);
+  const planArr=Array(mdays).fill(planPerDay);
 
   const labels=Array.from({length:mdays},(_,i)=>String(i+1));
 
@@ -904,7 +904,7 @@ function renderDailyChart(){
         pointRadius:1,borderDash:[5,4],tension:.3,yAxisID:'y2',fill:false},
       {type:'line',label:'План',data:planArr,
         borderColor:'#E24B4A',backgroundColor:'transparent',
-        pointRadius:0,borderDash:[3,3],borderWidth:1.5,tension:0,yAxisID:'y2'}
+        pointRadius:0,borderDash:[4,3],borderWidth:2,tension:0,yAxisID:'y'}
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
