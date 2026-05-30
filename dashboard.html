@@ -619,16 +619,17 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
   // KPI сделки
   const diff=deals-PLAN.deals;
   let kpiD;
+  const sign=n=>n>0?'+'+n:String(n);
   if(deals===0){
     kpiD=0;
-    row('KPI (сделки)','Нет сделок → 0',0,'pr');
+    row('KPI (сделки)',`${deals} сд. → 0`,0,'pr');
   } else if(diff>=0){
     kpiD=72000+diff*5000;
     const extra=diff>0?` + ${diff}×5 000`:'' ;
-    row('KPI (сделки)',`72 000${extra}`,kpiD,'pg');
+    row('KPI (сделки)',`${deals} сд. (${sign(diff)} к плану ${PLAN.deals}) → 72 000${extra}`,kpiD,'pg');
   } else {
     kpiD=Math.max(0,72000+diff*4500);
-    row('KPI (сделки)',`72 000 + (${diff})×4 500 = ${fmt(72000+diff*4500)}${kpiD===0?' → мин. 0':''}`,kpiD,diff<-4?'pr':'pa');
+    row('KPI (сделки)',`${deals} сд. (${sign(diff)} к плану ${PLAN.deals}) → 72 000 + (${diff})×4 500 = ${fmt(72000+diff*4500)}${kpiD===0?' → мин. 0':''}`,kpiD,diff<-4?'pr':'pa');
   }
   zp+=kpiD;
 
@@ -642,13 +643,13 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
     let kC1raw;
     if(conv1<15){
       kC1raw=0;
-      row('Конв. #1',`${conv1}% < 15% → 0`,0,'pr');
+      row('Конв. #1',`${conv1}% < 15% (порог) → 0`,0,'pr');
     } else if(dc1<0){
       kC1raw=Math.max(0,18000+dc1*1800);
-      row('Конв. #1',`(18 000 + (${dc1})×1 800) ÷ ${monthDays} × ${periodDays}`,Math.round(kC1raw*dayK),'pa');
+      row('Конв. #1',`${conv1}% (${sign(dc1)} к плану ${PLAN.conv1}%) → (18 000 + (${dc1})×1 800) ÷ ${monthDays} × ${periodDays}`,Math.round(kC1raw*dayK),'pa');
     } else {
       kC1raw=18000+dc1*750;
-      row('Конв. #1',`(18 000 + ${dc1}×750) ÷ ${monthDays} × ${periodDays}`,Math.round(kC1raw*dayK),'pg');
+      row('Конв. #1',`${conv1}% (${sign(dc1)} к плану ${PLAN.conv1}%) → (18 000 + ${dc1}×750) ÷ ${monthDays} × ${periodDays}`,Math.round(kC1raw*dayK),'pg');
     }
     const kC1=Math.round(kC1raw*dayK);
     zp+=kC1;
@@ -658,13 +659,13 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
     let kC24raw;
     if(conv24<45){
       kC24raw=0;
-      row('Конв. #2–4',`${conv24}% < 45% → 0`,0,'pr');
+      row('Конв. #2–4',`${conv24}% < 45% (порог) → 0`,0,'pr');
     } else if(dc24<0){
       kC24raw=Math.max(0,18000+dc24*900);
-      row('Конв. #2–4',`(18 000 + (${dc24})×900) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pa');
+      row('Конв. #2–4',`${conv24}% (${sign(dc24)} к плану ${PLAN.conv24}%) → (18 000 + (${dc24})×900) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pa');
     } else {
       kC24raw=18000+dc24*750;
-      row('Конв. #2–4',`(18 000 + ${dc24}×750) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pg');
+      row('Конв. #2–4',`${conv24}% (${sign(dc24)} к плану ${PLAN.conv24}%) → (18 000 + ${dc24}×750) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pg');
     }
     const kC24=Math.round(kC24raw*dayK);
     zp+=kC24;
@@ -677,13 +678,13 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
     let kAvgRaw;
     if(avg<AVG_MIN){
       kAvgRaw=0;
-      row('Ср. чек',`${fmtK(avg)} < 150 тыс. → 0`,0,'pr');
+      row('Ср. чек',`${fmtK(avg)} < 150 тыс. (порог) → 0`,0,'pr');
     } else if(davg<0){
       kAvgRaw=12000+davg*160;
-      row('Ср. чек',`(12 000 + (${davg})×160) ÷ ${monthDays} × ${periodDays}`,Math.round(kAvgRaw*dayK),'pa');
+      row('Ср. чек',`${fmtK(avg)} (${sign(davg)} тыс. к плану ${fmtK(PLAN.avgCheck)}) → (12 000 + (${davg})×160) ÷ ${monthDays} × ${periodDays}`,Math.round(kAvgRaw*dayK),'pa');
     } else {
       kAvgRaw=12000+davg*1000;
-      row('Ср. чек',`(12 000 + ${davg}×1 000) ÷ ${monthDays} × ${periodDays}`,Math.round(kAvgRaw*dayK),'pg');
+      row('Ср. чек',`${fmtK(avg)} (${sign(davg)} тыс. к плану ${fmtK(PLAN.avgCheck)}) → (12 000 + ${davg}×1 000) ÷ ${monthDays} × ${periodDays}`,Math.round(kAvgRaw*dayK),'pg');
     }
     kAvg=Math.round(kAvgRaw*dayK);
     zp+=kAvg;
