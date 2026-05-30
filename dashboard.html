@@ -336,7 +336,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
     </div>
     <div class="f-divider"></div>
     <div class="mop-dd" id="mop-dd">
-      <div class="mop-dd-btn" id="mop-dd-btn" onclick="toggleMopDd(event)">
+      <div class="mop-dd-btn" id="mop-dd-btn" onclick="toggleMopDd()">
         <span id="mop-dd-label">Все менеджеры</span>
         <span class="mop-dd-arrow" id="mop-dd-arrow">▼</span>
       </div>
@@ -740,17 +740,19 @@ function updateMopLabel(){
   document.getElementById('mop-dd-panel').querySelectorAll('input')[0].checked=(n===t);
 }
 
-function toggleMopDd(e){
-  e&&e.stopPropagation();
-  document.getElementById('mop-dd-panel').classList.toggle('open');
-  document.getElementById('mop-dd-arrow').classList.toggle('open');
+let _ddOpenedAt=0;
+function toggleMopDd(){
+  const panel=document.getElementById('mop-dd-panel');
+  const arrow=document.getElementById('mop-dd-arrow');
+  const opening=!panel.classList.contains('open');
+  panel.classList.toggle('open');
+  arrow.classList.toggle('open');
+  if(opening)_ddOpenedAt=Date.now();
 }
-document.getElementById('mop-dd-panel').addEventListener('click',e=>e.stopPropagation());
-document.addEventListener('click',e=>{
-  if(!document.getElementById('mop-dd').contains(e.target)){
-    document.getElementById('mop-dd-panel').classList.remove('open');
-    document.getElementById('mop-dd-arrow').classList.remove('open');
-  }
+document.addEventListener('click',()=>{
+  if(Date.now()-_ddOpenedAt<200)return; // игнорируем клик, который открыл
+  document.getElementById('mop-dd-panel').classList.remove('open');
+  document.getElementById('mop-dd-arrow').classList.remove('open');
 });
 
 function render(){
