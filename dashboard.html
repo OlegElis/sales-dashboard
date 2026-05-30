@@ -434,7 +434,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
             <th style="position:relative;">
               <span id="mop-th" onclick="toggleMopDd()" style="cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:5px;">
                 Менеджер <span id="mop-th-arrow" style="font-size:9px;color:var(--t3);transition:transform .15s;">▼</span>
-                <span id="mop-th-badge" style="display:none;background:var(--blue);color:#fff;border-radius:99px;font-size:8px;padding:1px 5px;font-weight:600;"></span>
+                <span id="mop-th-badge" style="display:none;background:var(--border2);color:var(--text);border-radius:99px;font-size:8px;padding:1px 5px;font-weight:500;"></span>
               </span>
               <div class="mop-dd-panel" id="mop-dd-panel"></div>
             </th>
@@ -810,13 +810,14 @@ function buildMopChips(){
 }
 
 function updateMopLabel(){
-  const n=selectedMops.size,t=allMops.length;
+  const mopList=periodMops.length?periodMops:allMops;
+  const n=selectedMops.size,t=mopList.length;
   const panel=document.getElementById('mop-dd-panel');
   if(panel){const cb=panel.querySelectorAll('input')[0];if(cb)cb.checked=(n===t);}
   // бейдж в заголовке
   const badge=document.getElementById('mop-th-badge');
   if(badge){
-    if(n<t){badge.style.display='inline';badge.textContent=n+'/'+ t;}
+    if(n<t){badge.style.display='inline';badge.textContent=n+'/'+t;}
     else{badge.style.display='none';}
   }
 }
