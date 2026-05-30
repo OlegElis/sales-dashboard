@@ -49,11 +49,14 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 .dd-item input{accent-color:var(--blue);width:13px;height:13px;margin:0;cursor:pointer;flex-shrink:0;}
 .dd-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
 
-/* DAYS PROGRESS */
-.days-row{display:flex;align-items:center;gap:10px;font-family:sans-serif;font-size:12px;color:var(--t2);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
-.days-bar-wrap{flex:1;height:6px;background:var(--s2);border-radius:99px;overflow:hidden;}
-.days-bar-fill{height:6px;background:var(--blue);border-radius:99px;transition:width .4s;}
-.days-label{color:var(--t3);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;width:90px;flex-shrink:0;}
+/* DAYS FILTER */
+.days-row{display:flex;align-items:flex-start;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+.days-label{color:var(--t3);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;width:60px;flex-shrink:0;padding-top:5px;font-family:sans-serif;}
+.day-btns{display:flex;gap:3px;flex-wrap:wrap;}
+.dbtn{font-size:11px;font-family:sans-serif;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .12s;min-width:26px;text-align:center;}
+.dbtn:hover{border-color:var(--blue);color:var(--blue);}
+.dbtn.active{background:var(--bbg);color:var(--blue);border-color:transparent;font-weight:600;}
+.dbtn.today{border-color:var(--blue);}
 
 /* TOP STATS STRIP */
 .stats-strip{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;}
@@ -343,9 +346,8 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
     </div>
   </div>
   <div class="days-row">
-    <div class="days-label">День месяца</div>
-    <div class="days-bar-wrap"><div class="days-bar-fill" id="days-bar" style="width:0%"></div></div>
-    <span id="days-txt" style="color:var(--t2);font-size:12px;"></span>
+    <div class="days-label">День</div>
+    <div class="day-btns" id="day-btns"></div>
   </div>
 </div>
 
@@ -445,7 +447,7 @@ const dealColor=(v,plan)=>v>=plan?'var(--green)':v>=plan*.8?'var(--amber)':'var(
 const pillCls=p=>p>=25?'pg':p>=15?'pa':'pr';
 
 let allRows=[],allMops=[],selectedMops=new Set();
-let activeYear=2026,activeMonth=5;
+let activeYear=2026,activeMonth=5,activeDay=null;
 let myChart=null;
 
 const MONTHS_RU=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
@@ -556,7 +558,8 @@ function buildYearBtns(){
       const today=new Date();
       // если выбранный год — текущий, ставим текущий месяц, иначе декабрь
       activeMonth=(y===today.getFullYear())?today.getMonth()+1:12;
-      buildYearBtns();buildMonthBtns();render();
+      activeDay=null;
+      buildYearBtns();buildMonthBtns();buildDayBtns();render();
     };
     wrap.appendChild(btn);
   });
@@ -571,7 +574,31 @@ function buildMonthBtns(){
     const btn=document.createElement('div');
     btn.className='mbtn'+(m===activeMonth?' active':'');
     btn.textContent=MONTHS_RU[m-1].slice(0,3);
-    btn.onclick=()=>{activeMonth=m;buildMonthBtns();render();};
+    btn.onclick=()=>{activeMonth=m;activeDay=null;buildMonthBtns();buildDayBtns();render();};
+    wrap.appendChild(btn);
+  }
+}
+
+function buildDayBtns(){
+  const wrap=document.getElementById('day-btns');
+  wrap.innerHTML='';
+  const today=new Date();
+  const mdays=daysInMonth(activeYear,activeMonth);
+  const isCurrentMonth=activeYear===today.getFullYear()&&activeMonth===today.getMonth()+1;
+  const maxDay=isCurrentMonth?today.getDate():mdays;
+  const todayDay=isCurrentMonth?today.getDate():null;
+
+  for(let d=1;d<=maxDay;d++){
+    const btn=document.createElement('div');
+    let cls='dbtn';
+    if(d===activeDay)cls+=' active';
+    if(d===todayDay&&d!==activeDay)cls+=' today';
+    btn.className=cls;
+    btn.textContent=d;
+    btn.onclick=()=>{
+      activeDay=(activeDay===d)?null:d; // повторный клик снимает выбор
+      buildDayBtns();render();
+    };
     wrap.appendChild(btn);
   }
 }
@@ -634,21 +661,18 @@ function render(){
   const mdays=daysInMonth(y,m);
   const today=new Date();
   const isCurrentMonth=today.getFullYear()===y&&today.getMonth()+1===m;
-  const daysPassed=isCurrentMonth?today.getDate():mdays;
+  const autoDay=isCurrentMonth?today.getDate():mdays;
+  const daysPassed=activeDay??autoDay;
   const daysLeft=mdays-daysPassed;
 
-  // Прогресс дня
-  const pct=Math.round(daysPassed/mdays*100);
-  document.getElementById('days-bar').style.width=pct+'%';
-  document.getElementById('days-txt').textContent=daysPassed+' из '+mdays+' дней';
-
-  // Фильтрация строк
+  // Фильтрация строк (с учётом выбранного дня)
   const activeMops=selectedMops;
   const filtered=allRows.filter(r=>{
     if(!isPaidRow(r))return false;
     const dp=parseDate(r[COL.datePaid]);
     if(!dp)return false;
     if(dp.getFullYear()!==y||dp.getMonth()+1!==m)return false;
+    if(dp.getDate()>daysPassed)return false;
     if(!activeMops.has(r[COL.responsible]))return false;
     return true;
   });
@@ -799,8 +823,9 @@ function renderDailyChart(){
   const today=new Date();
   const isCurrentMonth=(y===today.getFullYear()&&m===today.getMonth()+1);
   const mdays=daysInMonth(y,m);
-  // Сколько дней прошло в выбранном месяце
-  const daysPassed=isCurrentMonth?today.getDate():mdays;
+  // Сколько дней прошло (с учётом activeDay)
+  const autoDay=isCurrentMonth?today.getDate():mdays;
+  const daysPassed=activeDay??autoDay;
 
   // Сделки по дням
   const dailyDeals={};
@@ -908,7 +933,7 @@ function renderDailyChart(){
 }
 
 async function init(){
-  buildYearBtns();buildMonthBtns();
+  buildYearBtns();buildMonthBtns();buildDayBtns();
   let id=SHEET_ID;
   if(id==='ВСТАВЬ_ID'){const s=localStorage.getItem('dash_sid');if(s)id=s;else{document.getElementById('cfg').classList.add('show');document.getElementById('sdot').className='dot error';document.getElementById('stxt').textContent='Нужно настроить';return;}}
   try{
