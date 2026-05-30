@@ -255,6 +255,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .zp-close{margin-top:20px;width:100%;padding:9px;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rs);font-size:12px;font-family:inherit;color:var(--t2);cursor:pointer;transition:background .15s;}
 .zp-close:hover{background:var(--border2);}
 .rtable tbody tr{cursor:pointer;}
+.rtable tbody tr.row-selected{background:#EAF3DE;outline:2px solid #3B6D11;outline-offset:-1px;}
+.rtable tbody tr.row-dimmed{opacity:.3;}
+.rtable tbody tr.row-dimmed:hover{opacity:.5;}
 .zp-section-title{font-size:9px;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin:14px 0 6px;}
 .zp-formula-table{width:100%;border-collapse:collapse;font-family:inherit;font-size:12px;}
 .zp-formula-table td{padding:5px 0;border-bottom:.5px solid var(--border);vertical-align:middle;}
@@ -1030,11 +1033,35 @@ function render(){
           <span style="font-size:9px;color:var(--t3);font-family:inherit;">#1 </span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span>
           <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2–4 </span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
         </td>
-        <td class="r" style="color:${zpColor};font-weight:500;">${fmt(zp)} ₽</td>
+        <td class="r zp-open-cell" style="color:${zpColor};font-weight:500;cursor:pointer;" title="Расчёт ЗП">${fmt(zp)} ₽ <span style="opacity:.4;font-size:10px">↗</span></td>
       `;
-      // клик по строке = карточка ЗП
       tr.style.cursor='pointer';
-      tr.onclick=()=>openZpModal(name,zp,bd,conv,d,d.rows);
+      tr.dataset.name=name;
+      tr.onclick=(e)=>{
+        // клик по ЗП = карточка
+        if(e.target.closest('.zp-open-cell')){
+          openZpModal(name,zp,bd,conv,d,d.rows);
+          return;
+        }
+        // клик по строке = изоляция
+        const allRows2=tbody.querySelectorAll('tr:not(.total-row)');
+        const isSelected=tr.classList.contains('row-selected');
+        if(isSelected){
+          // сброс
+          allRows2.forEach(r=>{r.classList.remove('row-selected','row-dimmed');});
+          activeMop=null;
+          allMops.forEach(m=>selectedMops.add(m));
+        } else {
+          allRows2.forEach(r=>{
+            r.classList.toggle('row-selected',r===tr);
+            r.classList.toggle('row-dimmed',r!==tr);
+          });
+          activeMop=name;
+          selectedMops.clear();
+          selectedMops.add(name);
+        }
+        buildMopChips();render();
+      };
       tbody.appendChild(tr);
     });
     // Итого
