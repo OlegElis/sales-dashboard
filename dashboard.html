@@ -839,8 +839,12 @@ function renderDailyChart(){
     }
   }
 
-  // Плановая линия: план/день * день
-  const planPerDay=PLAN.deals/mdays;
+  // Суммарный план для выбранных менеджеров
+  const activeMopCount=selectedMops.size||1;
+  const effectivePlan=activeMopCount*PLAN.deals;
+
+  // Плановая линия: суммарный план / кол-во дней * день (нарастающим итогом)
+  const planPerDay=effectivePlan/mdays;
   const planArr=Array.from({length:mdays},(_,i)=>+(planPerDay*(i+1)).toFixed(1));
 
   const labels=Array.from({length:mdays},(_,i)=>String(i+1));
@@ -851,7 +855,7 @@ function renderDailyChart(){
 
   const pill=document.getElementById('daily-forecast-pill');
   if(isCurrentMonth){
-    const diff=forecastTotal-PLAN.deals;
+    const diff=forecastTotal-effectivePlan;
     const cls=diff>=0?'pg':diff>=-3?'pa':'pr';
     const sign=diff>=0?'+':'';
     pill.innerHTML=`
