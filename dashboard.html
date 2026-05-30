@@ -199,6 +199,15 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 .zp-close{margin-top:20px;width:100%;padding:9px;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rs);font-size:12px;font-family:sans-serif;color:var(--t2);cursor:pointer;transition:background .15s;}
 .zp-close:hover{background:var(--border2);}
 .rtable tbody tr{cursor:pointer;}
+.zp-deals-title{font-size:9px;font-family:sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin:16px 0 8px;}
+.zp-deals-table{width:100%;border-collapse:collapse;font-family:sans-serif;font-size:11px;}
+.zp-deals-table th{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-weight:500;padding:4px 8px;border-bottom:1px solid var(--border);text-align:left;}
+.zp-deals-table th.r{text-align:right;}
+.zp-deals-table td{padding:5px 8px;border-bottom:.5px solid var(--border);color:var(--t2);vertical-align:middle;}
+.zp-deals-table td.r{text-align:right;}
+.zp-deals-table tr:last-child td{border-bottom:none;}
+.zp-deals-table tbody tr:hover{background:var(--s2);}
+.zp-card{max-height:90vh;overflow-y:auto;}
 
 @media(max-width:640px){
   .metrics{grid-template-columns:repeat(2,1fr);}
@@ -626,9 +635,10 @@ function render(){
   const mopData={};
   filtered.forEach(r=>{
     const name=r[COL.responsible]||'Неизвестный';
-    if(!mopData[name])mopData[name]={deals:0,sum:0};
+    if(!mopData[name])mopData[name]={deals:0,sum:0,rows:[]};
     mopData[name].deals++;
     mopData[name].sum+=parseSum(r[COL.sum]);
+    mopData[name].rows.push(r);
   });
 
   const mops=Object.keys(mopData);
@@ -642,7 +652,7 @@ function render(){
     const conv=calcConversions(allRows,name,y,m);
     const{zp,pills}=calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays);
     totalZP+=zp;
-    mopResults.push({name,d,conv,zp,pills});
+    mopResults.push({name,d,conv,zp,pills,rows:d.rows});
   });
 
   // Сортировка по сделкам убыв
@@ -709,7 +719,7 @@ function render(){
         <td class="r"><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span></td>
         <td class="r" style="color:${zpColor};font-weight:500;">${fmt(zp)} ₽ <span style="font-size:10px;color:var(--t3);font-weight:400">↗</span></td>
       `;
-      tr.onclick=()=>openZpModal(name,zp,pills,conv,d);
+      tr.onclick=()=>openZpModal(name,zp,pills,conv,d,d.rows);
       tbody.appendChild(tr);
     });
     // Итого
@@ -901,7 +911,7 @@ async function init(){
 function saveId(){const v=document.getElementById('sid-input').value.trim();if(!v)return;localStorage.setItem('dash_sid',v);document.getElementById('cfg').classList.remove('show');init();}
 
 // ZP MODAL
-function openZpModal(name,zp,pills,conv,d){
+function openZpModal(name,zp,pills,conv,d,dealRows){
   const c=getMopColor(name);
   const zpColor=zp>=150000?'var(--green)':zp>=100000?'var(--amber)':'var(--red)';
   document.getElementById('zp-av').style.background=c.bg;
@@ -922,6 +932,34 @@ function openZpModal(name,zp,pills,conv,d){
   `;
   // пиллы составляющих
   document.getElementById('zp-pills').innerHTML=pills.map(p=>`<span class="pill ${p.cls}">${p.t}</span>`).join('');
+
+  // таблица сделок
+  const tbody=document.getElementById('zp-deals-tbody');
+  if(!dealRows||dealRows.length===0){
+    tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:10px 0;">Нет сделок</td></tr>`;
+  }else{
+    // сортировка по дате оплаты
+    const sorted=[...dealRows].sort((a,b)=>{
+      const da=parseDate(a[COL.datePaid]),db=parseDate(b[COL.datePaid]);
+      return (da||0)-(db||0);
+    });
+    tbody.innerHTML=sorted.map((r,i)=>{
+      const dp=parseDate(r[COL.datePaid]);
+      const dateStr=dp?dp.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}):'—';
+      const sum=parseSum(r[COL.sum]);
+      const dir=(r[COL.direction]||'—').trim();
+      const id=r[COL.id]||'—';
+      const dirCls=dir==='#1'?'pg':['#2','#3','#4'].includes(dir)?'pa':'';
+      return`<tr>
+        <td style="color:var(--t3)">${i+1}</td>
+        <td style="font-family:monospace;font-size:10px;">${id}</td>
+        <td><span class="pill ${dirCls}" style="font-size:9px">${dir}</span></td>
+        <td>${dateStr}</td>
+        <td class="r" style="font-weight:500">${fmt(sum)} ₽</td>
+      </tr>`;
+    }).join('');
+  }
+
   document.getElementById('zp-overlay').classList.add('open');
 }
 function closeZpModal(){document.getElementById('zp-overlay').classList.remove('open');}
@@ -944,6 +982,19 @@ init();
     <div class="zp-divider"></div>
     <div class="zp-rows" id="zp-detail-rows"></div>
     <div class="zp-pills" id="zp-pills"></div>
+    <div class="zp-deals-title">Сделки, вошедшие в расчёт</div>
+    <table class="zp-deals-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>ID сделки</th>
+          <th>Направление</th>
+          <th>Дата оплаты</th>
+          <th class="r">Сумма</th>
+        </tr>
+      </thead>
+      <tbody id="zp-deals-tbody"></tbody>
+    </table>
     <button class="zp-close" onclick="closeZpModal()">Закрыть</button>
   </div>
 </div>
