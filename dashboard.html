@@ -122,6 +122,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .pr{color:#A32D2D;background:#FCEBEB;}
 .total-row td{font-weight:500;background:var(--s2);color:var(--t2);border-top:1px solid var(--border2);}
 
+/* AI BLOCK */
+.ai-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;}
+.ai-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.ai-label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);display:flex;align-items:center;gap:6px;}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--t3);}
+.ai-dot.active{background:#7c3aed;animation:pulse 1.5s infinite;}
+.ai-btn{font-size:11px;padding:4px 10px;border-radius:var(--rs);border:1px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;}
+.ai-btn:hover{border-color:#7c3aed;color:#7c3aed;}
+.ai-btn:disabled{opacity:.5;cursor:default;}
+.ai-key-row{display:flex;gap:6px;margin-top:8px;}
+.ai-key-input{flex:1;font-size:11px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--s2);color:var(--text);outline:none;}
+.ai-key-input:focus{border-color:#7c3aed;}
+.ai-key-save{font-size:11px;padding:5px 10px;border-radius:var(--rs);border:none;background:#7c3aed;color:#fff;cursor:pointer;}
+.ai-text{font-size:12px;line-height:1.6;color:var(--t2);white-space:pre-wrap;}
+.ai-text.empty{color:var(--t3);font-style:italic;}
+.ai-error{font-size:11px;color:var(--red);margin-top:6px;}
+
 /* CHART */
 .chart-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;}
 .chart-legend{display:flex;gap:10px;margin-bottom:6px;font-size:10px;font-family:inherit;color:var(--t2);flex-wrap:wrap;}
@@ -456,6 +473,24 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
 
   <!-- [2,2] Прогресс + Графики -->
   <div class="col-charts">
+
+    <!-- AI-анализ -->
+    <div class="ai-block">
+      <div class="ai-header">
+        <div class="ai-label"><div class="ai-dot" id="ai-dot"></div>AI-анализ периода</div>
+        <button class="ai-btn" id="ai-btn" onclick="generateAiSummary()">✦ Обновить анализ</button>
+      </div>
+      <div class="ai-text empty" id="ai-text">Нажмите «Обновить анализ» для получения оценки от Claude</div>
+      <div class="ai-error" id="ai-error" style="display:none"></div>
+      <div id="ai-key-section" style="display:none;">
+        <div style="font-size:10px;color:var(--t3);margin-top:8px;">Введите Anthropic API-ключ (хранится локально):</div>
+        <div class="ai-key-row">
+          <input class="ai-key-input" id="ai-key-input" type="password" placeholder="sk-ant-...">
+          <button class="ai-key-save" onclick="saveAiKey()">Сохранить</button>
+        </div>
+      </div>
+    </div>
+
     <div class="plan-block" style="margin-bottom:0;">
       <div class="block-title">Прогресс к плану</div>
       <div class="plan-row"><div class="plan-lbl">Кол-во сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-deals" style="background:#378ADD;width:0%"></div></div><div class="plan-nums" id="pn-deals">—</div><div class="plan-pct" id="pp-deals">—</div></div>
@@ -1200,6 +1235,113 @@ async function init(){
   }
 }
 function saveId(){const v=document.getElementById('sid-input').value.trim();if(!v)return;localStorage.setItem('dash_sid',v);document.getElementById('cfg').classList.remove('show');init();}
+
+// AI SUMMARY
+function saveAiKey(){
+  const v=document.getElementById('ai-key-input').value.trim();
+  if(!v)return;
+  localStorage.setItem('claude_api_key',v);
+  document.getElementById('ai-key-section').style.display='none';
+  document.getElementById('ai-error').style.display='none';
+  generateAiSummary();
+}
+
+async function generateAiSummary(){
+  const key=localStorage.getItem('claude_api_key');
+  if(!key){
+    document.getElementById('ai-key-section').style.display='block';
+    document.getElementById('ai-error').style.display='none';
+    return;
+  }
+  const btn=document.getElementById('ai-btn');
+  const dot=document.getElementById('ai-dot');
+  const textEl=document.getElementById('ai-text');
+  const errEl=document.getElementById('ai-error');
+  btn.disabled=true;
+  dot.className='ai-dot active';
+  textEl.className='ai-text empty';
+  textEl.textContent='Анализирую данные...';
+  errEl.style.display='none';
+
+  // Собираем данные
+  const y=activeYear,m=activeMonth;
+  const mdays=daysInMonth(y,m);
+  const today=new Date();
+  const isCurrentMonth=today.getFullYear()===y&&today.getMonth()+1===m;
+  const autoDay=isCurrentMonth?today.getDate():mdays;
+  const daysPassed=activeDay??autoDay;
+
+  const filtered=allRows.filter(r=>{
+    if(!isPaidRow(r))return false;
+    const dp=parseDate(r[COL.datePaid]);
+    if(!dp||dp.getFullYear()!==y||dp.getMonth()+1!==m)return false;
+    if(dp.getDate()>daysPassed)return false;
+    return true;
+  });
+  const totalDeals=filtered.length;
+  const totalSum=filtered.reduce((s,r)=>s+parseSum(r[COL.sum]),0);
+  const avgCheck=totalDeals>0?Math.round(totalSum/totalDeals):0;
+
+  // Топ-менеджеры
+  const mopCnt={};
+  filtered.forEach(r=>{const n=r[COL.responsible];if(n)mopCnt[n]=(mopCnt[n]||0)+1;});
+  const topMops=Object.entries(mopCnt).sort((a,b)=>b[1]-a[1]).slice(0,3)
+    .map(([n,c])=>`${n} (${c} сд.)`).join(', ');
+
+  const period=MONTHS_RU[m-1]+' '+y+(activeDay?`, по ${activeDay}-е число`:'');
+  const planPct=Math.round(totalDeals/PLAN_TOTAL*100);
+  const sumPlan=PLAN_TOTAL*PLAN.avgCheck;
+  const sumPct=Math.round(totalSum/sumPlan*100);
+
+  const prompt=`Ты аналитик отдела продаж. Напиши краткий (3-4 предложения) деловой анализ на русском языке исполнения плана за ${period}.
+
+Данные:
+- Сделок закрыто: ${totalDeals} из ${PLAN_TOTAL} (${planPct}%)
+- Выручка: ${fmtM(totalSum)} из ${fmtM(sumPlan)} (${sumPct}%)
+- Средний чек: ${fmtK(avgCheck)} (план ${fmtK(PLAN.avgCheck)})
+- Дней прошло: ${daysPassed} из ${mdays}
+- Лидеры: ${topMops||'нет данных'}
+
+Будь конкретным, дай оценку и одну рекомендацию. Без заголовков, без списков — только текст.`;
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'content-type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5',
+        max_tokens:300,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    if(!resp.ok){
+      const e=await resp.json().catch(()=>({}));
+      throw new Error(e.error?.message||'HTTP '+resp.status);
+    }
+    const data=await resp.json();
+    const text=data.content?.[0]?.text||'Нет ответа';
+    textEl.className='ai-text';
+    textEl.textContent=text;
+  }catch(e){
+    textEl.textContent='';
+    textEl.className='ai-text empty';
+    errEl.style.display='block';
+    if(e.message?.includes('401')||e.message?.includes('invalid')){
+      errEl.textContent='Неверный API-ключ. Введите новый:';
+      document.getElementById('ai-key-section').style.display='block';
+    } else {
+      errEl.textContent='Ошибка: '+e.message;
+    }
+  }finally{
+    btn.disabled=false;
+    dot.className='ai-dot';
+  }
+}
 
 // ZP MODAL
 function openZpModal(name,zp,bd,conv,d,dealRows){
