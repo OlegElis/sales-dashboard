@@ -565,8 +565,9 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
     const davg=Math.round((avg-PLAN.avgCheck)/1000);
     let kAvg;
     if(davg<0){
-      kAvg=Math.max(-12000, davg*160);
-      row('Ср. чек',`${fmtK(avg)} < ${fmtK(PLAN.avgCheck)}: (${davg})×160`,kAvg,'pr');
+      kAvg=Math.max(0, 12000+davg*160);
+      const raw=12000+davg*160;
+      row('Ср. чек',`12 000 + (${davg})×160 = ${fmt(raw)}${kAvg===0?' → мин. 0':''}`,kAvg,kAvg<12000?'pa':'pg');
     } else {
       kAvg=12000+davg*1000;
       row('Ср. чек',`12 000 + ${davg}×1 000`,kAvg,'pg');
