@@ -784,8 +784,12 @@ function buildMopChips(){
   const mopList=periodMops.length?periodMops:allMops;
   allCb.checked=selectedMops.size===mopList.length;
   allCb.onchange=()=>{
-    if(allCb.checked)mopList.forEach(m=>selectedMops.add(m));
-    else selectedMops.clear();
+    if(allCb.checked){
+      mopList.forEach(m=>selectedMops.add(m));
+    } else {
+      // снимаем всех — не сбрасываем Set полностью, чтобы render не добавил их обратно
+      mopList.forEach(m=>selectedMops.delete(m));
+    }
     buildMopChips();render();
   };
   allItem.appendChild(allCb);
@@ -876,10 +880,15 @@ function render(){
     if(dp.getDate()>daysPassed)return;
     if(r[COL.responsible])periodMopSet.add(r[COL.responsible]);
   });
+  const prevPeriodMops=periodMops.join(',');
   periodMops=Array.from(periodMopSet).sort();
-  // Снять выбранных которых нет в периоде
+  // Убираем из выбранных тех кого нет в новом периоде
   selectedMops.forEach(m=>{if(!periodMopSet.has(m))selectedMops.delete(m);});
-  if(selectedMops.size===0)periodMops.forEach(m=>selectedMops.add(m));
+  // Если период сменился — автовыбор всех менеджеров нового периода
+  if(periodMops.join(',')!==prevPeriodMops){
+    periodMops.forEach(m=>selectedMops.add(m));
+  }
+  // Если вручную всё снято — оставляем пустым (покажем "нет данных")
   buildMopChips();
 
   // Агрегат по МОПам
