@@ -848,7 +848,7 @@ function render(){
   if(mopResults.length===0){
     tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3);font-family:sans-serif;">Нет данных за выбранный период</td></tr>';
   } else {
-    mopResults.forEach(({name,d,conv,zp,pills},i)=>{
+    mopResults.forEach(({name,d,conv,zp,pills,bd},i)=>{
       const c=getMopColor(name);
       const zpColor=zp>=150000?'var(--green)':zp>=100000?'var(--amber)':'var(--red)';
       const barW=Math.round(d.deals/maxDeals*44);
