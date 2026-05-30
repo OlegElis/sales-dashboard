@@ -32,22 +32,14 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 .ybtn.active{background:var(--text);color:#fff;border-color:transparent;}
 .f-divider{width:1px;height:32px;background:var(--border);flex-shrink:0;}
 
-/* DROPDOWN CHECKBOX */
-.dropdown{position:relative;font-family:sans-serif;}
-.dd-btn{font-size:12px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--s2);color:var(--t2);cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;user-select:none;}
-.dd-btn:hover{border-color:var(--blue);color:var(--blue);}
-.dd-arrow{font-size:10px;transition:transform .2s;}
-.dd-arrow.open{transform:rotate(180deg);}
-.dd-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:6px;z-index:100;min-width:220px;max-height:280px;overflow-y:auto;}
-.dd-panel.open{display:block;}
-.dd-all-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;}
-.dd-all{font-size:11px;color:var(--t3);display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 6px;}
-.dd-clear-btn{font-size:11px;font-family:sans-serif;color:var(--t3);cursor:pointer;padding:4px 6px;border-radius:var(--rs);transition:color .15s;}
-.dd-clear-btn:hover{color:var(--red);}
-.dd-item{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:var(--rs);cursor:pointer;font-size:12px;color:var(--t2);}
-.dd-item:hover{background:var(--s2);}
-.dd-item input{accent-color:var(--blue);width:13px;height:13px;margin:0;cursor:pointer;flex-shrink:0;}
-.dd-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
+/* MOP CHIPS */
+.mop-chips{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.mop-chip-all{font-size:11px;font-family:sans-serif;padding:4px 10px;border-radius:99px;border:1px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;white-space:nowrap;font-weight:500;}
+.mop-chip-all.active{background:var(--text);color:#fff;border-color:transparent;}
+.mop-chip{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;cursor:pointer;transition:all .15s;position:relative;border:2px solid transparent;flex-shrink:0;}
+.mop-chip:hover{transform:scale(1.12);}
+.mop-chip.inactive{opacity:.3;filter:grayscale(1);}
+.mop-chip.active{border-color:var(--text);}
 
 /* DAYS FILTER */
 .days-row{display:flex;align-items:flex-start;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
@@ -330,21 +322,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
       <div class="month-btns" id="month-btns"></div>
     </div>
     <div class="f-divider"></div>
-    <div class="dropdown" id="mop-dropdown">
-      <div class="dd-btn" id="dd-btn" onclick="toggleDropdown()">
-        <span id="dd-label">Все менеджеры</span>
-        <span class="dd-arrow" id="dd-arrow">▼</span>
-      </div>
-      <div class="dd-panel" id="dd-panel">
-        <div class="dd-all-row">
-          <div class="dd-all" onclick="toggleAllMops()">
-            <input type="checkbox" id="cb-all" checked> Выбрать всех
-          </div>
-          <span class="dd-clear-btn" onclick="deselectAllMops()">Снять все</span>
-        </div>
-        <div id="dd-items"></div>
-      </div>
-    </div>
+    <div class="mop-chips" id="mop-chips"></div>
   </div>
   <div class="days-row">
     <div class="days-label">День</div>
@@ -649,58 +627,43 @@ function buildDayBtns(){
   }
 }
 
-function buildDropdown(){
-  const items=document.getElementById('dd-items');
-  items.innerHTML='';
+function buildMopChips(){
+  const wrap=document.getElementById('mop-chips');
+  wrap.innerHTML='';
+  const allSelected=selectedMops.size===allMops.length;
+
+  // Кнопка «Все»
+  const all=document.createElement('div');
+  all.className='mop-chip-all'+(allSelected?' active':'');
+  all.textContent='Все';
+  all.onclick=()=>{
+    allMops.forEach(m=>selectedMops.add(m));
+    buildMopChips();render();
+  };
+  wrap.appendChild(all);
+
+  // Чип каждого менеджера
   allMops.forEach(name=>{
     const c=getMopColor(name);
-    const div=document.createElement('div');
-    div.className='dd-item';
-    const checked=selectedMops.has(name);
-    div.innerHTML=`<input type="checkbox" ${checked?'checked':''} data-name="${name}"><div class="dd-av" style="background:${c.bg};color:${c.tc}">${initials(name)}</div><span>${name}</span>`;
-    div.querySelector('input').onchange=e=>{
-      if(e.target.checked)selectedMops.add(name);
-      else selectedMops.delete(name);
-      updateDdLabel();
-      render();
+    const chip=document.createElement('div');
+    const active=selectedMops.has(name);
+    chip.className='mop-chip'+(active?'':' inactive');
+    chip.style.background=c.bg;
+    chip.style.color=c.tc;
+    chip.textContent=initials(name);
+    chip.title=name;
+    chip.onclick=()=>{
+      if(selectedMops.has(name)){
+        // нельзя снять если это последний выбранный
+        if(selectedMops.size>1)selectedMops.delete(name);
+      } else {
+        selectedMops.add(name);
+      }
+      buildMopChips();render();
     };
-    items.appendChild(div);
+    wrap.appendChild(chip);
   });
-  updateDdLabel();
 }
-
-function updateDdLabel(){
-  const total=allMops.length;
-  const sel=selectedMops.size;
-  document.getElementById('dd-label').textContent=sel===total?'Все менеджеры':sel===0?'Никто не выбран':sel+' из '+total;
-  document.getElementById('cb-all').checked=sel===total;
-}
-
-function toggleDropdown(){
-  const panel=document.getElementById('dd-panel');
-  const arrow=document.getElementById('dd-arrow');
-  panel.classList.toggle('open');
-  arrow.classList.toggle('open');
-}
-function toggleAllMops(){
-  if(selectedMops.size===allMops.length){
-    selectedMops.clear();
-  } else {
-    allMops.forEach(m=>selectedMops.add(m));
-  }
-  buildDropdown();render();
-}
-function deselectAllMops(){
-  selectedMops.clear();
-  buildDropdown();render();
-}
-document.addEventListener('click',e=>{
-  const dd=document.getElementById('mop-dropdown');
-  if(!dd.contains(e.target)){
-    document.getElementById('dd-panel').classList.remove('open');
-    document.getElementById('dd-arrow').classList.remove('open');
-  }
-});
 
 function render(){
   const y=activeYear,m=activeMonth;
@@ -806,9 +769,9 @@ function render(){
         <td><span class="av" style="background:${c.bg};color:${c.tc}">${initials(name)}</span>${name}</td>
         <td class="r"><b>${d.deals}</b><span class="mini-bar-wrap"><span class="mini-bar-fill" style="width:${barW}px;background:${d.deals>=PLAN.deals?'#378ADD':'#E24B4A'}"></span></span></td>
         <td class="r">${fmtM(d.sum)}</td>
-        <td class="r" style="line-height:1.6;">
-          <span style="font-size:9px;color:var(--t3);font-family:sans-serif;">#1&nbsp;</span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span><br>
-          <span style="font-size:9px;color:var(--t3);font-family:sans-serif;">#2–4&nbsp;</span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
+        <td class="r" style="white-space:nowrap;">
+          <span style="font-size:9px;color:var(--t3);font-family:sans-serif;">#1 </span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span>
+          <span style="font-size:9px;color:var(--t3);font-family:sans-serif;margin-left:4px">#2–4 </span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
         </td>
         <td class="r" style="color:${zpColor};font-weight:500;">${fmt(zp)} ₽</td>
       `;
@@ -824,9 +787,9 @@ function render(){
       <td></td><td>Итого</td>
       <td class="r"><b>${totalDeals}</b></td>
       <td class="r">${fmtM(totalSum)}</td>
-      <td class="r" style="line-height:1.6;">
-          <span style="font-size:9px;color:var(--t3);font-family:sans-serif;">#1&nbsp;</span><span class="pill ${pillCls(avgConv1)}">${avgConv1}%</span><br>
-          <span style="font-size:9px;color:var(--t3);font-family:sans-serif;">#2–4&nbsp;</span><span class="pill ${pillCls(avgConv24)}">${avgConv24}%</span>
+      <td class="r" style="white-space:nowrap;">
+          <span style="font-size:9px;color:var(--t3);font-family:sans-serif;">#1 </span><span class="pill ${pillCls(avgConv1)}">${avgConv1}%</span>
+          <span style="font-size:9px;color:var(--t3);font-family:sans-serif;margin-left:4px">#2–4 </span><span class="pill ${pillCls(avgConv24)}">${avgConv24}%</span>
         </td>
       <td class="r" style="font-weight:500;">${fmt(totalZP)} ₽</td>
     `;
@@ -997,7 +960,7 @@ async function init(){
     allMops=Array.from(mopSet).sort();
     allMops.forEach(m=>getMopColor(m));
     selectedMops=new Set(allMops);
-    buildDropdown();
+    buildMopChips();
     render();
     document.getElementById('sdot').className='dot';
     document.getElementById('stxt').textContent='Данные актуальны';
