@@ -1031,7 +1031,7 @@ function render(){
       const tr=document.createElement('tr');
       tr.innerHTML=`
         <td><span class="rank">${i+1}</span></td>
-        <td><span class="av" style="background:${c.bg};color:${c.tc}">${initials(name)}</span>${name}</td>
+        <td style="cursor:pointer;" title="Нажмите для изоляции"><span class="av" style="background:${c.bg};color:${c.tc}">${initials(name)}</span>${name}</td>
         <td class="r" style="color:var(--t2);">${d.meetings||0}</td>
         <td class="r" style="color:${d.deals>=PLAN.deals?'var(--green)':'var(--red)'};font-weight:500;white-space:nowrap;">${d.deals}${d.sameDayDeals>0?` <span style="font-size:10px;color:#854F0B;font-weight:400">⚡${d.sameDayDeals}</span>`:''}</td>
         <td class="r">${fmtM(d.sum)}</td>
@@ -1040,28 +1040,30 @@ function render(){
           <span style="font-size:9px;color:var(--t3);font-family:inherit;">#1 </span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span>
           <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2–4 </span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
         </td>
-        <td class="r zp-open-cell" style="color:${zpColor};font-weight:500;cursor:pointer;" title="Расчёт ЗП">${fmt(zp)} ₽ <span style="opacity:.4;font-size:10px">↗</span></td>
+        <td class="r" style="color:${zpColor};font-weight:500;">${fmt(zp)} ₽</td>
       `;
       tr.style.cursor='pointer';
       tr.dataset.name=name;
       tr.onclick=(e)=>{
-        // клик по ЗП = карточка
-        if(e.target.closest('.zp-open-cell')){
-          openZpModal(name,zp,bd,conv,d,d.rows);
+        // клик по ФИО (2-я ячейка) = изоляция
+        const td=e.target.closest('td');
+        const cellIndex=td?td.cellIndex:-1;
+        if(cellIndex===1){
+          // клик по ФИО — изоляция
+          const allRows2=tbody.querySelectorAll('tr:not(.total-row)');
+          activeMop=(activeMop===name)?null:name;
+          if(activeMop){
+            selectedMops.clear();
+            selectedMops.add(activeMop);
+          } else {
+            selectedMops.clear();
+            (periodMops.length?periodMops:allMops).forEach(m=>selectedMops.add(m));
+          }
+          buildMopChips();render();
           return;
         }
-        // клик по строке = изоляция
-        const allRows2=tbody.querySelectorAll('tr:not(.total-row)');
-        // переключаем activeMop и перерисовываем
-        activeMop=(activeMop===name)?null:name;
-        if(activeMop){
-          selectedMops.clear();
-          selectedMops.add(activeMop);
-        } else {
-          selectedMops.clear();
-          (periodMops.length?periodMops:allMops).forEach(m=>selectedMops.add(m));
-        }
-        buildMopChips();render();
+        // клик по любой другой ячейке = карточка ЗП
+        openZpModal(name,zp,bd,conv,d,d.rows);
       };
       // визуальное выделение на основе activeMop
       if(activeMop){
