@@ -954,13 +954,12 @@ function render(){
     mopResults.forEach(({name,d,conv,zp,pills,bd},i)=>{
       const c=getMopColor(name);
       const zpColor=zp>=150000?'var(--green)':zp>=100000?'var(--amber)':'var(--red)';
-      const barW=Math.round(d.deals/maxDeals*44);
       const convAvg=Math.round((conv.conv1+conv.conv24)/2);
       const tr=document.createElement('tr');
       tr.innerHTML=`
         <td><span class="rank">${i+1}</span></td>
         <td><span class="av" style="background:${c.bg};color:${c.tc}">${initials(name)}</span>${name}</td>
-        <td class="r"><b>${d.deals}</b><span class="mini-bar-wrap"><span class="mini-bar-fill" style="width:${barW}px;background:${d.deals>=PLAN.deals?'#378ADD':'#E24B4A'}"></span></span></td>
+        <td class="r" style="color:${d.deals>=PLAN.deals?'var(--green)':'var(--red)'};font-weight:500;">${d.deals}</td>
         <td class="r">${fmtM(d.sum)}</td>
         <td class="r" style="white-space:nowrap;">
           <span style="font-size:9px;color:var(--t3);font-family:inherit;">#1 </span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span>
