@@ -195,7 +195,7 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 /* ZP MODAL */
 .zp-overlay{position:fixed;inset:0;z-index:8888;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .zp-overlay.open{opacity:1;pointer-events:all;}
-.zp-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:28px 32px 24px;width:100%;max-width:640px;box-shadow:0 8px 40px rgba(0,0,0,0.13);transform:translateY(10px);transition:transform .2s;}
+.zp-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:28px 32px 24px;width:100%;max-width:820px;box-shadow:0 8px 40px rgba(0,0,0,0.13);transform:translateY(10px);transition:transform .2s;}
 .zp-overlay.open .zp-card{transform:translateY(0);}
 .zp-head{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
 .zp-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
@@ -1110,7 +1110,7 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
   // таблица сделок
   const tbody=document.getElementById('zp-deals-tbody');
   if(!dealRows||dealRows.length===0){
-    tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:10px 0;">Нет сделок</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:10px 0;">Нет сделок</td></tr>`;
   }else{
     // сортировка по дате оплаты
     const sorted=[...dealRows].sort((a,b)=>{
@@ -1123,13 +1123,15 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
       const sum=parseSum(r[COL.sum]);
       const dir=(r[COL.direction]||'—').trim();
       const client=(r[COL.clientName]||'—').trim();
+      const id=r[COL.id]||'—';
       const dirCls=dir==='#1'?'pg':['#2','#3','#4'].includes(dir)?'pa':'';
       return`<tr>
         <td style="color:var(--t3);white-space:nowrap">${i+1}</td>
-        <td style="font-size:11px">${client}</td>
-        <td><span class="pill ${dirCls}" style="font-size:9px">${dir}</span></td>
+        <td style="font-family:monospace;font-size:10px;white-space:nowrap">${id}</td>
         <td style="white-space:nowrap">${dateStr}</td>
+        <td style="font-size:11px">${client}</td>
         <td class="r" style="font-weight:500;white-space:nowrap">${fmt(sum)} ₽</td>
+        <td><span class="pill ${dirCls}" style="font-size:9px">${dir}</span></td>
       </tr>`;
     }).join('');
   }
@@ -1162,10 +1164,11 @@ init();
       <thead>
         <tr>
           <th>#</th>
+          <th>ID</th>
+          <th>Дата</th>
           <th>ФИО клиента</th>
-          <th>Направление</th>
-          <th>Дата оплаты</th>
           <th class="r">Сумма</th>
+          <th>Направление</th>
         </tr>
       </thead>
       <tbody id="zp-deals-tbody"></tbody>
