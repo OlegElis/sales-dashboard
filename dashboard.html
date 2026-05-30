@@ -564,10 +564,13 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
     const avg=Math.round(sumTotal/deals);
     const davg=Math.round((avg-PLAN.avgCheck)/1000);
     let kAvg;
-    if(davg<0){
-      kAvg=Math.max(0, 12000+davg*160);
-      const raw=12000+davg*160;
-      row('Ср. чек',`12 000 + (${davg})×160 = ${fmt(raw)}${kAvg===0?' → мин. 0':''}`,kAvg,kAvg<12000?'pa':'pg');
+    const AVG_MIN=150000;
+    if(avg<AVG_MIN){
+      kAvg=0;
+      row('Ср. чек',`${fmtK(avg)} < 150 тыс. → 0`,0,'pr');
+    } else if(davg<0){
+      kAvg=12000+davg*160; // при avg=150к = 0 точно
+      row('Ср. чек',`12 000 + (${davg})×160`,kAvg,'pa');
     } else {
       kAvg=12000+davg*1000;
       row('Ср. чек',`12 000 + ${davg}×1 000`,kAvg,'pg');
