@@ -1052,15 +1052,22 @@ function render(){
         }
         // клик по строке = изоляция
         const allRows2=tbody.querySelectorAll('tr:not(.total-row)');
-        const isSelected=tr.classList.contains('row-selected');
-        allRows2.forEach(r=>{
-          r.classList.remove('row-selected','row-dimmed');
-        });
-        if(!isSelected){
-          tr.classList.add('row-selected');
-          allRows2.forEach(r=>{if(r!==tr)r.classList.add('row-dimmed');});
+        // переключаем activeMop и перерисовываем
+        activeMop=(activeMop===name)?null:name;
+        if(activeMop){
+          selectedMops.clear();
+          selectedMops.add(activeMop);
+        } else {
+          selectedMops.clear();
+          (periodMops.length?periodMops:allMops).forEach(m=>selectedMops.add(m));
         }
+        buildMopChips();render();
       };
+      // визуальное выделение на основе activeMop
+      if(activeMop){
+        if(name===activeMop)tr.classList.add('row-selected');
+        else tr.classList.add('row-dimmed');
+      }
       tbody.appendChild(tr);
     });
     // Итого
