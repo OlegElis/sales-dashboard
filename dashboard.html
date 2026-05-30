@@ -1053,22 +1053,13 @@ function render(){
         // клик по строке = изоляция
         const allRows2=tbody.querySelectorAll('tr:not(.total-row)');
         const isSelected=tr.classList.contains('row-selected');
-        if(isSelected){
-          // сброс
-          allRows2.forEach(r=>{r.classList.remove('row-selected','row-dimmed');});
-          activeMop=null;
-          selectedMops.clear();
-          (periodMops.length?periodMops:allMops).forEach(m=>selectedMops.add(m));
-        } else {
-          allRows2.forEach(r=>{
-            r.classList.toggle('row-selected',r===tr);
-            r.classList.toggle('row-dimmed',r!==tr);
-          });
-          activeMop=name;
-          selectedMops.clear();
-          selectedMops.add(name);
+        allRows2.forEach(r=>{
+          r.classList.remove('row-selected','row-dimmed');
+        });
+        if(!isSelected){
+          tr.classList.add('row-selected');
+          allRows2.forEach(r=>{if(r!==tr)r.classList.add('row-dimmed');});
         }
-        buildMopChips();render();
       };
       tbody.appendChild(tr);
     });
