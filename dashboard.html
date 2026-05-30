@@ -386,7 +386,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
             <th>Менеджер</th>
             <th class="r">Сделок</th>
             <th class="r">Сумма</th>
-            <th class="r">Конв.</th>
+            <th class="r">Конверсия</th>
             <th class="r">ЗП (расч.) ↗</th>
           </tr>
         </thead>
@@ -760,7 +760,10 @@ function render(){
         <td><span class="av" style="background:${c.bg};color:${c.tc}">${initials(name)}</span>${name}</td>
         <td class="r"><b>${d.deals}</b><span class="mini-bar-wrap"><span class="mini-bar-fill" style="width:${barW}px;background:${d.deals>=PLAN.deals?'#378ADD':'#E24B4A'}"></span></span></td>
         <td class="r">${fmtM(d.sum)}</td>
-        <td class="r"><span class="pill ${pillCls(convAvg)}">${conv.conv1}% / ${conv.conv24}%</span></td>
+        <td class="r" style="line-height:1.6;">
+          <span style="font-size:9px;color:var(--t3);font-family:sans-serif;">#1&nbsp;</span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span><br>
+          <span style="font-size:9px;color:var(--t3);font-family:sans-serif;">#2–4&nbsp;</span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
+        </td>
         <td class="r" style="color:${zpColor};font-weight:500;">${fmt(zp)} ₽</td>
       `;
       tr.onclick=()=>openZpModal(name,zp,pills,conv,d,d.rows);
@@ -775,7 +778,10 @@ function render(){
       <td></td><td>Итого</td>
       <td class="r"><b>${totalDeals}</b></td>
       <td class="r">${fmtM(totalSum)}</td>
-      <td class="r"><span class="pill ${pillCls(Math.round((avgConv1+avgConv24)/2))}" title="Среднее по менеджерам">${avgConv1}% / ${avgConv24}%</span></td>
+      <td class="r" style="line-height:1.6;">
+          <span style="font-size:9px;color:var(--t3);font-family:sans-serif;">#1&nbsp;</span><span class="pill ${pillCls(avgConv1)}">${avgConv1}%</span><br>
+          <span style="font-size:9px;color:var(--t3);font-family:sans-serif;">#2–4&nbsp;</span><span class="pill ${pillCls(avgConv24)}">${avgConv24}%</span>
+        </td>
       <td class="r" style="font-weight:500;">${fmt(totalZP)} ₽</td>
     `;
     tbody.appendChild(trTotal);
