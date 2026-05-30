@@ -1473,7 +1473,8 @@ function openDayModal(day){
         const isSameDay=isPaid?meetingIds.has(r[COL.id]):dealIds.has(r[COL.id]);
         const dir=(r[COL.direction]||'').trim();
         const dirCls=dir==='#1'?'pg':['#2','#3','#4'].includes(dir)?'pa':'';
-        const sum=isPaid?`<b>${fmt(parseSum(r[COL.sum]))} ₽</b>`:'—';
+        const sumVal=parseSum(r[COL.sum]);
+        const sum=sumVal>0?(isPaid?`<b>${fmt(sumVal)} ₽</b>`:`${fmt(sumVal)} ₽`):'—';
         const manager=(r[COL.responsible]||'').split(' ').slice(0,2).join(' ');
         return`<tr class="${isSameDay?'same-day':''}">
           <td style="color:var(--t3)">${i+1}</td>
