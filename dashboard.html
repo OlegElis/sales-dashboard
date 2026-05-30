@@ -90,8 +90,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .pace-val{font-size:15px;color:#633806;font-weight:500;}
 .pace-val.ok{color:var(--green);}
 
-/* TOP INFO GRID */
-.top-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+/* TOP ZONE */
+.top-zone{display:grid;grid-template-columns:auto 1fr;gap:12px;margin-bottom:10px;align-items:start;}
+.stats-right{display:flex;flex-direction:column;gap:8px;}
 
 /* TWO-COLUMN MAIN GRID */
 .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;}
@@ -234,9 +235,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .zp-deals-table tbody tr:hover{background:var(--s2);}
 .zp-card{max-height:90vh;overflow-y:auto;}
 
+@media(max-width:1100px){
+  .top-zone{grid-template-columns:1fr;}
+}
 @media(max-width:900px){
   .main-grid{grid-template-columns:1fr;}
-  .top-grid{grid-template-columns:1fr;}
   .stats-strip{grid-template-columns:repeat(4,1fr);}
 }
 @media(max-width:560px){
@@ -338,48 +341,44 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   <button onclick="saveId()">Сохранить</button>
 </div>
 
-<div class="filters">
-  <div class="f-row">
-    <div class="f-label">Период</div>
-    <div class="period-wrap">
-      <div class="month-btns" id="year-btns"></div>
-      <div class="month-btns" id="month-btns"></div>
-    </div>
-    <div class="f-divider"></div>
-    <div class="mop-dd" id="mop-dd">
-      <div class="mop-dd-btn" id="mop-dd-btn" onclick="toggleMopDd()">
-        <span id="mop-dd-label">Все менеджеры</span>
-        <span class="mop-dd-arrow" id="mop-dd-arrow">▼</span>
-      </div>
-      <div class="mop-dd-panel" id="mop-dd-panel"></div>
-    </div>
-  </div>
-  <div class="days-row">
-    <div class="days-label">День</div>
-    <div class="day-btns" id="day-btns"></div>
-  </div>
-</div>
+<!-- ВЕРХНЯЯ ЗОНА: фильтры слева, статистика справа -->
+<div class="top-zone">
 
-<!-- ВЕРХНИЙ ДВУХКОЛОНОЧНЫЙ БЛОК: статистика + прогресс -->
-<div class="top-grid">
-  <!-- Левая: 8 метрик -->
-  <div class="stats-strip" style="margin-bottom:0;grid-template-columns:repeat(4,1fr);grid-template-rows:auto auto;">
-    <div class="stat-cell"><div class="stat-lbl">Сделок</div><div class="stat-val" id="m-deals">—</div><div class="stat-sub" id="m-deals-sub"></div></div>
-    <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
-    <div class="stat-cell"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">—</div><div class="stat-sub" id="m-avg-sub"></div></div>
-    <div class="stat-cell"><div class="stat-lbl">ФОТ</div><div class="stat-val" id="m-fot">—</div><div class="stat-sub" id="m-fot-sub"></div></div>
-    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">День мес.</div><div class="stat-val" id="cd-day">—</div></div>
-    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">До плана</div><div class="stat-val" id="cd-need">—</div></div>
-    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Нужно/день</div><div class="stat-val" id="cd-perday">—</div></div>
-    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Темп/день</div><div class="stat-val" id="cd-pace">—</div></div>
+  <!-- ЛЕВАЯ: фильтры -->
+  <div class="filters" style="margin-bottom:0;">
+    <div class="f-row">
+      <div class="f-label">Период</div>
+      <div class="period-wrap">
+        <div class="month-btns" id="year-btns"></div>
+        <div class="month-btns" id="month-btns"></div>
+      </div>
+    </div>
+    <div class="days-row">
+      <div class="days-label">День</div>
+      <div class="day-btns" id="day-btns"></div>
+    </div>
   </div>
-  <!-- Правая: прогресс-бары -->
-  <div class="plan-block" style="margin-bottom:0;">
-    <div class="block-title">Прогресс к плану</div>
-    <div class="plan-row"><div class="plan-lbl">Кол-во сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-deals" style="background:#378ADD;width:0%"></div></div><div class="plan-nums" id="pn-deals">—</div><div class="plan-pct" id="pp-deals">—</div></div>
-    <div class="plan-row"><div class="plan-lbl">Сумма сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-sum" style="background:#639922;width:0%"></div></div><div class="plan-nums" id="pn-sum">—</div><div class="plan-pct" id="pp-sum">—</div></div>
-    <div class="plan-row"><div class="plan-lbl">Средний чек</div><div class="plan-bw"><div class="plan-bf" id="bar-avg" style="background:#BA7517;width:0%"></div></div><div class="plan-nums" id="pn-avg">—</div><div class="plan-pct" id="pp-avg">—</div></div>
+
+  <!-- ПРАВАЯ: статистика + прогресс в 2 колонки -->
+  <div class="stats-right">
+    <div class="stats-strip" style="margin-bottom:8px;grid-template-columns:repeat(4,1fr);">
+      <div class="stat-cell"><div class="stat-lbl">Сделок</div><div class="stat-val" id="m-deals">—</div><div class="stat-sub" id="m-deals-sub"></div></div>
+      <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
+      <div class="stat-cell"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">—</div><div class="stat-sub" id="m-avg-sub"></div></div>
+      <div class="stat-cell"><div class="stat-lbl">ФОТ</div><div class="stat-val" id="m-fot">—</div><div class="stat-sub" id="m-fot-sub"></div></div>
+      <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">День мес.</div><div class="stat-val" id="cd-day">—</div></div>
+      <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">До плана</div><div class="stat-val" id="cd-need">—</div></div>
+      <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Нужно/день</div><div class="stat-val" id="cd-perday">—</div></div>
+      <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Темп/день</div><div class="stat-val" id="cd-pace">—</div></div>
+    </div>
+    <div class="plan-block" style="margin-bottom:0;">
+      <div class="block-title">Прогресс к плану</div>
+      <div class="plan-row"><div class="plan-lbl">Кол-во сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-deals" style="background:#378ADD;width:0%"></div></div><div class="plan-nums" id="pn-deals">—</div><div class="plan-pct" id="pp-deals">—</div></div>
+      <div class="plan-row"><div class="plan-lbl">Сумма сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-sum" style="background:#639922;width:0%"></div></div><div class="plan-nums" id="pn-sum">—</div><div class="plan-pct" id="pp-sum">—</div></div>
+      <div class="plan-row"><div class="plan-lbl">Средний чек</div><div class="plan-bw"><div class="plan-bf" id="bar-avg" style="background:#BA7517;width:0%"></div></div><div class="plan-nums" id="pn-avg">—</div><div class="plan-pct" id="pp-avg">—</div></div>
+    </div>
   </div>
+
 </div>
 
 <!-- ДВУХКОЛОНОЧНЫЙ ГРИД: таблица | графики -->
@@ -392,11 +391,11 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
         <thead>
           <tr>
             <th style="width:22px">#</th>
-            <th>Менеджер</th>
+            <th>Менеджер <span style="font-weight:400;opacity:.6;font-size:8px;">↕ клик — фильтр</span></th>
             <th class="r">Сделок</th>
             <th class="r">Сумма</th>
             <th class="r">Конверсия</th>
-            <th class="r">ЗП (расч.) ↗</th>
+            <th class="r">ЗП (расч.)</th>
           </tr>
         </thead>
         <tbody id="rtbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3);font-family:sans-serif;">Загрузка данных...</td></tr></tbody>
@@ -885,9 +884,24 @@ function render(){
           <span style="font-size:9px;color:var(--t3);font-family:sans-serif;">#1 </span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span>
           <span style="font-size:9px;color:var(--t3);font-family:sans-serif;margin-left:4px">#2–4 </span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
         </td>
-        <td class="r" style="color:${zpColor};font-weight:500;">${fmt(zp)} ₽</td>
+        <td class="r zp-cell" style="color:${zpColor};font-weight:500;cursor:pointer;" title="Открыть расчёт ЗП">${fmt(zp)} ₽ <span style="font-size:10px;opacity:.5">↗</span></td>
       `;
-      tr.onclick=()=>openZpModal(name,zp,bd,conv,d,d.rows);
+      // клик по строке = фильтр по менеджеру
+      tr.style.cursor='pointer';
+      tr.onclick=(e)=>{
+        // клик по ячейке ЗП = карточка
+        if(e.target.closest('.zp-cell')){openZpModal(name,zp,bd,conv,d,d.rows);return;}
+        // иначе — фильтр
+        if(activeMop===name){
+          activeMop=null;
+          allMops.forEach(m=>selectedMops.add(m));
+        } else {
+          activeMop=name;
+          selectedMops.clear();
+          selectedMops.add(name);
+        }
+        buildMopChips();render();
+      };
       tbody.appendChild(tr);
     });
     // Итого
