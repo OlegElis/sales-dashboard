@@ -55,48 +55,52 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 .days-bar-fill{height:6px;background:var(--blue);border-radius:99px;transition:width .4s;}
 .days-label{color:var(--t3);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;width:90px;flex-shrink:0;}
 
-/* TOP METRICS */
-.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px;}
-.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;}
-.metric-lbl{font-size:10px;font-family:sans-serif;color:var(--t3);margin-bottom:5px;letter-spacing:.03em;}
-.metric-val{font-size:21px;letter-spacing:-.02em;}
-.metric-sub{font-size:10px;font-family:sans-serif;color:var(--t3);margin-top:2px;}
+/* TOP STATS STRIP */
+.stats-strip{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;}
+.stat-cell{padding:8px 12px;border-right:1px solid var(--border);}
+.stat-cell:last-child{border-right:none;}
+.stat-lbl{font-size:9px;font-family:sans-serif;color:var(--t3);letter-spacing:.04em;margin-bottom:2px;}
+.stat-val{font-size:16px;letter-spacing:-.02em;line-height:1.1;}
+.stat-sub{font-size:9px;font-family:sans-serif;color:var(--t3);margin-top:1px;}
 .good{color:var(--green);}
 .bad{color:var(--red);}
 
-/* COUNTDOWN */
-.cdown{background:var(--abg);border:1px solid var(--aborder);border-radius:var(--r);padding:12px 18px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:0;}
-.cd-cell{padding:0 18px;border-right:1px solid var(--aborder);flex:1;min-width:110px;}
-.cd-cell:first-child{padding-left:0;}
-.cd-cell:last-child{border-right:none;}
-.cd-lbl{font-size:9px;font-family:sans-serif;letter-spacing:.07em;text-transform:uppercase;color:#854F0B;margin-bottom:3px;}
-.cd-val{font-size:20px;color:#633806;}
-.cd-val.ok{color:var(--green);}
-
-/* PLAN BARS */
-.plan-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:14px;}
-.block-title{font-size:9px;font-family:sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;}
-.plan-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+/* PLAN BARS (compact) */
+.plan-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px 14px;margin-bottom:10px;}
+.block-title{font-size:9px;font-family:sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:7px;}
+.plan-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
 .plan-row:last-child{margin-bottom:0;}
-.plan-lbl{font-size:11px;font-family:sans-serif;color:var(--t2);width:120px;flex-shrink:0;}
-.plan-bw{flex:1;height:7px;background:var(--s2);border-radius:99px;overflow:hidden;}
-.plan-bf{height:7px;border-radius:99px;transition:width .5s;}
-.plan-nums{font-size:11px;font-family:sans-serif;color:var(--text);width:110px;text-align:right;flex-shrink:0;}
-.plan-pct{font-size:11px;font-family:sans-serif;font-weight:500;width:36px;text-align:right;flex-shrink:0;}
+.plan-lbl{font-size:10px;font-family:sans-serif;color:var(--t2);width:110px;flex-shrink:0;}
+.plan-bw{flex:1;height:5px;background:var(--s2);border-radius:99px;overflow:hidden;}
+.plan-bf{height:5px;border-radius:99px;transition:width .5s;}
+.plan-nums{font-size:10px;font-family:sans-serif;color:var(--text);width:100px;text-align:right;flex-shrink:0;}
+.plan-pct{font-size:10px;font-family:sans-serif;font-weight:500;width:34px;text-align:right;flex-shrink:0;}
+
+/* PACE ROW */
+.pace-row{display:flex;gap:0;background:var(--abg);border:1px solid var(--aborder);border-radius:var(--r);margin-bottom:10px;overflow:hidden;}
+.pace-cell{padding:6px 14px;border-right:1px solid var(--aborder);flex:1;}
+.pace-cell:last-child{border-right:none;}
+.pace-lbl{font-size:9px;font-family:sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#854F0B;margin-bottom:1px;}
+.pace-val{font-size:15px;color:#633806;font-weight:500;}
+.pace-val.ok{color:var(--green);}
+
+/* TWO-COLUMN MAIN GRID */
+.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;}
+.col-charts{display:flex;flex-direction:column;gap:10px;}
+.col-table{display:flex;flex-direction:column;gap:0;}
 
 /* RATING TABLE */
-.section-title{font-size:13px;color:var(--text);margin-bottom:8px;letter-spacing:-.01em;}
-.rtable-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px;}
+.rtable-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
 .rtable{width:100%;border-collapse:collapse;font-size:12px;font-family:sans-serif;}
-.rtable th{padding:8px 10px;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--border);font-weight:500;text-align:left;background:var(--s2);}
+.rtable th{padding:7px 10px;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--border);font-weight:500;text-align:left;background:var(--s2);}
 .rtable th.r{text-align:right;}
-.rtable td{padding:8px 10px;border-bottom:.5px solid var(--border);color:var(--text);vertical-align:middle;}
+.rtable td{padding:7px 10px;border-bottom:.5px solid var(--border);color:var(--text);vertical-align:middle;}
 .rtable td.r{text-align:right;}
 .rtable tr:last-child td{border-bottom:none;}
 .rtable tbody tr:hover{background:var(--s2);}
 .rank{font-size:11px;color:var(--t3);font-weight:500;}
 .av{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;vertical-align:middle;margin-right:6px;}
-.mini-bar-wrap{width:60px;height:4px;background:var(--s2);border-radius:99px;display:inline-block;vertical-align:middle;margin-left:6px;}
+.mini-bar-wrap{width:44px;height:4px;background:var(--s2);border-radius:99px;display:inline-block;vertical-align:middle;margin-left:4px;}
 .mini-bar-fill{height:4px;border-radius:99px;}
 .pill{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:500;display:inline-block;}
 .pg{color:#3B6D11;background:#EAF3DE;}
@@ -105,8 +109,8 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 .total-row td{font-weight:500;background:var(--s2);color:var(--t2);border-top:1px solid var(--border2);}
 
 /* CHART */
-.chart-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;}
-.chart-legend{display:flex;gap:12px;margin-bottom:8px;font-size:10px;font-family:sans-serif;color:var(--t2);}
+.chart-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;}
+.chart-legend{display:flex;gap:10px;margin-bottom:6px;font-size:10px;font-family:sans-serif;color:var(--t2);flex-wrap:wrap;}
 .chart-legend span{display:flex;align-items:center;gap:4px;}
 .leg-sq{width:9px;height:9px;border-radius:2px;}
 .leg-ln{width:12px;height:3px;border-radius:2px;}
@@ -209,11 +213,13 @@ body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-heig
 .zp-deals-table tbody tr:hover{background:var(--s2);}
 .zp-card{max-height:90vh;overflow-y:auto;}
 
-@media(max-width:640px){
-  .metrics{grid-template-columns:repeat(2,1fr);}
-  .cdown{gap:8px;}
-  .cd-cell{border-right:none;border-bottom:1px solid var(--aborder);padding:6px 0;}
-  .cd-cell:last-child{border-bottom:none;}
+@media(max-width:900px){
+  .main-grid{grid-template-columns:1fr;}
+  .stats-strip{grid-template-columns:repeat(4,1fr);}
+}
+@media(max-width:560px){
+  .stats-strip{grid-template-columns:repeat(2,1fr);}
+  .stat-cell{border-bottom:1px solid var(--border);}
 }
 </style>
 </head>
@@ -336,20 +342,19 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   </div>
 </div>
 
-<div class="metrics">
-  <div class="metric"><div class="metric-lbl">Сделок (оплачено)</div><div class="metric-val" id="m-deals">—</div><div class="metric-sub" id="m-deals-sub"></div></div>
-  <div class="metric"><div class="metric-lbl">Сумма сделок</div><div class="metric-val" id="m-sum">—</div><div class="metric-sub" id="m-sum-sub"></div></div>
-  <div class="metric"><div class="metric-lbl">Средний чек</div><div class="metric-val" id="m-avg">—</div><div class="metric-sub" id="m-avg-sub"></div></div>
-  <div class="metric"><div class="metric-lbl">Расчётный ФОТ</div><div class="metric-val" id="m-fot">—</div><div class="metric-sub" id="m-fot-sub"></div></div>
+<!-- КОМПАКТНАЯ СТАТИСТИКА -->
+<div class="stats-strip">
+  <div class="stat-cell"><div class="stat-lbl">Сделок</div><div class="stat-val" id="m-deals">—</div><div class="stat-sub" id="m-deals-sub"></div></div>
+  <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
+  <div class="stat-cell"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">—</div><div class="stat-sub" id="m-avg-sub"></div></div>
+  <div class="stat-cell"><div class="stat-lbl">ФОТ</div><div class="stat-val" id="m-fot">—</div><div class="stat-sub" id="m-fot-sub"></div></div>
+  <div class="stat-cell"><div class="stat-lbl">День мес.</div><div class="stat-val" id="cd-day">—</div></div>
+  <div class="stat-cell"><div class="stat-lbl">До плана</div><div class="stat-val" id="cd-need">—</div></div>
+  <div class="stat-cell"><div class="stat-lbl">Нужно/день</div><div class="stat-val" id="cd-perday">—</div></div>
+  <div class="stat-cell"><div class="stat-lbl">Темп/день</div><div class="stat-val ok" id="cd-pace">—</div></div>
 </div>
 
-<div class="cdown">
-  <div class="cd-cell"><div class="cd-lbl">День месяца</div><div class="cd-val" id="cd-day">—</div></div>
-  <div class="cd-cell"><div class="cd-lbl">До плана осталось</div><div class="cd-val" id="cd-need">—</div></div>
-  <div class="cd-cell"><div class="cd-lbl">Нужно сделок в день</div><div class="cd-val" id="cd-perday">—</div></div>
-  <div class="cd-cell"><div class="cd-lbl">Темп сделок в день</div><div class="cd-val ok" id="cd-pace">—</div></div>
-</div>
-
+<!-- ПРОГРЕСС ПЛАН -->
 <div class="plan-block">
   <div class="block-title">Прогресс к плану</div>
   <div class="plan-row"><div class="plan-lbl">Кол-во сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-deals" style="background:#378ADD;width:0%"></div></div><div class="plan-nums" id="pn-deals">—</div><div class="plan-pct" id="pp-deals">—</div></div>
@@ -357,51 +362,59 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   <div class="plan-row"><div class="plan-lbl">Средний чек</div><div class="plan-bw"><div class="plan-bf" id="bar-avg" style="background:#BA7517;width:0%"></div></div><div class="plan-nums" id="pn-avg">—</div><div class="plan-pct" id="pp-avg">—</div></div>
 </div>
 
-<div class="section-title">Рейтинг менеджеров</div>
-<div class="rtable-wrap">
-  <table class="rtable" id="rtable">
-    <thead>
-      <tr>
-        <th style="width:28px">#</th>
-        <th>Менеджер</th>
-        <th class="r">Сделок</th>
-        <th class="r">Сумма</th>
-        <th class="r">Ср. чек</th>
-        <th class="r">Конв. #1</th>
-        <th class="r">Конв. #2-4</th>
-        <th class="r">ЗП (расч.)</th>
-      </tr>
-    </thead>
-    <tbody id="rtbody"><tr><td colspan="8" style="text-align:center;padding:20px;color:var(--t3);font-family:sans-serif;">Загрузка данных...</td></tr></tbody>
-  </table>
-</div>
+<!-- ДВУХКОЛОНОЧНЫЙ ГРИД -->
+<div class="main-grid">
 
-<div class="chart-block" style="margin-bottom:14px;">
-  <div class="block-title">Динамика по месяцам</div>
-  <div class="chart-legend">
-    <span><span class="leg-sq" style="background:#B5D4F4"></span>Сделок (шт)</span>
-    <span><span class="leg-ln" style="background:#BA7517"></span>Ср. чек (тыс. ₽)</span>
-  </div>
-  <div style="position:relative;width:100%;height:180px;">
-    <canvas id="dynChart" role="img" aria-label="Динамика сделок по месяцам">Данные загружаются.</canvas>
-  </div>
-</div>
-
-<div class="chart-block">
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-    <div>
-      <div class="block-title" style="margin-bottom:4px;">Динамика по дням — <span id="daily-title">текущий месяц</span></div>
+  <!-- ЛЕВАЯ: ГРАФИКИ -->
+  <div class="col-charts">
+    <div class="chart-block">
+      <div class="block-title">Динамика по месяцам</div>
       <div class="chart-legend">
-        <span><span class="leg-sq" style="background:#B5D4F4"></span>Факт (шт/день)</span>
-        <span><span class="leg-sq" style="background:#EAF3DE;border:1.5px solid #3B6D11"></span>Прогноз</span>
-        <span><span class="leg-ln" style="background:#E24B4A;border-top:2px dashed #E24B4A"></span>План/день</span>
+        <span><span class="leg-sq" style="background:#B5D4F4"></span>Сделок (шт)</span>
+        <span><span class="leg-ln" style="background:#BA7517"></span>Ср. чек (тыс. ₽)</span>
+      </div>
+      <div style="position:relative;width:100%;height:160px;">
+        <canvas id="dynChart"></canvas>
       </div>
     </div>
-    <div id="daily-forecast-pill" style="font-family:sans-serif;font-size:11px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;"></div>
+
+    <div class="chart-block">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px;">
+        <div>
+          <div class="block-title" style="margin-bottom:3px;">По дням — <span id="daily-title">текущий месяц</span></div>
+          <div class="chart-legend">
+            <span><span class="leg-sq" style="background:#B5D4F4"></span>Факт</span>
+            <span><span class="leg-sq" style="background:#EAF3DE;border:1px solid #3B6D11"></span>Прогноз</span>
+            <span><span class="leg-ln" style="background:#E24B4A"></span>План</span>
+          </div>
+        </div>
+        <div id="daily-forecast-pill" style="font-family:sans-serif;font-size:11px;display:flex;gap:5px;flex-wrap:wrap;align-items:center;"></div>
+      </div>
+      <div style="position:relative;width:100%;height:160px;">
+        <canvas id="dailyChart"></canvas>
+      </div>
+    </div>
   </div>
-  <div style="position:relative;width:100%;height:200px;">
-    <canvas id="dailyChart" role="img" aria-label="Динамика сделок по дням">Данные загружаются.</canvas>
+
+  <!-- ПРАВАЯ: ТАБЛИЦА МЕНЕДЖЕРОВ -->
+  <div class="col-table">
+    <div class="rtable-wrap">
+      <table class="rtable" id="rtable">
+        <thead>
+          <tr>
+            <th style="width:22px">#</th>
+            <th>Менеджер</th>
+            <th class="r">Сделок</th>
+            <th class="r">Сумма</th>
+            <th class="r">Конв.</th>
+            <th class="r">ЗП (расч.) ↗</th>
+          </tr>
+        </thead>
+        <tbody id="rtbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3);font-family:sans-serif;">Загрузка данных...</td></tr></tbody>
+      </table>
+    </div>
   </div>
+
 </div>
 
 <script>
@@ -692,32 +705,30 @@ function render(){
   const pace=daysPassed>0?(totalDeals/daysPassed).toFixed(1):'0';
   const perDay=daysLeft>0?(need/daysLeft).toFixed(1):'0';
   document.getElementById('cd-day').textContent=daysPassed+' / '+mdays;
-  document.getElementById('cd-need').textContent=need>0?need+' сд':'✓ выполнен';
-  document.getElementById('cd-need').className='cd-val'+(need<=0?' ok':'');
-  document.getElementById('cd-perday').textContent=daysLeft>0?perDay+' сд/день':'—';
-  document.getElementById('cd-pace').textContent=pace+' сд/день';
+  document.getElementById('cd-need').textContent=need>0?need+' сд':'✓ план';
+  document.getElementById('cd-need').style.color=need<=0?'var(--green)':'';
+  document.getElementById('cd-perday').textContent=daysLeft>0?perDay+' /д':'—';
+  document.getElementById('cd-pace').textContent=pace+' /д';
 
-  // Таблица рейтинга
+  // Таблица рейтинга (6 колонок)
   const tbody=document.getElementById('rtbody');
   tbody.innerHTML='';
   if(mopResults.length===0){
-    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--t3);font-family:sans-serif;">Нет данных за выбранный период</td></tr>';
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3);font-family:sans-serif;">Нет данных за выбранный период</td></tr>';
   } else {
     mopResults.forEach(({name,d,conv,zp,pills},i)=>{
       const c=getMopColor(name);
-      const avg=d.deals>0?d.sum/d.deals:0;
       const zpColor=zp>=150000?'var(--green)':zp>=100000?'var(--amber)':'var(--red)';
-      const barW=Math.round(d.deals/maxDeals*60);
+      const barW=Math.round(d.deals/maxDeals*44);
+      const convAvg=Math.round((conv.conv1+conv.conv24)/2);
       const tr=document.createElement('tr');
       tr.innerHTML=`
         <td><span class="rank">${i+1}</span></td>
         <td><span class="av" style="background:${c.bg};color:${c.tc}">${initials(name)}</span>${name}</td>
         <td class="r"><b>${d.deals}</b><span class="mini-bar-wrap"><span class="mini-bar-fill" style="width:${barW}px;background:${d.deals>=PLAN.deals?'#378ADD':'#E24B4A'}"></span></span></td>
         <td class="r">${fmtM(d.sum)}</td>
-        <td class="r">${fmtK(avg)}</td>
-        <td class="r"><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span></td>
-        <td class="r"><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span></td>
-        <td class="r" style="color:${zpColor};font-weight:500;">${fmt(zp)} ₽ <span style="font-size:10px;color:var(--t3);font-weight:400">↗</span></td>
+        <td class="r"><span class="pill ${pillCls(convAvg)}">${conv.conv1}% / ${conv.conv24}%</span></td>
+        <td class="r" style="color:${zpColor};font-weight:500;">${fmt(zp)} ₽</td>
       `;
       tr.onclick=()=>openZpModal(name,zp,pills,conv,d,d.rows);
       tbody.appendChild(tr);
@@ -731,9 +742,7 @@ function render(){
       <td></td><td>Итого / среднее</td>
       <td class="r"><b>${totalDeals}</b></td>
       <td class="r">${fmtM(totalSum)}</td>
-      <td class="r">${fmtK(totalAvg)}</td>
-      <td class="r"><span class="pill ${pillCls(avgConv1)}">${avgConv1}%</span></td>
-      <td class="r"><span class="pill ${pillCls(avgConv24)}">${avgConv24}%</span></td>
+      <td class="r"><span class="pill ${pillCls(Math.round((avgConv1+avgConv24)/2))}">${avgConv1}% / ${avgConv24}%</span></td>
       <td class="r" style="font-weight:500;">${fmt(totalZP)} ₽</td>
     `;
     tbody.appendChild(trTotal);
