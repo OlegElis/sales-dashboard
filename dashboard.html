@@ -1069,10 +1069,8 @@ function renderDailyChart(){
     }
   }
 
-  // Суммарный план: PLAN_TOTAL пропорционально выбранным менеджерам
-  const totalMops=periodMops.length||allMops.length||1;
-  const activeMopCount=selectedMops.size||1;
-  const effectivePlan=Math.round(PLAN_TOTAL*(activeMopCount/totalMops));
+  // План отдела фиксированный — всегда 120, независимо от фильтра менеджеров
+  const effectivePlan=PLAN_TOTAL;
 
   // Плановая линия: нарастающим итогом
   const planPerDay=effectivePlan/mdays;
