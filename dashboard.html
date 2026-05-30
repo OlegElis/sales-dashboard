@@ -613,7 +613,7 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
 
   // Оклад
   const oklad=Math.round(30000/monthDays*periodDays);
-  row('Оклад',`30 000 ÷ ${monthDays} × ${periodDays}`,oklad,'pg');
+  row('Оклад',`30 000 ÷ ${monthDays} дн. × ${periodDays} дн. отраб.`,oklad,'pg');
   let zp=oklad;
 
   // KPI сделки
