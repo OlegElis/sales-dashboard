@@ -46,7 +46,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .mop-dd-arrow.open{transform:rotate(180deg);}
 .mop-dd-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:280px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:200;overflow:hidden;}
 .mop-dd-panel.open{display:block;}
-.mop-dd-item{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:12px;color:var(--t2);transition:background .1s;}
+.mop-dd-item{display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;font-size:11px;color:var(--t2);transition:background .1s;}
 .mop-dd-item:hover{background:var(--s2);}
 .mop-dd-item input[type=checkbox]{accent-color:var(--blue);width:13px;height:13px;cursor:pointer;flex-shrink:0;}
 .mop-dd-sep{height:1px;background:var(--border);margin:2px 0;}
@@ -440,6 +440,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
             </th>
             <th class="r">Сделок</th>
             <th class="r">Сумма</th>
+            <th class="r">Ср. чек</th>
             <th class="r">Конверсия</th>
             <th class="r">ЗП (расч.)</th>
           </tr>
@@ -767,6 +768,7 @@ function buildDayBtns(){
 function buildMopChips(){
   const panel=document.getElementById('mop-dd-panel');
   if(!panel)return;
+  const wasOpen=panel.classList.contains('open');
   panel.innerHTML='';
 
   // «Все» — вверху
@@ -807,6 +809,7 @@ function buildMopChips(){
     panel.appendChild(item);
   });
   updateMopLabel();
+  if(wasOpen)panel.classList.add('open');
 }
 
 function updateMopLabel(){
@@ -956,6 +959,7 @@ function render(){
         <td><span class="av" style="background:${c.bg};color:${c.tc}">${initials(name)}</span>${name}</td>
         <td class="r" style="color:${d.deals>=PLAN.deals?'var(--green)':'var(--red)'};font-weight:500;">${d.deals}</td>
         <td class="r">${fmtM(d.sum)}</td>
+        <td class="r" style="color:${d.deals>0&&Math.round(d.sum/d.deals)>=PLAN.avgCheck?'var(--green)':'var(--t2)'}">${d.deals>0?fmtK(Math.round(d.sum/d.deals)):'—'}</td>
         <td class="r" style="white-space:nowrap;">
           <span style="font-size:9px;color:var(--t3);font-family:inherit;">#1 </span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span>
           <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2–4 </span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
@@ -976,6 +980,7 @@ function render(){
       <td></td><td>Итого</td>
       <td class="r"><b>${totalDeals}</b></td>
       <td class="r">${fmtM(totalSum)}</td>
+      <td class="r">${totalDeals>0?fmtK(Math.round(totalSum/totalDeals)):'—'}</td>
       <td class="r" style="white-space:nowrap;">
           <span style="font-size:9px;color:var(--t3);font-family:inherit;">#1 </span><span class="pill ${pillCls(avgConv1)}">${avgConv1}%</span>
           <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2–4 </span><span class="pill ${pillCls(avgConv24)}">${avgConv24}%</span>
