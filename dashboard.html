@@ -340,7 +340,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
         <span id="mop-dd-label">Все менеджеры</span>
         <span class="mop-dd-arrow" id="mop-dd-arrow">▼</span>
       </div>
-      <div class="mop-dd-panel" id="mop-dd-panel"></div>
+      <div class="mop-dd-panel" id="mop-dd-panel" onclick="event.stopPropagation()"></div>
     </div>
   </div>
   <div class="days-row">
@@ -740,7 +740,8 @@ function updateMopLabel(){
   document.getElementById('mop-dd-panel').querySelectorAll('input')[0].checked=(n===t);
 }
 
-function toggleMopDd(){
+function toggleMopDd(e){
+  e&&e.stopPropagation();
   document.getElementById('mop-dd-panel').classList.toggle('open');
   document.getElementById('mop-dd-arrow').classList.toggle('open');
 }
