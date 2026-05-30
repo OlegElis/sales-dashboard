@@ -880,11 +880,13 @@ function render(){
   });
   const prevPeriodMops=periodMops.join(',');
   periodMops=Array.from(periodMopSet).sort();
-  // Убираем из выбранных тех кого нет в новом периоде
-  selectedMops.forEach(m=>{if(!periodMopSet.has(m))selectedMops.delete(m);});
-  // Если период сменился — автовыбор всех менеджеров нового периода
+  // Если период сменился — полностью сбрасываем фильтр, выбираем всех
   if(periodMops.join(',')!==prevPeriodMops){
+    selectedMops.clear();
     periodMops.forEach(m=>selectedMops.add(m));
+  } else {
+    // Убираем из выбранных тех кого нет в текущем периоде
+    selectedMops.forEach(m=>{if(!periodMopSet.has(m))selectedMops.delete(m);});
   }
   // Если вручную всё снято — оставляем пустым (покажем "нет данных")
   buildMopChips();
