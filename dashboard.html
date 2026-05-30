@@ -748,10 +748,10 @@ function render(){
     const avgConv1=mopResults.length>0?Math.round(mopResults.reduce((s,r)=>s+r.conv.conv1,0)/mopResults.length):0;
     const avgConv24=mopResults.length>0?Math.round(mopResults.reduce((s,r)=>s+r.conv.conv24,0)/mopResults.length):0;
     trTotal.innerHTML=`
-      <td></td><td>Итого / среднее</td>
+      <td></td><td>Итого</td>
       <td class="r"><b>${totalDeals}</b></td>
       <td class="r">${fmtM(totalSum)}</td>
-      <td class="r"><span class="pill ${pillCls(Math.round((avgConv1+avgConv24)/2))}">${avgConv1}% / ${avgConv24}%</span></td>
+      <td class="r"><span class="pill ${pillCls(Math.round((avgConv1+avgConv24)/2))}" title="Среднее по менеджерам">${avgConv1}% / ${avgConv24}%</span></td>
       <td class="r" style="font-weight:500;">${fmt(totalZP)} ₽</td>
     `;
     tbody.appendChild(trTotal);
