@@ -586,6 +586,21 @@ function parseCSV(text){
   }).filter(r=>r.length>5&&r[COL.id]);
 }
 
+function calcConversionsDirect(rows,mopName,year,monthsSet){
+  let c1=0,p1=0,c24=0,p24=0;
+  rows.forEach(r=>{
+    if(r[COL.responsible]!==mopName)return;
+    const dc=parseDate(r[COL.dateCreated]);
+    if(!dc||dc.getFullYear()!==year)return;
+    if(monthsSet.size>0&&!monthsSet.has(dc.getMonth()+1))return;
+    const dir=(r[COL.direction]||'').trim();
+    const paid=isPaidRow(r);
+    if(dir==='#1'){c1++;if(paid)p1++;}
+    else if(['#2','#3','#4'].includes(dir)){c24++;if(paid)p24++;}
+  });
+  return{conv1:c1>0?Math.round(p1/c1*100):0,conv24:c24>0?Math.round(p24/c24*100):0,c1,c24};
+}
+
 function calcConversions(rows,mopName,year,month){
   // 3 предыдущих месяца
   const months=[];
@@ -1005,7 +1020,9 @@ function render(){
     totalDeals+=d.deals;
     totalSum+=d.sum;
     totalMeetings+=(d.meetings||0);
-    const conv=calcConversions(allRows,name,y,m||Math.max(...activeMonths)||new Date().getMonth()+1);
+    const conv=isSingleMonth
+      ? calcConversions(allRows,name,y,m)
+      : calcConversionsDirect(allRows,name,y,activeMonths);
     const{zp,pills,bd}=!isSingleMonth?{zp:null,pills:[],bd:[]}:calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays);
     if(!!isSingleMonth)totalZP+=zp;
     mopResults.push({name,d,conv,zp,pills,bd,rows:d.rows});
