@@ -1385,7 +1385,7 @@ function render(){
     trTotal.innerHTML=`
       <td></td><td>Итого</td>
       <td class="r">${totalMeetings}</td>
-      <td class="r"><b>${totalDeals}</b></td>
+      <td class="r" style="white-space:nowrap;"><b>${totalDeals}</b>${totalSameDayDeals>0?` <span style="font-size:10px;color:#854F0B;font-weight:400">⚡${totalSameDayDeals}</span>`:''}</td>
       <td class="r">${fmtM(totalSum)}</td>
       <td class="r">${totalDeals>0?fmtK(Math.round(totalSum/totalDeals)):'—'}</td>
       <td class="r" style="white-space:nowrap;">
