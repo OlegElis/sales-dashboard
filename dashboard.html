@@ -276,6 +276,27 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .zp-deals-table tbody tr:hover{background:var(--s2);}
 .zp-card{max-height:90vh;overflow-y:auto;}
 
+/* VIEW TABS */
+.view-tabs{display:flex;gap:4px;margin-bottom:12px;}
+.vtab{font-size:12px;font-family:inherit;padding:6px 16px;border-radius:99px;border:1px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;font-weight:500;transition:all .15s;}
+.vtab.active{background:var(--text);color:#fff;border-color:transparent;}
+
+/* PORTFOLIO */
+.portfolio-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.ptable{width:100%;border-collapse:collapse;font-size:12px;font-family:inherit;}
+.ptable th{padding:7px 10px;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--border);font-weight:500;text-align:left;background:var(--s2);}
+.ptable th.r{text-align:right;}
+.ptable td{padding:7px 10px;border-bottom:.5px solid var(--border);color:var(--text);vertical-align:middle;}
+.ptable td.r{text-align:right;}
+.ptable tr:last-child td{border-bottom:none;}
+.ptable tbody tr:hover{background:var(--s2);}
+.days-pill{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;}
+.days-green{background:#EAF3DE;color:#3B6D11;}
+.days-yellow{background:#FAEEDA;color:#854F0B;}
+.days-red{background:#FCEBEB;color:#A32D2D;}
+.days-gray{background:var(--s2);color:var(--t3);}
+.p-group-row td{background:var(--s2);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);font-weight:500;padding:5px 10px;border-bottom:1px solid var(--border);}
+
 @media(max-width:900px){
   .page-grid{grid-template-columns:1fr;grid-template-rows:auto;}
   .page-grid>.filters{grid-column:1;grid-row:1;}
@@ -402,7 +423,7 @@ const PLAN = { deals:16, avgCheck:225000, conv1:25, conv24:65 };
 const PLAN_TOTAL = 120;
 const COL = {
   id:0, clientName:3, sum:5, direction:7, responsible:8,
-  dateCreated:17, datePaid:20, stage:31
+  dateCreated:17, datePaid:20, lastContact:26, dealStage:30, stage:31
 };
 function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
 </script>
@@ -432,6 +453,12 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   </div>
 </div>
 
+<!-- VIEW TABS -->
+<div class="view-tabs">
+  <div class="vtab active" id="vtab-stats" onclick="switchView('stats')">Статистика</div>
+  <div class="vtab" id="vtab-portfolio" onclick="switchView('portfolio')">Портфель сделок</div>
+</div>
+
 <div class="cfg" id="cfg">
   <strong>Вставь ID Google Таблицы:</strong>
   <input type="text" id="sid-input" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
@@ -439,7 +466,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
 </div>
 
 <!-- ЕДИНЫЙ ГРИД: 2 строки × 2 колонки -->
-<div class="page-grid">
+<div class="page-grid" id="page-grid">
 
   <!-- [1,1] Фильтры периода -->
   <div class="filters" style="margin-bottom:0;">
@@ -530,6 +557,42 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   </div><!-- /col-charts -->
 
 </div><!-- /page-grid -->
+
+<!-- PORTFOLIO SECTION -->
+<div id="portfolio-section" style="display:none;">
+
+  <!-- Фильтры портфеля -->
+  <div class="filters" style="margin-bottom:12px;">
+    <div class="f-row" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div class="f-label">Сортировка</div>
+        <div class="month-btns" id="p-sort-btns"></div>
+      </div>
+      <div id="p-summary" style="font-size:12px;color:var(--t2);align-self:center;"></div>
+    </div>
+  </div>
+
+  <div class="portfolio-wrap">
+    <table class="ptable" id="ptable">
+      <thead>
+        <tr>
+          <th style="width:22px">#</th>
+          <th>Менеджер</th>
+          <th>Клиент</th>
+          <th>Стадия</th>
+          <th>Направление</th>
+          <th class="r">Сумма</th>
+          <th class="r">Последнее касание</th>
+          <th class="r">Дней без связи</th>
+        </tr>
+      </thead>
+      <tbody id="ptbody">
+        <tr><td colspan="8" style="text-align:center;padding:20px;color:var(--t3);">Загрузка...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- /portfolio-section -->
 
 <script>
 const MOP_COLORS=[
@@ -1146,6 +1209,7 @@ function render(){
 
   buildDayBtns();
   renderChart();
+  if(activeView==='portfolio')renderPortfolio();
 }
 
 let myChartDaily=null;
@@ -1305,6 +1369,157 @@ function renderDailyChart(){
       onHover:(e)=>{e.native.target.style.cursor=e.chart.getElementsAtEventForMode(e.native,'nearest',{intersect:true},false).length?'pointer':'default';}
     }
   });
+}
+
+// VIEW SWITCHING
+let activeView='stats';
+function switchView(v){
+  activeView=v;
+  document.getElementById('page-grid').style.display=v==='stats'?'':'none';
+  document.getElementById('portfolio-section').style.display=v==='portfolio'?'':'none';
+  document.getElementById('vtab-stats').classList.toggle('active',v==='stats');
+  document.getElementById('vtab-portfolio').classList.toggle('active',v==='portfolio');
+  if(v==='portfolio')renderPortfolio();
+}
+
+// PORTFOLIO
+let pSortMode='priority'; // 'priority' | 'date' | 'sum' | 'manager'
+
+function daysSince(dateStr){
+  const d=parseDate(dateStr);
+  if(!d)return null;
+  const diff=Math.floor((new Date()-d)/(1000*60*60*24));
+  return diff<0?0:diff;
+}
+
+function daysPillCls(days){
+  if(days===null)return'days-gray';
+  if(days<=2)return'days-green';
+  if(days<=7)return'days-yellow';
+  return'days-red';
+}
+
+function priorityOrder(days){
+  if(days===null)return 3;
+  if(days>7)return 0;
+  if(days>2)return 1;
+  return 2;
+}
+
+function buildPortfolioSortBtns(){
+  const wrap=document.getElementById('p-sort-btns');
+  if(!wrap)return;
+  const opts=[
+    {key:'priority',label:'По приоритету'},
+    {key:'date',label:'По дате касания'},
+    {key:'manager',label:'По менеджеру'},
+    {key:'sum',label:'По сумме'},
+  ];
+  wrap.innerHTML='';
+  opts.forEach(o=>{
+    const btn=document.createElement('div');
+    btn.className='mbtn'+(pSortMode===o.key?' active':'');
+    btn.textContent=o.label;
+    btn.onclick=()=>{pSortMode=o.key;buildPortfolioSortBtns();renderPortfolio();};
+    wrap.appendChild(btn);
+  });
+}
+
+function renderPortfolio(){
+  buildPortfolioSortBtns();
+  const tbody=document.getElementById('ptbody');
+  if(!tbody)return;
+
+  // Неоплаченные сделки выбранных менеджеров
+  let rows=allRows.filter(r=>{
+    if(isPaidRow(r))return false;
+    if(!r[COL.responsible])return false;
+    if(!selectedMops.has(r[COL.responsible]))return false;
+    return true;
+  });
+
+  // Сортировка
+  rows=[...rows].sort((a,b)=>{
+    if(pSortMode==='priority'){
+      const da=daysSince(a[COL.lastContact]),db=daysSince(b[COL.lastContact]);
+      const po=priorityOrder(da)-priorityOrder(db);
+      if(po!==0)return po;
+      return(db??-1)-(da??-1);
+    }
+    if(pSortMode==='date'){
+      const da=parseDate(a[COL.lastContact]),db=parseDate(b[COL.lastContact]);
+      if(!da&&!db)return 0;if(!da)return 1;if(!db)return-1;
+      return da-db;
+    }
+    if(pSortMode==='sum'){
+      return parseSum(b[COL.sum])-parseSum(a[COL.sum]);
+    }
+    if(pSortMode==='manager'){
+      const nm=(a[COL.responsible]||'').localeCompare(b[COL.responsible]||'');
+      if(nm!==0)return nm;
+      const da=daysSince(a[COL.lastContact]),db=daysSince(b[COL.lastContact]);
+      return(db??-1)-(da??-1);
+    }
+    return 0;
+  });
+
+  // Сводка
+  const red=rows.filter(r=>daysSince(r[COL.lastContact])>7).length;
+  const yellow=rows.filter(r=>{const d=daysSince(r[COL.lastContact]);return d!==null&&d>=3&&d<=7;}).length;
+  const green=rows.filter(r=>{const d=daysSince(r[COL.lastContact]);return d!==null&&d<=2;}).length;
+  const sumTotal=rows.reduce((s,r)=>s+parseSum(r[COL.sum]),0);
+  document.getElementById('p-summary').innerHTML=
+    `Всего: <b>${rows.length}</b> сд. · ${fmtM(sumTotal)} &nbsp;|&nbsp; `+
+    `<span class="days-pill days-red">${red}</span> &nbsp;`+
+    `<span class="days-pill days-yellow">${yellow}</span> &nbsp;`+
+    `<span class="days-pill days-green">${green}</span>`;
+
+  if(rows.length===0){
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--t3);font-family:inherit;">Нет неоплаченных сделок</td></tr>';
+    return;
+  }
+
+  let html='';
+  let lastGroupKey=null;
+
+  rows.forEach((r,i)=>{
+    const days=daysSince(r[COL.lastContact]);
+    const cls=daysPillCls(days);
+    const c=getMopColor(r[COL.responsible]||'');
+    const name=r[COL.responsible]||'—';
+    const short=name.split(' ').slice(0,2).join(' ');
+    const lc=r[COL.lastContact]?r[COL.lastContact].trim():'—';
+    const lcDate=parseDate(lc);
+    const lcStr=lcDate?lcDate.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}):'—';
+    const stage=(r[COL.dealStage]||'—').trim();
+    const dir=(r[COL.direction]||'—').trim();
+    const dirCls=dir==='#1'?'pg':['#2','#3','#4'].includes(dir)?'pa':'';
+    const sum=parseSum(r[COL.sum]);
+
+    // Групповой заголовок
+    let groupKey='';
+    if(pSortMode==='priority'){
+      groupKey=days===null?'Нет данных о касании':days>7?'🔴 Срочно — более 7 дней':days>2?'🟡 Внимание — 3–7 дней':'🟢 В работе — до 2 дней';
+    }else if(pSortMode==='manager'){
+      groupKey=name;
+    }
+    if(groupKey&&groupKey!==lastGroupKey){
+      html+=`<tr class="p-group-row"><td colspan="8">${groupKey}</td></tr>`;
+      lastGroupKey=groupKey;
+    }
+
+    html+=`<tr>
+      <td><span class="rank">${i+1}</span></td>
+      <td><span class="av" style="background:${c.bg};color:${c.tc}">${initials(name)}</span>${short}</td>
+      <td style="font-size:11px">${(r[COL.clientName]||'—').trim()}</td>
+      <td style="font-size:11px;color:var(--t2)">${stage}</td>
+      <td><span class="pill ${dirCls}" style="font-size:9px">${dir}</span></td>
+      <td class="r">${sum>0?fmt(sum)+' ₽':'—'}</td>
+      <td class="r" style="color:var(--t2);font-size:11px">${lcStr}</td>
+      <td class="r"><span class="days-pill ${cls}">${days!==null?days+' д':'нет данных'}</span></td>
+    </tr>`;
+  });
+  tbody.innerHTML=html;
 }
 
 async function init(){
