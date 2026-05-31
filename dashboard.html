@@ -471,8 +471,9 @@ let PLAN = { deals:16, avgCheck:225000, conv1:25, conv24:65 };
 let PLAN_TOTAL = 120;
 
 // SETTINGS
-const SETTINGS_KEY='opora_settings_v2';
+const SETTINGS_KEY='opora_settings_v3';
 const PLAN_DEFAULT={deals:16,avgCheck:225000,conv1:25,conv24:65,total:100};
+// planDefault всегда из кода — в localStorage только planMonths и startDates
 let settings={ planDefault:{...PLAN_DEFAULT}, planMonths:{}, startDates:{} };
 
 function getPlanForMonth(year,month){
@@ -488,12 +489,15 @@ function applyPlanToGlobals(plan){
 function loadSettings(){
   try{
     const s=localStorage.getItem(SETTINGS_KEY);
-    if(s){ const p=JSON.parse(s); settings={...settings,...p}; }
-    // совместимость со старым форматом
-    const old=localStorage.getItem('opora_settings_v1');
-    if(old&&!s){ const p=JSON.parse(old); if(p.plan){settings.planDefault={...PLAN_DEFAULT,...p.plan};} if(p.startDates)settings.startDates=p.startDates; }
+    if(s){
+      const p=JSON.parse(s);
+      // planDefault берём из кода (PLAN_DEFAULT), переносим только planMonths и startDates
+      if(p.planMonths)settings.planMonths=p.planMonths;
+      if(p.startDates)settings.startDates=p.startDates;
+      // planDefault можно переопределить только если явно сохранено в v3
+      if(p.planDefault)settings.planDefault={...PLAN_DEFAULT,...p.planDefault};
+    }
   }catch(e){}
-  // При инициализации применяем дефолтный план (activeYear/activeMonths ещё не готовы)
   applyPlanToGlobals(settings.planDefault);
 }
 function saveSettings(){
