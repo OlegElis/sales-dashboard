@@ -1300,7 +1300,7 @@ function render(){
 let myChartDaily=null;
 
 function renderChart(){
-  const activeMops=selectedMops;
+  const activeMops=activeMop?new Set([activeMop]):selectedMops;
   const md={},ms={};
   allRows.forEach(r=>{
     if(!isPaidRow(r))return;
@@ -1350,7 +1350,8 @@ function renderDailyChart(){
   const dailyDeals={};
   allRows.forEach(r=>{
     if(!isPaidRow(r))return;
-    if(!selectedMops.has(r[COL.responsible]))return;
+    const chartMops=activeMop?new Set([activeMop]):selectedMops;
+    if(!chartMops.has(r[COL.responsible]))return;
     const dp=parseDate(r[COL.datePaid]);
     if(!dp||dp.getFullYear()!==y||dp.getMonth()+1!==m)return;
     const day=dp.getDate();
@@ -1734,30 +1735,6 @@ function openSettings(){
   sPlanMonth=activeMonths.size===1?[...activeMonths][0]:0;
   buildSettingsPlanBtns();
   loadPlanFields();
-  // Список менеджеров
-  const list=document.getElementById('s-mop-list');
-  list.innerHTML='';
-  const mops=allMops.length?allMops:[...new Set(allRows.map(r=>r[COL.responsible]).filter(Boolean))].sort();
-  if(!mops.length){
-    list.innerHTML='<div style="font-size:11px;color:var(--t3);">Загрузите данные чтобы задать стаж</div>';
-  } else {
-    mops.forEach(name=>{
-      const c=getMopColor(name);
-      const saved=settings.startDates[name]||'';
-      const {years}=getSeniorityBonus(name,1,1);
-      const row=document.createElement('div');
-      row.className='s-mop-row';
-      row.innerHTML=`
-        <div class="s-mop-av" style="background:${c.bg};color:${c.tc}">${initials(name)}</div>
-        <div class="s-mop-name" title="${name}">${name}</div>
-        ${years>0?`<div class="s-mop-badge">+${years}г · +${fmt(years*2000)} ₽/мес</div>`:''}
-        <input class="s-input" style="width:108px;text-align:left;" type="text"
-          placeholder="ДД.ММ.ГГГГ" value="${saved}"
-          data-mop="${name}" oninput="updateSeniorityBadge(this)">
-      `;
-      list.appendChild(row);
-    });
-  }
   document.getElementById('settings-overlay').classList.add('open');
   document.getElementById('settings-panel').classList.add('open');
 }
@@ -1794,11 +1771,6 @@ function applySettings(){
   }
   buildSettingsPlanBtns();
   loadPlanFields();
-  document.querySelectorAll('#s-mop-list input[data-mop]').forEach(inp=>{
-    const v=inp.value.trim();
-    if(v)settings.startDates[inp.dataset.mop]=v;
-    else delete settings.startDates[inp.dataset.mop];
-  });
   saveSettings();
   closeSettings();
   render();
@@ -2138,11 +2110,6 @@ init();
       <div class="s-row"><span class="s-lbl">Конверсия #2–4 (план, %)</span><input class="s-input" id="s-conv24" type="number" min="0" max="100"></div>
       <div class="s-row"><span class="s-lbl">Общий план сделок (отдел)</span><input class="s-input" id="s-total" type="number" min="1"></div>
       <button onclick="resetMonthPlan()" style="font-size:10px;color:var(--t3);background:none;border:none;cursor:pointer;padding:2px 0;text-decoration:underline;" id="s-reset-btn">Сбросить к умолчанию</button>
-    </div>
-
-    <div class="s-section">
-      <div class="s-section-title">Стаж менеджеров (+2 000 ₽/год)</div>
-      <div id="s-mop-list"></div>
     </div>
 
     <button class="s-save" onclick="applySettings()">Сохранить</button>
