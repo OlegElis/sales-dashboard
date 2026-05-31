@@ -59,10 +59,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .dbtn-num{line-height:1.2;}
 .dbtn-dow{font-size:7px;line-height:1.1;opacity:.55;font-weight:400;letter-spacing:.02em;}
 .dbtn-dow.weekend{color:#A32D2D;opacity:.75;}
+.dbtn-dow.today-label{color:#185FA5;opacity:1;font-weight:700;}
 .dbtn:hover:not(.dbtn-future){filter:brightness(.92);}
 .dbtn.active{outline:1.5px solid var(--red);outline-offset:1px;}
 .dbtn.active .dbtn-num{font-weight:700;}
-.dbtn.today::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--blue);}
 .dbtn-future{opacity:.35;cursor:default;pointer-events:none;}
 
 /* TOP STATS STRIP */
@@ -1039,7 +1039,7 @@ function buildDayBtns(){
     const dow=new Date(y,m-1,d).getDay(); // 0=Вс,1=Пн..6=Сб
     const DOW_RU=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
     const isWeekend=dow===0||dow===6;
-    btn.innerHTML=`<span class="dbtn-num">${d}</span><span class="dbtn-dow${isWeekend?' weekend':''}">${DOW_RU[dow]}</span>`;
+    btn.innerHTML=`<span class="dbtn-num">${d}</span><span class="dbtn-dow${isToday?' today-label':isWeekend?' weekend':''}">${isToday?'▲ сег':DOW_RU[dow]}</span>`;
     btn.style.background=col.bg;
     btn.style.color=col.color;
     if(col.border)btn.style.borderColor=col.border;
