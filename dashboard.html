@@ -471,18 +471,37 @@ let PLAN = { deals:16, avgCheck:225000, conv1:25, conv24:65 };
 let PLAN_TOTAL = 120;
 
 // SETTINGS
-const SETTINGS_KEY='opora_settings_v1';
-let settings={ plan:{deals:16,avgCheck:225000,conv1:25,conv24:65,total:120}, startDates:{} };
+const SETTINGS_KEY='opora_settings_v2';
+const PLAN_DEFAULT={deals:16,avgCheck:225000,conv1:25,conv24:65,total:120};
+let settings={ planDefault:{...PLAN_DEFAULT}, planMonths:{}, startDates:{} };
+
+function getPlanForMonth(year,month){
+  const key=year+'-'+String(month||0).padStart(2,'0');
+  const mo=settings.planMonths[key]||{};
+  return{...settings.planDefault,...mo};
+}
+function applyPlanToGlobals(plan){
+  PLAN.deals=plan.deals; PLAN.avgCheck=plan.avgCheck;
+  PLAN.conv1=plan.conv1; PLAN.conv24=plan.conv24;
+  PLAN_TOTAL=plan.total;
+}
 function loadSettings(){
-  try{ const s=localStorage.getItem(SETTINGS_KEY); if(s){ const p=JSON.parse(s); settings={...settings,...p}; } }catch(e){}
-  PLAN.deals=settings.plan.deals; PLAN.avgCheck=settings.plan.avgCheck;
-  PLAN.conv1=settings.plan.conv1; PLAN.conv24=settings.plan.conv24;
-  PLAN_TOTAL=settings.plan.total;
+  try{
+    const s=localStorage.getItem(SETTINGS_KEY);
+    if(s){ const p=JSON.parse(s); settings={...settings,...p}; }
+    // совместимость со старым форматом
+    const old=localStorage.getItem('opora_settings_v1');
+    if(old&&!s){ const p=JSON.parse(old); if(p.plan){settings.planDefault={...PLAN_DEFAULT,...p.plan};} if(p.startDates)settings.startDates=p.startDates; }
+  }catch(e){}
+  const plan=getPlanForMonth(activeYear, activeMonths.size===1?[...activeMonths][0]:0);
+  applyPlanToGlobals(plan);
 }
 function saveSettings(){
   localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));
-  loadSettings();
 }
+
+// Активный месяц в панели настроек
+let sPlanYear=new Date().getFullYear(), sPlanMonth=0; // 0 = по умолчанию
 function getSeniorityBonus(name,periodDays,monthDays){
   const ds=settings.startDates[name]; if(!ds)return{bonus:0,years:0};
   const start=parseDate(ds); if(!start)return{bonus:0,years:0};
@@ -1052,6 +1071,8 @@ document.addEventListener('click',()=>{
 function render(){
   const y=activeYear;
   const isSingleMonth=activeMonths.size===1;
+  // Применяем план для текущего периода
+  applyPlanToGlobals(getPlanForMonth(y, isSingleMonth?[...activeMonths][0]:0));
   const m=isSingleMonth?[...activeMonths][0]:null;
   const mdays=isSingleMonth?daysInMonth(y,m):null;
   const today=new Date();
@@ -1634,13 +1655,80 @@ function renderPortfolio(){
 }
 
 // SETTINGS UI
+function sPlanKey(){ return sPlanMonth===0?'default':sPlanYear+'-'+String(sPlanMonth).padStart(2,'0'); }
+
+function buildSettingsPlanBtns(){
+  const today=new Date();
+  // Года
+  const yWrap=document.getElementById('s-year-btns');
+  yWrap.innerHTML='';
+  [today.getFullYear()-1, today.getFullYear()].forEach(y=>{
+    const b=document.createElement('div');
+    b.className='ybtn'+(y===sPlanYear?' active':'');
+    b.textContent=y;
+    b.onclick=()=>{sPlanYear=y;buildSettingsPlanBtns();loadPlanFields();};
+    yWrap.appendChild(b);
+  });
+  // Месяцы
+  const mWrap=document.getElementById('s-month-btns');
+  mWrap.innerHTML='';
+  const defBtn=document.createElement('div');
+  defBtn.className='mbtn'+(sPlanMonth===0?' active':'');
+  defBtn.textContent='По умолчанию';
+  defBtn.onclick=()=>{sPlanMonth=0;buildSettingsPlanBtns();loadPlanFields();};
+  mWrap.appendChild(defBtn);
+  for(let m=1;m<=12;m++){
+    const key=sPlanYear+'-'+String(m).padStart(2,'0');
+    const hasOverride=!!settings.planMonths[key];
+    const b=document.createElement('div');
+    b.className='mbtn'+(m===sPlanMonth?' active':'');
+    b.style.position='relative';
+    b.textContent=MONTHS_RU[m-1].slice(0,3);
+    if(hasOverride){
+      const dot=document.createElement('span');
+      dot.style.cssText='position:absolute;top:2px;right:2px;width:5px;height:5px;border-radius:50%;background:var(--blue);';
+      b.appendChild(dot);
+    }
+    b.onclick=()=>{sPlanMonth=m;buildSettingsPlanBtns();loadPlanFields();};
+    mWrap.appendChild(b);
+  }
+}
+
+function loadPlanFields(){
+  const plan=sPlanMonth===0?settings.planDefault:getPlanForMonth(sPlanYear,sPlanMonth);
+  document.getElementById('s-deals').value=plan.deals;
+  document.getElementById('s-avgcheck').value=plan.avgCheck;
+  document.getElementById('s-conv1').value=plan.conv1;
+  document.getElementById('s-conv24').value=plan.conv24;
+  document.getElementById('s-total').value=plan.total;
+  const isOverride=sPlanMonth!==0&&!!settings.planMonths[sPlanYear+'-'+String(sPlanMonth).padStart(2,'0')];
+  const tag=document.getElementById('s-plan-tag');
+  const rst=document.getElementById('s-reset-btn');
+  if(sPlanMonth===0){
+    tag.textContent='Применяется ко всем месяцам без индивидуального плана';
+    rst.style.display='none';
+  }else{
+    tag.textContent=isOverride?'Индивидуальный план для этого месяца':'Значения из умолчаний — сохраните чтобы зафиксировать';
+    tag.style.color=isOverride?'var(--blue)':'var(--t3)';
+    rst.style.display=isOverride?'':'none';
+  }
+}
+
+function resetMonthPlan(){
+  if(sPlanMonth===0)return;
+  const key=sPlanYear+'-'+String(sPlanMonth).padStart(2,'0');
+  delete settings.planMonths[key];
+  saveSettings();
+  buildSettingsPlanBtns();
+  loadPlanFields();
+  render();
+}
+
 function openSettings(){
-  // Заполняем поля плана
-  document.getElementById('s-deals').value=settings.plan.deals;
-  document.getElementById('s-avgcheck').value=settings.plan.avgCheck;
-  document.getElementById('s-conv1').value=settings.plan.conv1;
-  document.getElementById('s-conv24').value=settings.plan.conv24;
-  document.getElementById('s-total').value=settings.plan.total;
+  sPlanYear=activeYear;
+  sPlanMonth=activeMonths.size===1?[...activeMonths][0]:0;
+  buildSettingsPlanBtns();
+  loadPlanFields();
   // Список менеджеров
   const list=document.getElementById('s-mop-list');
   list.innerHTML='';
@@ -1686,13 +1774,21 @@ function closeSettings(){
 }
 
 function applySettings(){
-  settings.plan={
+  const planVals={
     deals: parseInt(document.getElementById('s-deals').value)||16,
     avgCheck: parseInt(document.getElementById('s-avgcheck').value)||225000,
     conv1: parseInt(document.getElementById('s-conv1').value)||25,
     conv24: parseInt(document.getElementById('s-conv24').value)||65,
     total: parseInt(document.getElementById('s-total').value)||120,
   };
+  if(sPlanMonth===0){
+    settings.planDefault=planVals;
+  }else{
+    const key=sPlanYear+'-'+String(sPlanMonth).padStart(2,'0');
+    settings.planMonths[key]=planVals;
+  }
+  buildSettingsPlanBtns();
+  loadPlanFields();
   document.querySelectorAll('#s-mop-list input[data-mop]').forEach(inp=>{
     const v=inp.value.trim();
     if(v)settings.startDates[inp.dataset.mop]=v;
@@ -2022,12 +2118,21 @@ init();
   <div class="settings-body">
 
     <div class="s-section">
-      <div class="s-section-title">План отдела на месяц</div>
+      <div class="s-section-title">План отдела</div>
+
+      <!-- Год + месяц -->
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+        <div id="s-year-btns" style="display:flex;gap:4px;"></div>
+        <div id="s-month-btns" style="display:flex;gap:3px;flex-wrap:wrap;"></div>
+      </div>
+      <div id="s-plan-tag" style="font-size:10px;color:var(--t3);margin-bottom:8px;"></div>
+
       <div class="s-row"><span class="s-lbl">Кол-во сделок (план)</span><input class="s-input" id="s-deals" type="number" min="1"></div>
       <div class="s-row"><span class="s-lbl">Средний чек (план, ₽)</span><input class="s-input" id="s-avgcheck" type="number" min="1"></div>
       <div class="s-row"><span class="s-lbl">Конверсия #1 (план, %)</span><input class="s-input" id="s-conv1" type="number" min="0" max="100"></div>
       <div class="s-row"><span class="s-lbl">Конверсия #2–4 (план, %)</span><input class="s-input" id="s-conv24" type="number" min="0" max="100"></div>
       <div class="s-row"><span class="s-lbl">Общий план сделок (отдел)</span><input class="s-input" id="s-total" type="number" min="1"></div>
+      <button onclick="resetMonthPlan()" style="font-size:10px;color:var(--t3);background:none;border:none;cursor:pointer;padding:2px 0;text-decoration:underline;" id="s-reset-btn">Сбросить к умолчанию</button>
     </div>
 
     <div class="s-section">
