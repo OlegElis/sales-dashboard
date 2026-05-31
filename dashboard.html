@@ -788,6 +788,18 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=
   row('Оклад',`30 000 ÷ ${monthDays} дн. × ${periodDays} дн. отраб.`,oklad,'pg');
   let zp=oklad;
 
+  // Надбавка за стаж (сразу после оклада)
+  if(seniorityDaysToNext!==null){
+    const nextTxt=seniorityDaysToNext>0?` · до повышения ${seniorityDaysToNext} дн.`:'';
+    if(seniorityYears>0){
+      const yLabel=seniorityYears===1?'год':seniorityYears<5?'года':'лет';
+      row('Надбавка за стаж',`${seniorityYears} ${yLabel} × 2 000 ₽ ÷ ${monthDays} × ${periodDays} дн.${nextTxt}`,seniorityBonus,'pg');
+    }else{
+      row('Надбавка за стаж',`Первый год не завершён${nextTxt}`,0,'');
+    }
+    zp+=seniorityBonus;
+  }
+
   // KPI сделки
   const diff=deals-PLAN.deals;
   let kpiD;
@@ -860,18 +872,6 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=
     }
     kAvg=Math.round(kAvgRaw*dayK);
     zp+=kAvg;
-  }
-
-  // Надбавка за стаж (показываем всегда если есть дата найма)
-  if(seniorityDaysToNext!==null){
-    const nextTxt=seniorityDaysToNext>0?` · до повышения ${seniorityDaysToNext} дн.`:'';
-    if(seniorityYears>0){
-      const yLabel=seniorityYears===1?'год':seniorityYears<5?'года':'лет';
-      row('Надбавка за стаж',`${seniorityYears} ${yLabel} × 2 000 ₽ ÷ ${monthDays} × ${periodDays} дн.${nextTxt}`,seniorityBonus,'pg');
-    }else{
-      row('Надбавка за стаж',`Первый год не завершён${nextTxt}`,0,'');
-    }
-    zp+=seniorityBonus;
   }
 
   zp=Math.max(0,zp);
