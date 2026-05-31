@@ -449,6 +449,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
         <div class="month-btns" id="year-btns"></div>
         <div class="month-btns" id="month-btns"></div>
       </div>
+      <div id="period-desc" style="margin-left:auto;font-size:13px;font-weight:500;color:var(--text);letter-spacing:-.01em;white-space:nowrap;align-self:center;"></div>
     </div>
     <div class="days-row">
       <div class="days-label">День</div>
@@ -549,7 +550,7 @@ const dealColor=(v,plan)=>v>=plan?'var(--green)':v>=plan*.8?'var(--amber)':'var(
 const pillCls=p=>p>=25?'pg':p>=15?'pa':'pr';
 
 let allRows=[],allMops=[],periodMops=[],selectedMops=new Set();
-let activeYear=2026,activeMonth=5,activeDay=null;
+let activeYear=2026,activeMonths=new Set([5]),activeDay=null;
 let myChart=null;
 
 const MONTHS_RU=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
@@ -713,14 +714,33 @@ function buildYearBtns(){
     btn.textContent=y;
     btn.onclick=()=>{
       activeYear=y;
-      const today=new Date();
-      // если выбранный год — текущий, ставим текущий месяц, иначе декабрь
-      activeMonth=(y===today.getFullYear())?today.getMonth()+1:12;
+      activeMonths=new Set();
       activeDay=null;
-      buildYearBtns();buildMonthBtns();buildDayBtns();render();
+      buildYearBtns();buildMonthBtns();buildDayBtns();updatePeriodDesc();render();
     };
     wrap.appendChild(btn);
   });
+}
+
+function updatePeriodDesc(){
+  const el=document.getElementById('period-desc');
+  if(!el)return;
+  const y=activeYear;
+  const ms=[...activeMonths].sort((a,b)=>a-b);
+  let text;
+  if(ms.length===0){
+    text=y+' · весь год';
+  }else if(ms.length===1){
+    text=MONTHS_RU[ms[0]-1]+' '+y;
+  }else{
+    const consec=ms.every((m,i)=>i===0||m===ms[i-1]+1);
+    if(consec){
+      text=MONTHS_RU[ms[0]-1].slice(0,3)+' — '+MONTHS_RU[ms[ms.length-1]-1].slice(0,3)+' '+y;
+    }else{
+      text=ms.map(m=>MONTHS_RU[m-1].slice(0,3)).join(', ')+' '+y;
+    }
+  }
+  el.textContent=text;
 }
 
 function buildMonthBtns(){
@@ -730,18 +750,24 @@ function buildMonthBtns(){
   const maxM=(activeYear===today.getFullYear())?today.getMonth()+1:12;
   for(let m=1;m<=maxM;m++){
     const btn=document.createElement('div');
-    btn.className='mbtn'+(m===activeMonth?' active':'');
+    btn.className='mbtn'+(activeMonths.has(m)?' active':'');
     btn.textContent=MONTHS_RU[m-1].slice(0,3);
-    btn.onclick=()=>{activeMonth=m;activeDay=null;buildMonthBtns();buildDayBtns();render();};
+    btn.onclick=()=>{
+      if(activeMonths.has(m))activeMonths.delete(m);else activeMonths.add(m);
+      if(activeMonths.size!==1)activeDay=null;
+      buildMonthBtns();buildDayBtns();render();
+    };
     wrap.appendChild(btn);
   }
+  updatePeriodDesc();
 }
 
 function buildDayBtns(){
   const wrap=document.getElementById('day-btns');
   wrap.innerHTML='';
+  if(activeMonths.size!==1)return;
   const today=new Date();
-  const y=activeYear,m=activeMonth;
+  const y=activeYear,m=[...activeMonths][0];
   const mdays=daysInMonth(y,m);
   const isCurrentMonth=y===today.getFullYear()&&m===today.getMonth()+1;
   const todayDay=isCurrentMonth?today.getDate():null;
@@ -887,33 +913,40 @@ document.addEventListener('click',()=>{
 });
 
 function render(){
-  const y=activeYear,m=activeMonth;
-  const mdays=daysInMonth(y,m);
+  const y=activeYear;
+  const isSingleMonth=activeMonths.size===1;
+  const m=isSingleMonth?[...activeMonths][0]:null;
+  const mdays=isSingleMonth?daysInMonth(y,m):null;
   const today=new Date();
-  const isCurrentMonth=today.getFullYear()===y&&today.getMonth()+1===m;
+  const isCurrentMonth=isSingleMonth&&today.getFullYear()===y&&today.getMonth()+1===m;
   const autoDay=isCurrentMonth?today.getDate():mdays;
-  const daysPassed=activeDay??autoDay;
-  const daysLeft=mdays-daysPassed;
+  const daysPassed=isSingleMonth?(activeDay??autoDay):null;
+  const daysLeft=isSingleMonth?mdays-daysPassed:null;
 
-  // Фильтрация строк (с учётом выбранного дня)
-  const activeMops=selectedMops;
-  const filtered=allRows.filter(r=>{
+  // Базовый фильтр по периоду (все менеджеры — для таблицы)
+  const filteredAll=allRows.filter(r=>{
     if(!isPaidRow(r))return false;
     const dp=parseDate(r[COL.datePaid]);
     if(!dp)return false;
-    if(dp.getFullYear()!==y||dp.getMonth()+1!==m)return false;
-    if(dp.getDate()>daysPassed)return false;
-    if(!activeMops.has(r[COL.responsible]))return false;
+    if(dp.getFullYear()!==y)return false;
+    if(activeMonths.size>0&&!activeMonths.has(dp.getMonth()+1))return false;
+    if(isSingleMonth&&daysPassed!==null&&dp.getDate()>daysPassed)return false;
+    if(!selectedMops.has(r[COL.responsible]))return false;
     return true;
   });
+  // Фильтр для статистики/графиков (с учётом activeMop)
+  const filtered=activeMop
+    ? filteredAll.filter(r=>r[COL.responsible]===activeMop)
+    : filteredAll;
 
   // Менеджеры с данными в этом периоде (без учёта фильтра)
   const periodMopSet=new Set();
   allRows.forEach(r=>{
     if(!isPaidRow(r))return;
     const dp=parseDate(r[COL.datePaid]);
-    if(!dp||dp.getFullYear()!==y||dp.getMonth()+1!==m)return;
-    if(dp.getDate()>daysPassed)return;
+    if(!dp||dp.getFullYear()!==y)return;
+    if(activeMonths.size>0&&!activeMonths.has(dp.getMonth()+1))return;
+    if(isSingleMonth&&daysPassed!==null&&dp.getDate()>daysPassed)return;
     if(r[COL.responsible])periodMopSet.add(r[COL.responsible]);
   });
   const prevPeriodMops=periodMops.join(',');
@@ -935,14 +968,15 @@ function render(){
     const name=r[COL.responsible];
     if(!name||!selectedMops.has(name))return;
     const dc=parseDate(r[COL.dateCreated]);
-    if(!dc||dc.getFullYear()!==y||dc.getMonth()+1!==m)return;
-    if(dc.getDate()>daysPassed)return;
+    if(!dc||dc.getFullYear()!==y)return;
+    if(activeMonths.size>0&&!activeMonths.has(dc.getMonth()+1))return;
+    if(isSingleMonth&&daysPassed!==null&&dc.getDate()>daysPassed)return;
     meetingData[name]=(meetingData[name]||0)+1;
   });
 
-  // Агрегат по МОПам (оплаченные сделки)
+  // Агрегат по МОПам для ТАБЛИЦЫ — всегда все менеджеры (filteredAll)
   const mopData={};
-  filtered.forEach(r=>{
+  filteredAll.forEach(r=>{
     const name=r[COL.responsible]||'Неизвестный';
     if(!mopData[name])mopData[name]={deals:0,sum:0,rows:[],meetings:0,sameDayDeals:0};
     mopData[name].deals++;
@@ -961,6 +995,7 @@ function render(){
     mopData[name].meetings=meetingData[name];
   });
 
+  // Для таблицы — все менеджеры периода; для статистики — только через activeMops
   const mops=Object.keys(mopData);
   let totalDeals=0,totalSum=0,totalZP=0,totalMeetings=0;
   const mopResults=[];
@@ -970,9 +1005,9 @@ function render(){
     totalDeals+=d.deals;
     totalSum+=d.sum;
     totalMeetings+=(d.meetings||0);
-    const conv=calcConversions(allRows,name,y,m);
-    const{zp,pills,bd}=calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays);
-    totalZP+=zp;
+    const conv=calcConversions(allRows,name,y,m||Math.max(...activeMonths)||new Date().getMonth()+1);
+    const{zp,pills,bd}=!isSingleMonth?{zp:null,pills:[],bd:[]}:calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays);
+    if(!!isSingleMonth)totalZP+=zp;
     mopResults.push({name,d,conv,zp,pills,bd,rows:d.rows});
   });
 
@@ -990,7 +1025,7 @@ function render(){
   document.getElementById('m-avg').textContent=fmtK(totalAvg);
   document.getElementById('m-avg-sub').textContent='план 225 тыс.';
   document.getElementById('m-avg-sub').className='metric-sub '+(totalAvg>=PLAN.avgCheck?'good':'bad');
-  document.getElementById('m-fot').textContent=fmtM(totalZP);
+  document.getElementById('m-fot').textContent=!isSingleMonth?'—':fmtM(totalZP);
   document.getElementById('m-fot-sub').textContent=mops.length+' менеджеров';
 
   // Прогресс-бары
@@ -1009,14 +1044,22 @@ function render(){
   });
 
   // Countdown
-  const need=Math.max(0,PLAN_TOTAL-totalDeals);
-  const pace=daysPassed>0?(totalDeals/daysPassed).toFixed(1):'0';
-  const perDay=daysLeft>0?(need/daysLeft).toFixed(1):'0';
-  document.getElementById('cd-day').textContent=daysPassed+' / '+mdays;
-  document.getElementById('cd-need').textContent=need>0?need+' сд':'✓ план';
-  document.getElementById('cd-need').style.color=need<=0?'var(--green)':'';
-  document.getElementById('cd-perday').textContent=daysLeft>0?perDay+' /д':'—';
-  document.getElementById('cd-pace').textContent=pace+' /д';
+  if(!isSingleMonth){
+    document.getElementById('cd-day').textContent='—';
+    document.getElementById('cd-need').textContent='—';
+    document.getElementById('cd-need').style.color='';
+    document.getElementById('cd-perday').textContent='—';
+    document.getElementById('cd-pace').textContent='—';
+  }else{
+    const need=Math.max(0,PLAN_TOTAL-totalDeals);
+    const pace=daysPassed>0?(totalDeals/daysPassed).toFixed(1):'0';
+    const perDay=daysLeft>0?(need/daysLeft).toFixed(1):'0';
+    document.getElementById('cd-day').textContent=daysPassed+' / '+mdays;
+    document.getElementById('cd-need').textContent=need>0?need+' сд':'✓ план';
+    document.getElementById('cd-need').style.color=need<=0?'var(--green)':'';
+    document.getElementById('cd-perday').textContent=daysLeft>0?perDay+' /д':'—';
+    document.getElementById('cd-pace').textContent=pace+' /д';
+  }
 
   // Таблица рейтинга (6 колонок)
   const tbody=document.getElementById('rtbody');
@@ -1026,7 +1069,7 @@ function render(){
   } else {
     mopResults.forEach(({name,d,conv,zp,pills,bd},i)=>{
       const c=getMopColor(name);
-      const zpColor=zp>=150000?'var(--green)':zp>=100000?'var(--amber)':'var(--red)';
+      const zpColor=zp===null?'var(--t3)':zp>=150000?'var(--green)':zp>=100000?'var(--amber)':'var(--red)';
       const convAvg=Math.round((conv.conv1+conv.conv24)/2);
       const tr=document.createElement('tr');
       tr.innerHTML=`
@@ -1040,7 +1083,7 @@ function render(){
           <span style="font-size:9px;color:var(--t3);font-family:inherit;">#1 </span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span>
           <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2–4 </span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
         </td>
-        <td class="r" style="color:${zpColor};font-weight:500;">${fmt(zp)} ₽</td>
+        <td class="r" style="color:${zpColor};font-weight:500;">${zp===null?'—':fmt(zp)+' ₽'}</td>
       `;
       tr.style.cursor='pointer';
       tr.dataset.name=name;
@@ -1049,21 +1092,13 @@ function render(){
         const td=e.target.closest('td');
         const cellIndex=td?td.cellIndex:-1;
         if(cellIndex===1){
-          // клик по ФИО — изоляция
-          const allRows2=tbody.querySelectorAll('tr:not(.total-row)');
+          // клик по ФИО — изоляция (только визуал + графики)
           activeMop=(activeMop===name)?null:name;
-          if(activeMop){
-            selectedMops.clear();
-            selectedMops.add(activeMop);
-          } else {
-            selectedMops.clear();
-            (periodMops.length?periodMops:allMops).forEach(m=>selectedMops.add(m));
-          }
-          buildMopChips();render();
+          render();
           return;
         }
-        // клик по любой другой ячейке = карточка ЗП
-        openZpModal(name,zp,bd,conv,d,d.rows);
+        // клик по любой другой ячейке = карточка ЗП (только в режиме месяца)
+        if(!!isSingleMonth)openZpModal(name,zp,bd,conv,d,d.rows);
       };
       // визуальное выделение на основе activeMop
       if(activeMop){
@@ -1087,7 +1122,7 @@ function render(){
           <span style="font-size:9px;color:var(--t3);font-family:inherit;">#1 </span><span class="pill ${pillCls(avgConv1)}">${avgConv1}%</span>
           <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2–4 </span><span class="pill ${pillCls(avgConv24)}">${avgConv24}%</span>
         </td>
-      <td class="r" style="font-weight:500;">${fmt(totalZP)} ₽</td>
+      <td class="r" style="font-weight:500;">${!isSingleMonth?'—':fmt(totalZP)+' ₽'}</td>
     `;
     tbody.appendChild(trTotal);
   }
@@ -1131,7 +1166,13 @@ function renderChart(){
 }
 
 function renderDailyChart(){
-  const y=activeYear,m=activeMonth;
+  if(activeMonths.size!==1){
+    if(myChartDaily){myChartDaily.destroy();myChartDaily=null;}
+    document.getElementById('daily-title').textContent='выберите месяц';
+    document.getElementById('daily-forecast-pill').innerHTML='';
+    return;
+  }
+  const y=activeYear,m=[...activeMonths][0];
   const today=new Date();
   const isCurrentMonth=(y===today.getFullYear()&&m===today.getMonth()+1);
   const mdays=daysInMonth(y,m);
@@ -1282,7 +1323,7 @@ function generateAiSummary(){
   const textEl=document.getElementById('ai-text');
   btn.disabled=true;
 
-  const y=activeYear,m=activeMonth;
+  const y=activeYear,m=activeMonths.size===1?[...activeMonths][0]:new Date().getMonth()+1;
   const mdays=daysInMonth(y,m);
   const today=new Date();
   const isCurrentMonth=today.getFullYear()===y&&today.getMonth()+1===m;
@@ -1385,7 +1426,7 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
   document.getElementById('zp-av').style.color=c.tc;
   document.getElementById('zp-av').textContent=initials(name);
   document.getElementById('zp-name').textContent=name;
-  document.getElementById('zp-period').textContent=MONTHS_RU[activeMonth-1]+' '+activeYear;
+  document.getElementById('zp-period').textContent=MONTHS_RU[([...activeMonths][0]||1)-1]+' '+activeYear;
   document.getElementById('zp-total').textContent=fmt(zp)+' ₽';
   document.getElementById('zp-total').style.color=zpColor;
   // строки деталей
@@ -1446,7 +1487,7 @@ function closeZpModal(){document.getElementById('zp-overlay').classList.remove('
 
 // DAY MODAL
 function openDayModal(day){
-  const y=activeYear,m=activeMonth;
+  const y=activeYear,m=[...activeMonths][0]||new Date().getMonth()+1;
   const dateStr=`${day} ${MONTHS_RU[m-1]} ${y}`;
 
   // Встречи — созданы в этот день
