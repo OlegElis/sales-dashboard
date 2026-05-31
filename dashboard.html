@@ -55,9 +55,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .days-row{display:flex;align-items:flex-start;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
 .days-label{color:var(--t3);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;width:60px;flex-shrink:0;padding-top:5px;font-family:inherit;}
 .day-btns{display:flex;gap:3px;flex-wrap:wrap;}
-.dbtn{font-size:11px;font-family:inherit;padding:3px 7px;border-radius:6px;border:1px solid transparent;color:var(--text);cursor:pointer;transition:all .12s;min-width:26px;text-align:center;position:relative;}
+.dbtn{font-size:11px;font-family:inherit;padding:3px 5px 2px;border-radius:6px;border:1px solid transparent;color:var(--text);cursor:pointer;transition:all .12s;min-width:24px;text-align:center;position:relative;display:flex;flex-direction:column;align-items:center;gap:0;}
+.dbtn-num{line-height:1.2;}
+.dbtn-dow{font-size:7px;line-height:1.1;opacity:.55;font-weight:400;letter-spacing:.02em;}
+.dbtn-dow.weekend{color:#A32D2D;opacity:.75;}
 .dbtn:hover:not(.dbtn-future){filter:brightness(.92);}
-.dbtn.active{outline:1.5px solid var(--red);outline-offset:1px;font-weight:700;}
+.dbtn.active{outline:1.5px solid var(--red);outline-offset:1px;}
+.dbtn.active .dbtn-num{font-weight:700;}
 .dbtn.today::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--blue);}
 .dbtn-future{opacity:.35;cursor:default;pointer-events:none;}
 
@@ -836,14 +840,14 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=
   const sign=n=>n>0?'+'+n:String(n);
   if(deals===0){
     kpiD=0;
-    row('KPI (сделки)',`${deals} сд. → 0`,0,'pr');
+    row('KPI (сделки)',`${deals} сд. = 0`,0,'pr');
   } else if(diff>=0){
     kpiD=72000+diff*5000;
     const extra=diff>0?` + ${diff}×5 000`:'' ;
-    row('KPI (сделки)',`${deals} сд. (${sign(diff)} к плану ${PLAN.deals}) → 72 000${extra}`,kpiD,'pg');
+    row('KPI (сделки)',`${deals} сд. (${sign(diff)} к плану ${PLAN.deals}) = 72 000${extra}`,kpiD,'pg');
   } else {
     kpiD=Math.max(0,72000+diff*4500);
-    row('KPI (сделки)',`${deals} сд. (${sign(diff)} к плану ${PLAN.deals}) → 72 000 + (${diff})×4 500 = ${fmt(72000+diff*4500)}${kpiD===0?' → мин. 0':''}`,kpiD,diff<-4?'pr':'pa');
+    row('KPI (сделки)',`${deals} сд. (${sign(diff)} к плану ${PLAN.deals}) = 72 000 + (${diff})×4 500 = ${fmt(72000+diff*4500)}${kpiD===0?' = мин. 0':''}`,kpiD,diff<-4?'pr':'pa');
   }
   zp+=kpiD;
 
@@ -857,13 +861,13 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=
     let kC1raw;
     if(conv1<15){
       kC1raw=0;
-      row('Конв. #1',`${conv1}% < 15% (порог) → 0`,0,'pr');
+      row('Конв. #1',`${conv1}% < 15% (порог) = 0`,0,'pr');
     } else if(dc1<0){
       kC1raw=Math.max(0,18000+dc1*1800);
-      row('Конв. #1',`${conv1}% (${sign(dc1)} к плану ${PLAN.conv1}%) → (18 000 + (${dc1})×1 800) ÷ ${monthDays} × ${periodDays}`,Math.round(kC1raw*dayK),'pa');
+      row('Конв. #1',`${conv1}% (${sign(dc1)} к плану ${PLAN.conv1}%) = (18 000 + (${dc1})×1 800) ÷ ${monthDays} × ${periodDays}`,Math.round(kC1raw*dayK),'pa');
     } else {
       kC1raw=18000+dc1*750;
-      row('Конв. #1',`${conv1}% (${sign(dc1)} к плану ${PLAN.conv1}%) → (18 000 + ${dc1}×750) ÷ ${monthDays} × ${periodDays}`,Math.round(kC1raw*dayK),'pg');
+      row('Конв. #1',`${conv1}% (${sign(dc1)} к плану ${PLAN.conv1}%) = (18 000 + ${dc1}×750) ÷ ${monthDays} × ${periodDays}`,Math.round(kC1raw*dayK),'pg');
     }
     const kC1=Math.round(kC1raw*dayK);
     zp+=kC1;
@@ -873,13 +877,13 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=
     let kC24raw;
     if(conv24<45){
       kC24raw=0;
-      row('Конв. #2–4',`${conv24}% < 45% (порог) → 0`,0,'pr');
+      row('Конв. #2–4',`${conv24}% < 45% (порог) = 0`,0,'pr');
     } else if(dc24<0){
       kC24raw=Math.max(0,18000+dc24*900);
-      row('Конв. #2–4',`${conv24}% (${sign(dc24)} к плану ${PLAN.conv24}%) → (18 000 + (${dc24})×900) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pa');
+      row('Конв. #2–4',`${conv24}% (${sign(dc24)} к плану ${PLAN.conv24}%) = (18 000 + (${dc24})×900) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pa');
     } else {
       kC24raw=18000+dc24*750;
-      row('Конв. #2–4',`${conv24}% (${sign(dc24)} к плану ${PLAN.conv24}%) → (18 000 + ${dc24}×750) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pg');
+      row('Конв. #2–4',`${conv24}% (${sign(dc24)} к плану ${PLAN.conv24}%) = (18 000 + ${dc24}×750) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pg');
     }
     const kC24=Math.round(kC24raw*dayK);
     zp+=kC24;
@@ -892,13 +896,13 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=
     let kAvgRaw;
     if(avg<AVG_MIN){
       kAvgRaw=0;
-      row('Ср. чек',`${fmtK(avg)} < 150 тыс. (порог) → 0`,0,'pr');
+      row('Ср. чек',`${fmtK(avg)} < 150 тыс. (порог) = 0`,0,'pr');
     } else if(davg<0){
       kAvgRaw=12000+davg*160;
-      row('Ср. чек',`${fmtK(avg)} (${sign(davg)} тыс. к плану ${fmtK(PLAN.avgCheck)}) → (12 000 + (${davg})×160) ÷ ${monthDays} × ${periodDays}`,Math.round(kAvgRaw*dayK),'pa');
+      row('Ср. чек',`${fmtK(avg)} (${sign(davg)} тыс. к плану ${fmtK(PLAN.avgCheck)}) = (12 000 + (${davg})×160) ÷ ${monthDays} × ${periodDays}`,Math.round(kAvgRaw*dayK),'pa');
     } else {
       kAvgRaw=12000+davg*1000;
-      row('Ср. чек',`${fmtK(avg)} (${sign(davg)} тыс. к плану ${fmtK(PLAN.avgCheck)}) → (12 000 + ${davg}×1 000) ÷ ${monthDays} × ${periodDays}`,Math.round(kAvgRaw*dayK),'pg');
+      row('Ср. чек',`${fmtK(avg)} (${sign(davg)} тыс. к плану ${fmtK(PLAN.avgCheck)}) = (12 000 + ${davg}×1 000) ÷ ${monthDays} × ${periodDays}`,Math.round(kAvgRaw*dayK),'pg');
     }
     kAvg=Math.round(kAvgRaw*dayK);
     zp+=kAvg;
@@ -1003,7 +1007,7 @@ function buildDayBtns(){
     if(!isPast)return{bg:'var(--s2)',color:'var(--t3)'};
     if(count===0)return{bg:'#FCEBEB',color:'#A32D2D'};
     const t=count/maxCount; // 0..1
-    // интерполяция: красный(252,91,91) → жёлтый(250,200,50) → зелёный(90,180,80)
+    // интерполяция: красный(252,91,91) = жёлтый(250,200,50) = зелёный(90,180,80)
     let r,g,b;
     if(t<0.5){
       const tt=t*2;
@@ -1032,7 +1036,10 @@ function buildDayBtns(){
     if(d===activeDay)cls+=' active';
     if(isToday)cls+=' today';
     btn.className=cls;
-    btn.textContent=d;
+    const dow=new Date(y,m-1,d).getDay(); // 0=Вс,1=Пн..6=Сб
+    const DOW_RU=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+    const isWeekend=dow===0||dow===6;
+    btn.innerHTML=`<span class="dbtn-num">${d}</span><span class="dbtn-dow${isWeekend?' weekend':''}">${DOW_RU[dow]}</span>`;
     btn.style.background=col.bg;
     btn.style.color=col.color;
     if(col.border)btn.style.borderColor=col.border;
@@ -2099,7 +2106,7 @@ function openDayModal(day){
 
   document.getElementById('day-modal-title').textContent=dateStr;
   document.getElementById('day-modal-sub').textContent=
-    `Встреч: ${meetings.length} · Сделок: ${deals.length}${deals.length&&meetings.filter(r=>meetingIds.has(r[COL.id])&&deals.find(d=>d[COL.id]===r[COL.id])).length?` · ⚡ ${deals.filter(d=>meetingIds.has(d[COL.id])).length} встреча→сделка в один день`:''}`;
+    `Встреч: ${meetings.length} · Сделок: ${deals.length}${deals.length&&meetings.filter(r=>meetingIds.has(r[COL.id])&&deals.find(d=>d[COL.id]===r[COL.id])).length?` · ⚡ ${deals.filter(d=>meetingIds.has(d[COL.id])).length} встреча=сделка в один день`:''}`;
 
   function renderTable(rows, isPaid){
     if(!rows.length) return `<div class="day-empty">Нет данных</div>`;
