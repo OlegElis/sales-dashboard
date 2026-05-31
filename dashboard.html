@@ -1848,7 +1848,18 @@ function resetMonthPlan(){
   render();
 }
 
+const SETTINGS_PWD='AveMaria1';
+let settingsUnlocked=false;
+
 function openSettings(){
+  if(!settingsUnlocked){
+    const pwd=prompt('Пароль для настроек:');
+    if(pwd!==SETTINGS_PWD){
+      if(pwd!==null)alert('Неверный пароль');
+      return;
+    }
+    settingsUnlocked=true;
+  }
   sPlanYear=activeYear;
   sPlanMonth=activeMonths.size===1?[...activeMonths][0]:0;
   buildSettingsPlanBtns();
