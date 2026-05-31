@@ -596,6 +596,10 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
         <div class="vtab" id="pvtab-kanban" onclick="switchPortfolioView('kanban')" style="padding:4px 12px;font-size:11px;">⊞ Канбан</div>
       </div>
     </div>
+    <div class="days-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+      <div class="days-label">Менеджер</div>
+      <div id="p-mop-btns" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+    </div>
   </div>
 
   <div id="p-kanban-wrap" style="display:none;" class="kanban-wrap"></div>
@@ -1400,6 +1404,8 @@ function renderDailyChart(){
   });
 }
 
+let portfolioMop=null;
+
 // PORTFOLIO VIEW SWITCHING
 let portfolioView='table';
 function switchPortfolioView(v){
@@ -1533,6 +1539,37 @@ function priorityOrder(days){
   return 2;
 }
 
+function buildPortfolioMopBtns(allPortfolioRows){
+  const wrap=document.getElementById('p-mop-btns');
+  if(!wrap)return;
+  // Собираем менеджеров из всех строк портфеля (до фильтра)
+  const mops=[...new Set(allPortfolioRows.map(r=>r[COL.responsible]).filter(Boolean))].sort();
+  wrap.innerHTML='';
+
+  // Кнопка «Все»
+  const allBtn=document.createElement('div');
+  allBtn.className='mbtn'+(portfolioMop===null?' active':'');
+  allBtn.textContent='Все';
+  allBtn.onclick=()=>{portfolioMop=null;buildPortfolioMopBtns(allPortfolioRows);renderPortfolio();};
+  wrap.appendChild(allBtn);
+
+  mops.forEach(name=>{
+    const c=getMopColor(name);
+    const btn=document.createElement('div');
+    btn.className='mbtn'+(portfolioMop===name?' active':'');
+    btn.style.cssText=portfolioMop===name?`background:${c.bg};color:${c.tc};border-color:transparent;`:'';
+    // Короткое имя: Фамилия И.
+    const parts=name.trim().split(/\s+/);
+    const short=parts[0]+(parts[1]?' '+parts[1][0]+'.':'');
+    btn.textContent=short;
+    btn.onclick=()=>{
+      portfolioMop=(portfolioMop===name)?null:name;
+      buildPortfolioMopBtns(allPortfolioRows);renderPortfolio();
+    };
+    wrap.appendChild(btn);
+  });
+}
+
 function buildPortfolioSortBtns(){
   const wrap=document.getElementById('p-sort-btns');
   if(!wrap)return;
@@ -1565,13 +1602,15 @@ function renderPortfolio(){
   ]);
 
   // Неоплаченные сделки выбранных менеджеров с нужными стадиями
-  let rows=allRows.filter(r=>{
+  const allPortfolioRows=allRows.filter(r=>{
     if(isPaidRow(r))return false;
     if(!r[COL.responsible])return false;
     if(!selectedMops.has(r[COL.responsible]))return false;
     if(!PORTFOLIO_STAGES.has((r[COL.dealStage]||'').trim()))return false;
     return true;
   });
+  buildPortfolioMopBtns(allPortfolioRows);
+  let rows=portfolioMop?allPortfolioRows.filter(r=>r[COL.responsible]===portfolioMop):allPortfolioRows;
 
   // Сортировка
   rows=[...rows].sort((a,b)=>{
