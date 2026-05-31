@@ -942,7 +942,7 @@ function buildMonthBtns(){
   const wrap=document.getElementById('month-btns');
   wrap.innerHTML='';
   const today=new Date();
-  const maxM=(activeYear===today.getFullYear())?today.getMonth()+1:12;
+  const maxM=12; // показываем все месяцы, будущие просто без данных
   for(let m=1;m<=maxM;m++){
     const btn=document.createElement('div');
     btn.className='mbtn'+(activeMonths.has(m)?' active':'');
