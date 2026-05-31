@@ -1291,13 +1291,14 @@ function render(){
   // Топ-метрики
   document.getElementById('m-deals').textContent=totalDeals;
   document.getElementById('m-deals-sub').textContent='план '+PLAN_TOTAL+' шт';
-  document.getElementById('m-deals-sub').className='metric-sub '+(totalDeals>=PLAN_TOTAL?'good':'bad');
+  document.getElementById('m-deals-sub').className='stat-sub '+(totalDeals>=PLAN_TOTAL?'good':'bad');
   document.getElementById('m-sameday').textContent=totalSameDayDeals>0?'⚡ '+totalSameDayDeals+' день в день':'';
   document.getElementById('m-sum').textContent=fmtM(totalSum);
   document.getElementById('m-sum-sub').textContent='план '+fmtM(PLAN_TOTAL*PLAN.avgCheck);
+  document.getElementById('m-sum-sub').className='stat-sub '+(totalSum>=PLAN_TOTAL*PLAN.avgCheck?'good':'bad');
   document.getElementById('m-avg').textContent=fmtK(totalAvg);
   document.getElementById('m-avg-sub').textContent='план 225 тыс.';
-  document.getElementById('m-avg-sub').className='metric-sub '+(totalAvg>=PLAN.avgCheck?'good':'bad');
+  document.getElementById('m-avg-sub').className='stat-sub '+(totalAvg>=PLAN.avgCheck?'good':'bad');
   document.getElementById('m-fot').textContent=!isSingleMonth?'—':fmtM(totalZP);
   document.getElementById('m-fot-sub').textContent=mops.length+' менеджеров';
 
