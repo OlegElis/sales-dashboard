@@ -518,11 +518,17 @@ function saveSettings(){
 // Активный месяц в панели настроек
 let sPlanYear=new Date().getFullYear(), sPlanMonth=0; // 0 = по умолчанию
 function getSeniorityBonus(name,periodDays,monthDays){
-  const ds=settings.startDates[name]; if(!ds)return{bonus:0,years:0};
-  const start=parseDate(ds); if(!start)return{bonus:0,years:0};
-  const years=Math.floor((new Date()-start)/(365.25*24*60*60*1000));
-  if(years<=0)return{bonus:0,years:0};
-  return{bonus:Math.round(years*2000/monthDays*periodDays),years};
+  const ds=settings.startDates[name]; if(!ds)return{bonus:0,years:0,daysToNext:null,startDate:null};
+  const start=parseDate(ds); if(!start)return{bonus:0,years:0,daysToNext:null,startDate:null};
+  const today=new Date();
+  const msPerDay=1000*60*60*24;
+  const years=Math.floor((today-start)/(365.25*msPerDay));
+  // Дата следующего повышения — ближайший день годовщины
+  const nextAnniv=new Date(start);
+  nextAnniv.setFullYear(start.getFullYear()+years+1);
+  const daysToNext=Math.ceil((nextAnniv-today)/msPerDay);
+  const bonus=years>0?Math.round(years*2000/monthDays*periodDays):0;
+  return{bonus,years,daysToNext,startDate:ds};
 }
 loadSettings();
 const COL = {
@@ -773,7 +779,7 @@ function calcConversions(rows,mopName,year,month){
   return{conv1:c1>0?Math.round(p1/c1*100):0,conv24:c24>0?Math.round(p24/c24*100):0,c1,c24};
 }
 
-function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=0,seniorityYears=0){
+function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=0,seniorityYears=0,seniorityDaysToNext=null){
   const bd=[]; // breakdown: {label,formula,amount,cls}
   function row(label,formula,amount,cls){bd.push({label,formula,amount,cls});}
 
@@ -856,9 +862,15 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=
     zp+=kAvg;
   }
 
-  // Надбавка за стаж
-  if(seniorityBonus>0){
-    row('Надбавка за стаж',`${seniorityYears} ${seniorityYears===1?'год':seniorityYears<5?'года':'лет'} × 2 000 ₽ ÷ ${monthDays} × ${periodDays} дн.`,seniorityBonus,'pg');
+  // Надбавка за стаж (показываем всегда если есть дата найма)
+  if(seniorityDaysToNext!==null){
+    const nextTxt=seniorityDaysToNext>0?` · до повышения ${seniorityDaysToNext} дн.`:'';
+    if(seniorityYears>0){
+      const yLabel=seniorityYears===1?'год':seniorityYears<5?'года':'лет';
+      row('Надбавка за стаж',`${seniorityYears} ${yLabel} × 2 000 ₽ ÷ ${monthDays} × ${periodDays} дн.${nextTxt}`,seniorityBonus,'pg');
+    }else{
+      row('Надбавка за стаж',`Первый год не завершён${nextTxt}`,0,'');
+    }
     zp+=seniorityBonus;
   }
 
@@ -1181,8 +1193,8 @@ function render(){
     const conv=isSingleMonth
       ? calcConversions(allRows,name,y,m)
       : calcConversionsDirect(allRows,name,y,activeMonths);
-    const{bonus:senBonus,years:senYears}=isSingleMonth?getSeniorityBonus(name,daysPassed,mdays):{bonus:0,years:0};
-    const{zp,pills,bd}=!isSingleMonth?{zp:null,pills:[],bd:[]}:calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays,senBonus,senYears);
+    const{bonus:senBonus,years:senYears,daysToNext:senDays}=isSingleMonth?getSeniorityBonus(name,daysPassed,mdays):{bonus:0,years:0,daysToNext:null};
+    const{zp,pills,bd}=!isSingleMonth?{zp:null,pills:[],bd:[]}:calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays,senBonus,senYears,senDays);
     if(isSingleMonth)totalZP+=zp;
     mopResults.push({name,d,conv,zp,pills,bd,rows:d.rows});
   });
