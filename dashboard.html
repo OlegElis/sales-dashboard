@@ -423,7 +423,7 @@ const PLAN = { deals:16, avgCheck:225000, conv1:25, conv24:65 };
 const PLAN_TOTAL = 120;
 const COL = {
   id:0, clientName:3, sum:5, direction:7, responsible:8,
-  dateCreated:17, datePaid:20, lastContact:26, dealStage:30, stage:31
+  dateCreated:17, datePaid:20, lastContact:26, dealStage:30, stage:31, dealLink:34
 };
 function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
 </script>
@@ -584,10 +584,11 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
           <th class="r">Сумма</th>
           <th class="r">Последнее касание</th>
           <th class="r">Дней без связи</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="ptbody">
-        <tr><td colspan="8" style="text-align:center;padding:20px;color:var(--t3);">Загрузка...</td></tr>
+        <tr><td colspan="9" style="text-align:center;padding:20px;color:var(--t3);">Загрузка...</td></tr>
       </tbody>
     </table>
   </div>
@@ -1475,7 +1476,7 @@ function renderPortfolio(){
     `<span class="days-pill days-green">${green}</span>`;
 
   if(rows.length===0){
-    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--t3);font-family:inherit;">Нет неоплаченных сделок</td></tr>';
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--t3);font-family:inherit;">Нет неоплаченных сделок</td></tr>';
     return;
   }
 
@@ -1504,7 +1505,7 @@ function renderPortfolio(){
       groupKey=name;
     }
     if(groupKey&&groupKey!==lastGroupKey){
-      html+=`<tr class="p-group-row"><td colspan="8">${groupKey}</td></tr>`;
+      html+=`<tr class="p-group-row"><td colspan="9">${groupKey}</td></tr>`;
       lastGroupKey=groupKey;
     }
 
@@ -1517,6 +1518,7 @@ function renderPortfolio(){
       <td class="r">${sum>0?fmt(sum)+' ₽':'—'}</td>
       <td class="r" style="color:var(--t2);font-size:11px">${lcStr}</td>
       <td class="r"><span class="days-pill ${cls}">${days!==null?days+' д':'нет данных'}</span></td>
+      <td style="text-align:center">${(r[COL.dealLink]||'').trim()?`<a href="${(r[COL.dealLink]||'').trim()}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none;padding:3px 7px;border:1px solid var(--border2);border-radius:var(--rs);white-space:nowrap;">Б24 ↗</a>`:'—'}</td>
     </tr>`;
   });
   tbody.innerHTML=html;
