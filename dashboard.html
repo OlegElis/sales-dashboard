@@ -605,34 +605,34 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   <!-- [1,2] Статистика -->
   <div class="stats-strip" style="grid-template-columns:repeat(4,1fr);height:100%;">
 
-    <!-- Строка 1: Сделки / встречи по направлениям -->
-    <div class="stat-cell" style="padding:5px 10px;">
-      <div class="stat-lbl" style="font-size:9px;">#1 сд / встр</div>
-      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-deal1">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-meet1">—</span></div>
-    </div>
-    <div class="stat-cell" style="padding:5px 10px;">
-      <div class="stat-lbl" style="font-size:9px;">#2 сд / встр</div>
-      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-deal2">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-meet2">—</span></div>
-    </div>
-    <div class="stat-cell" style="padding:5px 10px;">
-      <div class="stat-lbl" style="font-size:9px;">#3 сд / встр</div>
-      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-deal3">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-meet3">—</span></div>
-    </div>
-    <div class="stat-cell" style="padding:5px 10px;">
-      <div class="stat-lbl" style="font-size:9px;">#4 сд / встр</div>
-      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-deal4">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-meet4">—</span></div>
-    </div>
-
-    <!-- Строка 2: Ключевые метрики -->
-    <div class="stat-cell" style="border-top:1px solid var(--border)">
+    <!-- Строка 1: Ключевые метрики -->
+    <div class="stat-cell">
       <div class="stat-lbl">Сделок</div>
       <div class="stat-val" id="m-deals">—</div>
       <div class="stat-sub" id="m-deals-sub"></div>
       <div style="font-size:9px;color:var(--amber);margin-top:1px;" id="m-sameday"></div>
     </div>
-    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
-    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">—</div><div class="stat-sub" id="m-avg-sub"></div></div>
-    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">ФОТ</div><div class="stat-val" id="m-fot">—</div><div class="stat-sub" id="m-fot-sub"></div></div>
+    <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
+    <div class="stat-cell"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">—</div><div class="stat-sub" id="m-avg-sub"></div></div>
+    <div class="stat-cell"><div class="stat-lbl">ФОТ</div><div class="stat-val" id="m-fot">—</div><div class="stat-sub" id="m-fot-sub"></div></div>
+
+    <!-- Строка 2: Сделки / встречи по направлениям -->
+    <div class="stat-cell" style="border-top:1px solid var(--border);padding:5px 10px;">
+      <div class="stat-lbl" style="font-size:9px;">#1 сд / встр</div>
+      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-deal1">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-meet1">—</span></div>
+    </div>
+    <div class="stat-cell" style="border-top:1px solid var(--border);padding:5px 10px;">
+      <div class="stat-lbl" style="font-size:9px;">#2 сд / встр</div>
+      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-deal2">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-meet2">—</span></div>
+    </div>
+    <div class="stat-cell" style="border-top:1px solid var(--border);padding:5px 10px;">
+      <div class="stat-lbl" style="font-size:9px;">#3 сд / встр</div>
+      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-deal3">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-meet3">—</span></div>
+    </div>
+    <div class="stat-cell" style="border-top:1px solid var(--border);padding:5px 10px;">
+      <div class="stat-lbl" style="font-size:9px;">#4 сд / встр</div>
+      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-deal4">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-meet4">—</span></div>
+    </div>
 
     <!-- Строка 3: Темп и встречи всего -->
     <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">День мес.</div><div class="stat-val" id="cd-day">—</div></div>
