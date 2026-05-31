@@ -492,7 +492,7 @@ function getSeniorityBonus(name,periodDays,monthDays){
 }
 loadSettings();
 const COL = {
-  id:0, clientName:3, sum:5, direction:7, responsible:8,
+  id:0, clientName:3, sum:5, direction:7, responsible:8, responsibleText:9,
   dateCreated:17, datePaid:20, lastContact:26, dealStage:30, stage:31, dealLink:34
 };
 function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
@@ -1498,8 +1498,9 @@ function renderKanban(rows){
     stageRows.forEach(r=>{
       const days=daysSince(r[COL.lastContact]);
       const cls=daysPillCls(days);
-      const c=getMopColor(r[COL.responsible]||'');
-      const mopShort=(r[COL.responsible]||'').split(' ').slice(0,2).join(' ');
+      const mopName=(r[COL.responsibleText]||r[COL.responsible]||'');
+      const c=getMopColor(mopName);
+      const mopShort=mopName.split(' ').slice(0,2).join(' ');
       const client=(r[COL.clientName]||'—').trim();
       const sum=parseSum(r[COL.sum]);
       const lc=parseDate(r[COL.lastContact]);
@@ -1515,7 +1516,7 @@ function renderKanban(rows){
         </div>
         <div class="k-card-bottom">
           <div class="k-card-mop">
-            <span class="av" style="background:${c.bg};color:${c.tc};width:20px;height:20px;font-size:8px;">${initials(r[COL.responsible]||'')}</span>
+            <span class="av" style="background:${c.bg};color:${c.tc};width:20px;height:20px;font-size:8px;">${initials(mopName)}</span>
             ${mopShort}
           </div>
           <div class="k-card-sum">${sum>0?fmt(sum)+' ₽':'—'}</div>
@@ -1568,7 +1569,7 @@ function buildPortfolioMopBtns(allPortfolioRows){
   const wrap=document.getElementById('p-mop-btns');
   if(!wrap)return;
   // Собираем менеджеров из всех строк портфеля (до фильтра)
-  const mops=[...new Set(allPortfolioRows.map(r=>r[COL.responsible]).filter(Boolean))].sort();
+  const mops=[...new Set(allPortfolioRows.map(r=>r[COL.responsibleText]||r[COL.responsible]).filter(Boolean))].sort();
   wrap.innerHTML='';
 
   // Кнопка «Все»
@@ -1612,11 +1613,11 @@ function renderPortfolio(){
     if(!PORTFOLIO_STAGES.has(stage))return false;
     // Для частичной оплаты показываем независимо от наличия оплаты
     if(stage!=='Продажа БФЛ. Полная/частичная оплата'&&isPaidRow(r))return false;
-    if(!r[COL.responsible])return false;
+    if(!(r[COL.responsibleText]||r[COL.responsible]))return false;
     return true;
   });
   buildPortfolioMopBtns(allPortfolioRows);
-  const rows=portfolioMop?allPortfolioRows.filter(r=>r[COL.responsible]===portfolioMop):allPortfolioRows;
+  const rows=portfolioMop?allPortfolioRows.filter(r=>(r[COL.responsibleText]||r[COL.responsible])===portfolioMop):allPortfolioRows;
 
   // Сводка
   const red=rows.filter(r=>{const d=daysSince(r[COL.lastContact]);return d===null||d>7;}).length;
