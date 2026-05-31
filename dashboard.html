@@ -493,8 +493,8 @@ function loadSettings(){
     const old=localStorage.getItem('opora_settings_v1');
     if(old&&!s){ const p=JSON.parse(old); if(p.plan){settings.planDefault={...PLAN_DEFAULT,...p.plan};} if(p.startDates)settings.startDates=p.startDates; }
   }catch(e){}
-  const plan=getPlanForMonth(activeYear, activeMonths.size===1?[...activeMonths][0]:0);
-  applyPlanToGlobals(plan);
+  // При инициализации применяем дефолтный план (activeYear/activeMonths ещё не готовы)
+  applyPlanToGlobals(settings.planDefault);
 }
 function saveSettings(){
   localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));
