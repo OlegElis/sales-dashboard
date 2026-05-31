@@ -474,7 +474,18 @@ let PLAN_TOTAL = 120;
 const SETTINGS_KEY='opora_settings_v3';
 const PLAN_DEFAULT={deals:16,avgCheck:225000,conv1:25,conv24:65,total:100};
 // planDefault всегда из кода — в localStorage только planMonths и startDates
-let settings={ planDefault:{...PLAN_DEFAULT}, planMonths:{}, startDates:{} };
+const START_DATES_DEFAULT={
+  'Архипов Евгений Николаевич':          '13.07.2021',
+  'Панова Анна Александровна':            '09.01.2023',
+  'Лаврик Ксения Андреевна':             '06.02.2025',
+  'Кушнеревич Алика Геннадьевна':        '27.02.2025',
+  'Кривчикова Мария Ивановна':           '22.09.2025',
+  'Расстегаев Никита Андреевич':         '07.11.2025',
+  'Черных Елена Николаевна':             '01.12.2025',
+  'Варламова Светлана Александровна':    '14.01.2026',
+  'Лисечко Дмитрий Анатольевич':        '28.04.2026',
+};
+let settings={ planDefault:{...PLAN_DEFAULT}, planMonths:{}, startDates:{...START_DATES_DEFAULT} };
 
 function getPlanForMonth(year,month){
   const key=year+'-'+String(month||0).padStart(2,'0');
@@ -493,7 +504,7 @@ function loadSettings(){
       const p=JSON.parse(s);
       // planDefault берём из кода (PLAN_DEFAULT), переносим только planMonths и startDates
       if(p.planMonths)settings.planMonths=p.planMonths;
-      if(p.startDates)settings.startDates=p.startDates;
+      if(p.startDates)settings.startDates={...START_DATES_DEFAULT,...p.startDates};
       // planDefault можно переопределить только если явно сохранено в v3
       if(p.planDefault)settings.planDefault={...PLAN_DEFAULT,...p.planDefault};
     }
