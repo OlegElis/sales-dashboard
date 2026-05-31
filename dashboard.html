@@ -1632,8 +1632,9 @@ function renderPortfolio(){
   const allPortfolioRows=allRows.filter(r=>{
     const stage=(r[COL.dealStage]||'').trim();
     if(!PORTFOLIO_STAGES.has(stage))return false;
-    // Для частичной оплаты показываем независимо от наличия оплаты
-    if(stage!=='Продажа БФЛ. Полная/частичная оплата'&&isPaidRow(r))return false;
+    // Для этих стадий показываем независимо от наличия оплаты
+    const PAID_ALLOWED=new Set(['Продажа БФЛ. Полная/частичная оплата','Продажа БФЛ. Передача в ОИ (автоматика)','Продажа БФЛ. Передано в Делопроизводство']);
+    if(!PAID_ALLOWED.has(stage)&&isPaidRow(r))return false;
     if(!(r[COL.responsibleText]||r[COL.responsible]))return false;
     return true;
   });
