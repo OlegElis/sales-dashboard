@@ -1841,6 +1841,7 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
   // строки деталей
   const avg=d.deals>0?Math.round(d.sum/d.deals):0;
   document.getElementById('zp-detail-rows').innerHTML=`
+    <div class="zp-row"><span class="zp-row-lbl">Встреч</span><span class="zp-row-val">${d.meetings||0}</span></div>
     <div class="zp-row"><span class="zp-row-lbl">Сделок</span><span class="zp-row-val">${d.deals} (план ${PLAN.deals})</span></div>
     <div class="zp-row"><span class="zp-row-lbl">Выручка</span><span class="zp-row-val">${fmtM(d.sum)}</span></div>
     <div class="zp-row"><span class="zp-row-lbl">Средний чек</span><span class="zp-row-val">${fmtK(avg)} (план ${fmtK(PLAN.avgCheck)})</span></div>
