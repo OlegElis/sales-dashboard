@@ -586,44 +586,13 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   <!-- Фильтры портфеля -->
   <div class="filters" style="margin-bottom:12px;">
     <div class="f-row" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <div class="f-label">Сортировка</div>
-        <div class="month-btns" id="p-sort-btns"></div>
-      </div>
-      <div id="p-summary" style="font-size:12px;color:var(--t2);align-self:center;"></div>
-      <div style="display:flex;gap:3px;flex-shrink:0;">
-        <div class="vtab active" id="pvtab-table" onclick="switchPortfolioView('table')" style="padding:4px 12px;font-size:11px;">☰ Таблица</div>
-        <div class="vtab" id="pvtab-kanban" onclick="switchPortfolioView('kanban')" style="padding:4px 12px;font-size:11px;">⊞ Канбан</div>
-      </div>
-    </div>
-    <div class="days-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
-      <div class="days-label">Менеджер</div>
-      <div id="p-mop-btns" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+      <div class="f-label">Менеджер</div>
+      <div id="p-mop-btns" style="display:flex;gap:5px;flex-wrap:wrap;flex:1;"></div>
+      <div id="p-summary" style="font-size:12px;color:var(--t2);align-self:center;white-space:nowrap;"></div>
     </div>
   </div>
 
-  <div id="p-kanban-wrap" style="display:none;" class="kanban-wrap"></div>
-
-  <div class="portfolio-wrap" id="p-table-wrap">
-    <table class="ptable" id="ptable">
-      <thead>
-        <tr>
-          <th style="width:22px">#</th>
-          <th>Менеджер</th>
-          <th>Клиент</th>
-          <th>Стадия</th>
-          <th>Направление</th>
-          <th class="r">Сумма</th>
-          <th class="r">Последнее касание</th>
-          <th class="r">Дней без связи</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="ptbody">
-        <tr><td colspan="9" style="text-align:center;padding:20px;color:var(--t3);">Загрузка...</td></tr>
-      </tbody>
-    </table>
-  </div>
+  <div id="p-kanban-wrap" class="kanban-wrap"></div>
 
 </div><!-- /portfolio-section -->
 
@@ -1406,16 +1375,6 @@ function renderDailyChart(){
 
 let portfolioMop=null;
 
-// PORTFOLIO VIEW SWITCHING
-let portfolioView='table';
-function switchPortfolioView(v){
-  portfolioView=v;
-  document.getElementById('p-table-wrap').style.display=v==='table'?'':'none';
-  document.getElementById('p-kanban-wrap').style.display=v==='kanban'?'flex':'none';
-  document.getElementById('pvtab-table').classList.toggle('active',v==='table');
-  document.getElementById('pvtab-kanban').classList.toggle('active',v==='kanban');
-  renderPortfolio();
-}
 
 const STAGE_SHORT={
   'Продажа БФЛ. В доработку':'Доработка',
@@ -1516,7 +1475,6 @@ function switchView(v){
 }
 
 // PORTFOLIO
-let pSortMode='priority'; // 'priority' | 'date' | 'sum' | 'manager'
 
 function daysSince(dateStr){
   const d=parseDate(dateStr);
@@ -1570,30 +1528,8 @@ function buildPortfolioMopBtns(allPortfolioRows){
   });
 }
 
-function buildPortfolioSortBtns(){
-  const wrap=document.getElementById('p-sort-btns');
-  if(!wrap)return;
-  const opts=[
-    {key:'priority',label:'По приоритету'},
-    {key:'date',label:'По дате касания'},
-    {key:'manager',label:'По менеджеру'},
-    {key:'sum',label:'По сумме'},
-  ];
-  wrap.innerHTML='';
-  opts.forEach(o=>{
-    const btn=document.createElement('div');
-    btn.className='mbtn'+(pSortMode===o.key?' active':'');
-    btn.textContent=o.label;
-    btn.onclick=()=>{pSortMode=o.key;buildPortfolioSortBtns();renderPortfolio();};
-    wrap.appendChild(btn);
-  });
-}
 
 function renderPortfolio(){
-  buildPortfolioSortBtns();
-  const tbody=document.getElementById('ptbody');
-  if(!tbody)return;
-
   const PORTFOLIO_STAGES=new Set([
     'Продажа БФЛ. В доработку',
     'Продажа БФЛ. Надо подумать',
@@ -1601,7 +1537,6 @@ function renderPortfolio(){
     'Продажа БФЛ. Полная/частичная оплата',
   ]);
 
-  // Неоплаченные сделки выбранных менеджеров с нужными стадиями
   const allPortfolioRows=allRows.filter(r=>{
     if(isPaidRow(r))return false;
     if(!r[COL.responsible])return false;
@@ -1610,32 +1545,7 @@ function renderPortfolio(){
     return true;
   });
   buildPortfolioMopBtns(allPortfolioRows);
-  let rows=portfolioMop?allPortfolioRows.filter(r=>r[COL.responsible]===portfolioMop):allPortfolioRows;
-
-  // Сортировка
-  rows=[...rows].sort((a,b)=>{
-    if(pSortMode==='priority'){
-      const da=daysSince(a[COL.lastContact]),db=daysSince(b[COL.lastContact]);
-      const po=priorityOrder(da)-priorityOrder(db);
-      if(po!==0)return po;
-      return(db??-1)-(da??-1);
-    }
-    if(pSortMode==='date'){
-      const da=parseDate(a[COL.lastContact]),db=parseDate(b[COL.lastContact]);
-      if(!da&&!db)return 0;if(!da)return 1;if(!db)return-1;
-      return da-db;
-    }
-    if(pSortMode==='sum'){
-      return parseSum(b[COL.sum])-parseSum(a[COL.sum]);
-    }
-    if(pSortMode==='manager'){
-      const nm=(a[COL.responsible]||'').localeCompare(b[COL.responsible]||'');
-      if(nm!==0)return nm;
-      const da=daysSince(a[COL.lastContact]),db=daysSince(b[COL.lastContact]);
-      return(db??-1)-(da??-1);
-    }
-    return 0;
-  });
+  const rows=portfolioMop?allPortfolioRows.filter(r=>r[COL.responsible]===portfolioMop):allPortfolioRows;
 
   // Сводка
   const red=rows.filter(r=>daysSince(r[COL.lastContact])>7).length;
@@ -1643,60 +1553,12 @@ function renderPortfolio(){
   const green=rows.filter(r=>{const d=daysSince(r[COL.lastContact]);return d!==null&&d<=2;}).length;
   const sumTotal=rows.reduce((s,r)=>s+parseSum(r[COL.sum]),0);
   document.getElementById('p-summary').innerHTML=
-    `Всего: <b>${rows.length}</b> сд. · ${fmtM(sumTotal)} &nbsp;|&nbsp; `+
-    `<span class="days-pill days-red">${red}</span> &nbsp;`+
-    `<span class="days-pill days-yellow">${yellow}</span> &nbsp;`+
+    `<b>${rows.length}</b> сд. · ${fmtM(sumTotal)} &nbsp;`+
+    `<span class="days-pill days-red">${red}</span> `+
+    `<span class="days-pill days-yellow">${yellow}</span> `+
     `<span class="days-pill days-green">${green}</span>`;
 
-  if(portfolioView==='kanban'){renderKanban(rows);return;}
-
-  if(rows.length===0){
-    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--t3);font-family:inherit;">Нет неоплаченных сделок</td></tr>';
-    return;
-  }
-
-  let html='';
-  let lastGroupKey=null;
-
-  rows.forEach((r,i)=>{
-    const days=daysSince(r[COL.lastContact]);
-    const cls=daysPillCls(days);
-    const c=getMopColor(r[COL.responsible]||'');
-    const name=r[COL.responsible]||'—';
-    const short=name.split(' ').slice(0,2).join(' ');
-    const lc=r[COL.lastContact]?r[COL.lastContact].trim():'—';
-    const lcDate=parseDate(lc);
-    const lcStr=lcDate?lcDate.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}):'—';
-    const stage=(r[COL.dealStage]||'—').trim();
-    const dir=(r[COL.direction]||'—').trim();
-    const dirCls=dir==='#1'?'pg':['#2','#3','#4'].includes(dir)?'pa':'';
-    const sum=parseSum(r[COL.sum]);
-
-    // Групповой заголовок
-    let groupKey='';
-    if(pSortMode==='priority'){
-      groupKey=days===null?'Нет данных о касании':days>7?'🔴 Срочно — более 7 дней':days>2?'🟡 Внимание — 3–7 дней':'🟢 В работе — до 2 дней';
-    }else if(pSortMode==='manager'){
-      groupKey=name;
-    }
-    if(groupKey&&groupKey!==lastGroupKey){
-      html+=`<tr class="p-group-row"><td colspan="9">${groupKey}</td></tr>`;
-      lastGroupKey=groupKey;
-    }
-
-    html+=`<tr>
-      <td><span class="rank">${i+1}</span></td>
-      <td><span class="av" style="background:${c.bg};color:${c.tc}">${initials(name)}</span>${short}</td>
-      <td style="font-size:11px">${(r[COL.clientName]||'—').trim()}</td>
-      <td style="font-size:11px;color:var(--t2)">${stage}</td>
-      <td><span class="pill ${dirCls}" style="font-size:9px">${dir}</span></td>
-      <td class="r">${sum>0?fmt(sum)+' ₽':'—'}</td>
-      <td class="r" style="color:var(--t2);font-size:11px">${lcStr}</td>
-      <td class="r"><span class="days-pill ${cls}">${days!==null?days+' д':'нет данных'}</span></td>
-      <td style="text-align:center">${(r[COL.dealLink]||'').trim()?`<a href="${(r[COL.dealLink]||'').trim()}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none;padding:3px 7px;border:1px solid var(--border2);border-radius:var(--rs);white-space:nowrap;">Б24 ↗</a>`:'—'}</td>
-    </tr>`;
-  });
-  tbody.innerHTML=html;
+  renderKanban(rows);
 }
 
 async function init(){
