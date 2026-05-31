@@ -608,9 +608,11 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
     <!-- Строка 1: Ключевые метрики -->
     <div class="stat-cell">
       <div class="stat-lbl">Сделок</div>
-      <div class="stat-val" id="m-deals">—</div>
+      <div style="display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;">
+        <div class="stat-val" id="m-deals">—</div>
+        <div style="font-size:9px;color:var(--amber);white-space:nowrap;" id="m-sameday"></div>
+      </div>
       <div class="stat-sub" id="m-deals-sub"></div>
-      <div style="font-size:9px;color:var(--amber);margin-top:1px;" id="m-sameday"></div>
     </div>
     <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
     <div class="stat-cell"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">—</div><div class="stat-sub" id="m-avg-sub"></div></div>
