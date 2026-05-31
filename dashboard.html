@@ -1596,10 +1596,12 @@ function renderPortfolio(){
   ]);
 
   const allPortfolioRows=allRows.filter(r=>{
-    if(isPaidRow(r))return false;
+    const stage=(r[COL.dealStage]||'').trim();
+    if(!PORTFOLIO_STAGES.has(stage))return false;
+    // Для частичной оплаты показываем независимо от наличия оплаты
+    if(stage!=='Продажа БФЛ. Полная/частичная оплата'&&isPaidRow(r))return false;
     if(!r[COL.responsible])return false;
     if(!selectedMops.has(r[COL.responsible]))return false;
-    if(!PORTFOLIO_STAGES.has((r[COL.dealStage]||'').trim()))return false;
     return true;
   });
   buildPortfolioMopBtns(allPortfolioRows);
