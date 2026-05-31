@@ -780,7 +780,7 @@ function calcConversions(rows,mopName,year,month){
   return{conv1:c1>0?Math.round(p1/c1*100):0,conv24:c24>0?Math.round(p24/c24*100):0,c1,c24};
 }
 
-function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=0,seniorityYears=0,seniorityDaysToNext=null){
+function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=0,seniorityYears=0,seniorityDaysToNext=null,seniorityStartDate=null){
   const bd=[]; // breakdown: {label,formula,amount,cls}
   function row(label,formula,amount,cls){bd.push({label,formula,amount,cls});}
 
@@ -792,11 +792,12 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=
   // Надбавка за стаж (сразу после оклада)
   if(seniorityDaysToNext!==null){
     const nextTxt=seniorityDaysToNext>0?` · до повышения ${seniorityDaysToNext} дн.`:'';
+    const dateTxt=seniorityStartDate?` (с ${seniorityStartDate})`:'';
     if(seniorityYears>0){
       const yLabel=seniorityYears===1?'год':seniorityYears<5?'года':'лет';
-      row('Надбавка за стаж',`${seniorityYears} ${yLabel} × 2 000 ₽ ÷ ${monthDays} × ${periodDays} дн.${nextTxt}`,seniorityBonus,'pg');
+      row('Надбавка за стаж',`${seniorityYears} ${yLabel} × 2 000 ₽ ÷ ${monthDays} × ${periodDays} дн.${nextTxt}${dateTxt}`,seniorityBonus,'pg');
     }else{
-      row('Надбавка за стаж',`Первый год не завершён${nextTxt}`,0,'');
+      row('Надбавка за стаж',`Первый год не завершён${nextTxt}${dateTxt}`,0,'');
     }
     zp+=seniorityBonus;
   }
@@ -1205,8 +1206,8 @@ function render(){
         }
       }
     }
-    const{bonus:senBonus,years:senYears,daysToNext:senDays}=isSingleMonth?getSeniorityBonus(name,effectiveDays,mdays):{bonus:0,years:0,daysToNext:null};
-    const{zp,pills,bd}=!isSingleMonth?{zp:null,pills:[],bd:[]}:calcZP(d.deals,d.sum,conv.conv1,conv.conv24,effectiveDays,mdays,senBonus,senYears,senDays);
+    const{bonus:senBonus,years:senYears,daysToNext:senDays,startDate:senStart}=isSingleMonth?getSeniorityBonus(name,effectiveDays,mdays):{bonus:0,years:0,daysToNext:null,startDate:null};
+    const{zp,pills,bd}=!isSingleMonth?{zp:null,pills:[],bd:[]}:calcZP(d.deals,d.sum,conv.conv1,conv.conv24,effectiveDays,mdays,senBonus,senYears,senDays,senStart);
     if(isSingleMonth)totalZP+=zp;
     mopResults.push({name,d,conv,zp,pills,bd,rows:d.rows});
   });
