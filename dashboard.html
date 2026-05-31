@@ -598,7 +598,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
     </div>
   </div>
 
-  <!-- [1,2] Только статистика (8 ячеек) -->
+  <!-- [1,2] Статистика -->
   <div class="stats-strip" style="grid-template-columns:repeat(4,1fr);height:100%;">
     <div class="stat-cell"><div class="stat-lbl">Сделок</div><div class="stat-val" id="m-deals">—</div><div class="stat-sub" id="m-deals-sub"></div></div>
     <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
@@ -608,6 +608,16 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
     <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">До плана</div><div class="stat-val" id="cd-need">—</div></div>
     <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Нужно/день</div><div class="stat-val" id="cd-perday">—</div></div>
     <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Темп/день</div><div class="stat-val" id="cd-pace">—</div></div>
+    <!-- Встречи по направлениям -->
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Встречи</div><div class="stat-val" id="m-meet">—</div><div class="stat-sub" style="color:var(--t3)">всего</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Встречи #1</div><div class="stat-val" id="m-meet1">—</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Встречи #2</div><div class="stat-val" id="m-meet2">—</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Встречи #3–4</div><div class="stat-val" id="m-meet34">—</div></div>
+    <!-- Сделки по направлениям -->
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Сделок #1</div><div class="stat-val" id="m-deal1">—</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Сделок #2</div><div class="stat-val" id="m-deal2">—</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Сделок #3</div><div class="stat-val" id="m-deal3">—</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Сделок #4</div><div class="stat-val" id="m-deal4">—</div></div>
   </div>
 
   <!-- [2,1] Таблица менеджеров -->
@@ -1161,6 +1171,28 @@ function render(){
     meetingData[name]=(meetingData[name]||0)+1;
   });
 
+  // Встречи и сделки по направлениям
+  const meetDir={1:0,2:0,3:0,4:0};
+  const dealDir={1:0,2:0,3:0,4:0};
+  allRows.forEach(r=>{
+    const name=r[COL.responsible];
+    if(!name||!selectedMops.has(name))return;
+    const dir=parseInt((r[COL.direction]||'').replace('#',''));
+    if(![1,2,3,4].includes(dir))return;
+    const dc=parseDate(r[COL.dateCreated]);
+    if(!dc||dc.getFullYear()!==y)return;
+    if(activeMonths.size>0&&!activeMonths.has(dc.getMonth()+1))return;
+    if(isSingleMonth&&daysPassed!==null&&dc.getDate()>daysPassed)return;
+    meetDir[dir]++;
+    if(isPaidRow(r)){
+      const dp=parseDate(r[COL.datePaid]);
+      if(!dp||dp.getFullYear()!==y)return;
+      if(activeMonths.size>0&&!activeMonths.has(dp.getMonth()+1))return;
+      if(isSingleMonth&&daysPassed!==null&&dp.getDate()>daysPassed)return;
+      dealDir[dir]++;
+    }
+  });
+
   // Агрегат по МОПам для ТАБЛИЦЫ — всегда все менеджеры (filteredAll)
   const mopData={};
   filteredAll.forEach(r=>{
@@ -1228,6 +1260,16 @@ function render(){
   document.getElementById('m-avg-sub').className='metric-sub '+(totalAvg>=PLAN.avgCheck?'good':'bad');
   document.getElementById('m-fot').textContent=!isSingleMonth?'—':fmtM(totalZP);
   document.getElementById('m-fot-sub').textContent=mops.length+' менеджеров';
+
+  // Встречи и направления
+  document.getElementById('m-meet').textContent=totalMeetings;
+  document.getElementById('m-meet1').textContent=meetDir[1];
+  document.getElementById('m-meet2').textContent=meetDir[2];
+  document.getElementById('m-meet34').textContent=(meetDir[3]+meetDir[4]);
+  document.getElementById('m-deal1').textContent=dealDir[1];
+  document.getElementById('m-deal2').textContent=dealDir[2];
+  document.getElementById('m-deal3').textContent=dealDir[3];
+  document.getElementById('m-deal4').textContent=dealDir[4];
 
   // Прогресс-бары
   const dP=Math.min(100,Math.round(totalDeals/PLAN_TOTAL*100));
