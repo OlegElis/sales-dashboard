@@ -2052,7 +2052,7 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
   document.getElementById('zp-detail-rows').innerHTML=`
     <div class="zp-row"><span class="zp-row-lbl">Встреч</span><span class="zp-row-val">${d.meetings||0}</span></div>
     <div class="zp-row"><span class="zp-row-lbl">Сделок</span><span class="zp-row-val">${d.deals} (план ${PLAN.deals})</span></div>
-    <div class="zp-row"><span class="zp-row-lbl">Выручка</span><span class="zp-row-val">${fmtM(d.sum)}</span></div>
+    <div class="zp-row"><span class="zp-row-lbl">Сумма договоров</span><span class="zp-row-val">${fmtM(d.sum)}</span></div>
     <div class="zp-row"><span class="zp-row-lbl">Средний чек</span><span class="zp-row-val">${fmtK(avg)} (план ${fmtK(PLAN.avgCheck)})</span></div>
     <div class="zp-row"><span class="zp-row-lbl">Конверсия #1</span><span class="zp-row-val">${conv.conv1}% (план ${PLAN.conv1}%)</span></div>
     <div class="zp-row"><span class="zp-row-lbl">Конверсия #2–4</span><span class="zp-row-val">${conv.conv24}% (план ${PLAN.conv24}%)</span></div>
