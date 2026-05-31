@@ -1431,11 +1431,19 @@ function renderPortfolio(){
   const tbody=document.getElementById('ptbody');
   if(!tbody)return;
 
-  // Неоплаченные сделки выбранных менеджеров
+  const PORTFOLIO_STAGES=new Set([
+    'Продажа БФЛ. Доработка',
+    'Продажа БФЛ. Надо подумать',
+    'Продажа БФЛ. Договор без оплаты',
+    'Продажа БФЛ. Полная/частичная оплата',
+  ]);
+
+  // Неоплаченные сделки выбранных менеджеров с нужными стадиями
   let rows=allRows.filter(r=>{
     if(isPaidRow(r))return false;
     if(!r[COL.responsible])return false;
     if(!selectedMops.has(r[COL.responsible]))return false;
+    if(!PORTFOLIO_STAGES.has((r[COL.dealStage]||'').trim()))return false;
     return true;
   });
 
