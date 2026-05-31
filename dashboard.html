@@ -1039,7 +1039,7 @@ function buildDayBtns(){
     const dow=new Date(y,m-1,d).getDay(); // 0=Вс,1=Пн..6=Сб
     const DOW_RU=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
     const isWeekend=dow===0||dow===6;
-    btn.innerHTML=`<span class="dbtn-num">${d}</span><span class="dbtn-dow${isToday?' today-label':isWeekend?' weekend':''}">${isToday?'▲ сег':DOW_RU[dow]}</span>`;
+    btn.innerHTML=`<span class="dbtn-num">${d}</span><span class="dbtn-dow${isWeekend?' weekend':''}">${DOW_RU[dow]}</span>${isToday?'<span class="dbtn-dow today-label">▲ сег</span>':''}`;
     btn.style.background=col.bg;
     btn.style.color=col.color;
     if(col.border)btn.style.borderColor=col.border;
