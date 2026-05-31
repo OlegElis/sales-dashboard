@@ -1194,8 +1194,19 @@ function render(){
     const conv=isSingleMonth
       ? calcConversions(allRows,name,y,m)
       : calcConversionsDirect(allRows,name,y,activeMonths);
-    const{bonus:senBonus,years:senYears,daysToNext:senDays}=isSingleMonth?getSeniorityBonus(name,daysPassed,mdays):{bonus:0,years:0,daysToNext:null};
-    const{zp,pills,bd}=!isSingleMonth?{zp:null,pills:[],bd:[]}:calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays,senBonus,senYears,senDays);
+    // Эффективные дни: если нанят в этом месяце — считаем с даты найма
+    let effectiveDays=daysPassed;
+    if(isSingleMonth){
+      const ds=settings.startDates[name];
+      if(ds){
+        const sd=parseDate(ds);
+        if(sd&&sd.getFullYear()===y&&sd.getMonth()+1===m&&sd.getDate()>1){
+          effectiveDays=Math.max(0,daysPassed-sd.getDate()+1);
+        }
+      }
+    }
+    const{bonus:senBonus,years:senYears,daysToNext:senDays}=isSingleMonth?getSeniorityBonus(name,effectiveDays,mdays):{bonus:0,years:0,daysToNext:null};
+    const{zp,pills,bd}=!isSingleMonth?{zp:null,pills:[],bd:[]}:calcZP(d.deals,d.sum,conv.conv1,conv.conv24,effectiveDays,mdays,senBonus,senYears,senDays);
     if(isSingleMonth)totalZP+=zp;
     mopResults.push({name,d,conv,zp,pills,bd,rows:d.rows});
   });
