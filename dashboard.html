@@ -276,6 +276,32 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .zp-deals-table tbody tr:hover{background:var(--s2);}
 .zp-card{max-height:90vh;overflow-y:auto;}
 
+/* SETTINGS PANEL */
+.cfg-btn{background:none;border:1px solid var(--border2);border-radius:var(--rs);padding:5px 10px;cursor:pointer;font-size:13px;color:var(--t2);transition:all .15s;font-family:inherit;}
+.cfg-btn:hover{border-color:var(--text);color:var(--text);}
+.settings-overlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.3);opacity:0;pointer-events:none;transition:opacity .2s;}
+.settings-overlay.open{opacity:1;pointer-events:all;}
+.settings-panel{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:95vw;background:var(--surface);border-left:1px solid var(--border2);box-shadow:-4px 0 24px rgba(0,0,0,0.1);z-index:9001;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column;overflow:hidden;}
+.settings-panel.open{transform:translateX(0);}
+.settings-head{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.settings-title{font-size:15px;font-weight:600;letter-spacing:-.01em;}
+.settings-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--t3);line-height:1;padding:2px 6px;}
+.settings-close:hover{color:var(--text);}
+.settings-body{overflow-y:auto;padding:16px 20px;flex:1;}
+.s-section{margin-bottom:20px;}
+.s-section-title{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.s-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px;}
+.s-lbl{font-size:12px;color:var(--t2);flex:1;}
+.s-input{width:110px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--rs);font-size:12px;font-family:inherit;background:var(--s2);color:var(--text);text-align:right;outline:none;}
+.s-input:focus{border-color:var(--blue);background:#fff;}
+.s-mop-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.s-mop-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
+.s-mop-name{font-size:12px;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.s-mop-badge{font-size:10px;color:var(--green);font-weight:500;white-space:nowrap;flex-shrink:0;}
+.s-save{width:100%;padding:10px;background:var(--text);color:#fff;border:none;border-radius:var(--rs);font-size:13px;font-family:inherit;cursor:pointer;margin-top:4px;transition:opacity .15s;}
+.s-save:hover{opacity:.85;}
+.s-hint{font-size:10px;color:var(--t3);margin-top:6px;text-align:center;}
+
 /* VIEW TABS */
 .view-tabs{display:flex;gap:4px;margin-bottom:12px;}
 .vtab{font-size:12px;font-family:inherit;padding:6px 16px;border-radius:99px;border:1px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;font-weight:500;transition:all .15s;}
@@ -441,8 +467,30 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <script>
 const SHEET_ID = '15jO2Z5AYdp-9qmd79XCVNQBIwvR3KZPxWVgJP5zV8-0';
 const SHEET_NAME = 'RawData_BFL';
-const PLAN = { deals:16, avgCheck:225000, conv1:25, conv24:65 };
-const PLAN_TOTAL = 120;
+let PLAN = { deals:16, avgCheck:225000, conv1:25, conv24:65 };
+let PLAN_TOTAL = 120;
+
+// SETTINGS
+const SETTINGS_KEY='opora_settings_v1';
+let settings={ plan:{deals:16,avgCheck:225000,conv1:25,conv24:65,total:120}, startDates:{} };
+function loadSettings(){
+  try{ const s=localStorage.getItem(SETTINGS_KEY); if(s){ const p=JSON.parse(s); settings={...settings,...p}; } }catch(e){}
+  PLAN.deals=settings.plan.deals; PLAN.avgCheck=settings.plan.avgCheck;
+  PLAN.conv1=settings.plan.conv1; PLAN.conv24=settings.plan.conv24;
+  PLAN_TOTAL=settings.plan.total;
+}
+function saveSettings(){
+  localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));
+  loadSettings();
+}
+function getSeniorityBonus(name,periodDays,monthDays){
+  const ds=settings.startDates[name]; if(!ds)return{bonus:0,years:0};
+  const start=parseDate(ds); if(!start)return{bonus:0,years:0};
+  const years=Math.floor((new Date()-start)/(365.25*24*60*60*1000));
+  if(years<=0)return{bonus:0,years:0};
+  return{bonus:Math.round(years*2000/monthDays*periodDays),years};
+}
+loadSettings();
 const COL = {
   id:0, clientName:3, sum:5, direction:7, responsible:8,
   dateCreated:17, datePaid:20, lastContact:26, dealStage:30, stage:31, dealLink:34
@@ -469,7 +517,10 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
       </div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-      <div class="status-pill"><div class="dot loading" id="sdot"></div><span id="stxt">Загрузка...</span></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="cfg-btn" onclick="openSettings()" title="Настройки">⚙ Настройки</button>
+        <div class="status-pill"><div class="dot loading" id="sdot"></div><span id="stxt">Загрузка...</span></div>
+      </div>
       <div style="font-size:10px;color:var(--t3);" id="supd"></div>
     </div>
   </div>
@@ -688,7 +739,7 @@ function calcConversions(rows,mopName,year,month){
   return{conv1:c1>0?Math.round(p1/c1*100):0,conv24:c24>0?Math.round(p24/c24*100):0,c1,c24};
 }
 
-function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
+function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=0,seniorityYears=0){
   const bd=[]; // breakdown: {label,formula,amount,cls}
   function row(label,formula,amount,cls){bd.push({label,formula,amount,cls});}
 
@@ -769,6 +820,12 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays){
     }
     kAvg=Math.round(kAvgRaw*dayK);
     zp+=kAvg;
+  }
+
+  // Надбавка за стаж
+  if(seniorityBonus>0){
+    row('Надбавка за стаж',`${seniorityYears} ${seniorityYears===1?'год':seniorityYears<5?'года':'лет'} × 2 000 ₽ ÷ ${monthDays} × ${periodDays} дн.`,seniorityBonus,'pg');
+    zp+=seniorityBonus;
   }
 
   zp=Math.max(0,zp);
@@ -1088,8 +1145,9 @@ function render(){
     const conv=isSingleMonth
       ? calcConversions(allRows,name,y,m)
       : calcConversionsDirect(allRows,name,y,activeMonths);
-    const{zp,pills,bd}=!isSingleMonth?{zp:null,pills:[],bd:[]}:calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays);
-    if(!!isSingleMonth)totalZP+=zp;
+    const{bonus:senBonus,years:senYears}=isSingleMonth?getSeniorityBonus(name,daysPassed,mdays):{bonus:0,years:0};
+    const{zp,pills,bd}=!isSingleMonth?{zp:null,pills:[],bd:[]}:calcZP(d.deals,d.sum,conv.conv1,conv.conv24,daysPassed,mdays,senBonus,senYears);
+    if(isSingleMonth)totalZP+=zp;
     mopResults.push({name,d,conv,zp,pills,bd,rows:d.rows});
   });
 
@@ -1561,6 +1619,78 @@ function renderPortfolio(){
   renderKanban(rows);
 }
 
+// SETTINGS UI
+function openSettings(){
+  // Заполняем поля плана
+  document.getElementById('s-deals').value=settings.plan.deals;
+  document.getElementById('s-avgcheck').value=settings.plan.avgCheck;
+  document.getElementById('s-conv1').value=settings.plan.conv1;
+  document.getElementById('s-conv24').value=settings.plan.conv24;
+  document.getElementById('s-total').value=settings.plan.total;
+  // Список менеджеров
+  const list=document.getElementById('s-mop-list');
+  list.innerHTML='';
+  const mops=allMops.length?allMops:[...new Set(allRows.map(r=>r[COL.responsible]).filter(Boolean))].sort();
+  if(!mops.length){
+    list.innerHTML='<div style="font-size:11px;color:var(--t3);">Загрузите данные чтобы задать стаж</div>';
+  } else {
+    mops.forEach(name=>{
+      const c=getMopColor(name);
+      const saved=settings.startDates[name]||'';
+      const {years}=getSeniorityBonus(name,1,1);
+      const row=document.createElement('div');
+      row.className='s-mop-row';
+      row.innerHTML=`
+        <div class="s-mop-av" style="background:${c.bg};color:${c.tc}">${initials(name)}</div>
+        <div class="s-mop-name" title="${name}">${name}</div>
+        ${years>0?`<div class="s-mop-badge">+${years}г · +${fmt(years*2000)} ₽/мес</div>`:''}
+        <input class="s-input" style="width:108px;text-align:left;" type="text"
+          placeholder="ДД.ММ.ГГГГ" value="${saved}"
+          data-mop="${name}" oninput="updateSeniorityBadge(this)">
+      `;
+      list.appendChild(row);
+    });
+  }
+  document.getElementById('settings-overlay').classList.add('open');
+  document.getElementById('settings-panel').classList.add('open');
+}
+
+function updateSeniorityBadge(inp){
+  const name=inp.dataset.mop;
+  const tmp={...settings.startDates,[name]:inp.value};
+  const savedOrig=settings.startDates;
+  settings.startDates=tmp;
+  const{years}=getSeniorityBonus(name,1,1);
+  settings.startDates=savedOrig;
+  const badge=inp.closest('.s-mop-row').querySelector('.s-mop-badge');
+  if(badge){badge.textContent=years>0?`+${years}г · +${fmt(years*2000)} ₽/мес`:'';}
+}
+
+function closeSettings(){
+  document.getElementById('settings-overlay').classList.remove('open');
+  document.getElementById('settings-panel').classList.remove('open');
+}
+
+function applySettings(){
+  settings.plan={
+    deals: parseInt(document.getElementById('s-deals').value)||16,
+    avgCheck: parseInt(document.getElementById('s-avgcheck').value)||225000,
+    conv1: parseInt(document.getElementById('s-conv1').value)||25,
+    conv24: parseInt(document.getElementById('s-conv24').value)||65,
+    total: parseInt(document.getElementById('s-total').value)||120,
+  };
+  document.querySelectorAll('#s-mop-list input[data-mop]').forEach(inp=>{
+    const v=inp.value.trim();
+    if(v)settings.startDates[inp.dataset.mop]=v;
+    else delete settings.startDates[inp.dataset.mop];
+  });
+  saveSettings();
+  closeSettings();
+  render();
+}
+
+document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeSettings(); });
+
 async function init(){
   buildYearBtns();buildMonthBtns();buildDayBtns();
   let id=SHEET_ID;
@@ -1868,6 +1998,34 @@ init();
     <button class="zp-close" onclick="closeZpModal()">Закрыть</button>
   </div>
 </div>
+<!-- SETTINGS PANEL -->
+<div class="settings-overlay" id="settings-overlay" onclick="closeSettings()"></div>
+<div class="settings-panel" id="settings-panel">
+  <div class="settings-head">
+    <div class="settings-title">⚙ Настройки</div>
+    <button class="settings-close" onclick="closeSettings()">×</button>
+  </div>
+  <div class="settings-body">
+
+    <div class="s-section">
+      <div class="s-section-title">План отдела на месяц</div>
+      <div class="s-row"><span class="s-lbl">Кол-во сделок (план)</span><input class="s-input" id="s-deals" type="number" min="1"></div>
+      <div class="s-row"><span class="s-lbl">Средний чек (план, ₽)</span><input class="s-input" id="s-avgcheck" type="number" min="1"></div>
+      <div class="s-row"><span class="s-lbl">Конверсия #1 (план, %)</span><input class="s-input" id="s-conv1" type="number" min="0" max="100"></div>
+      <div class="s-row"><span class="s-lbl">Конверсия #2–4 (план, %)</span><input class="s-input" id="s-conv24" type="number" min="0" max="100"></div>
+      <div class="s-row"><span class="s-lbl">Общий план сделок (отдел)</span><input class="s-input" id="s-total" type="number" min="1"></div>
+    </div>
+
+    <div class="s-section">
+      <div class="s-section-title">Стаж менеджеров (+2 000 ₽/год)</div>
+      <div id="s-mop-list"></div>
+    </div>
+
+    <button class="s-save" onclick="applySettings()">Сохранить</button>
+    <div class="s-hint">Настройки сохраняются в браузере</div>
+  </div>
+</div>
+
 </body>
 </html>
 
