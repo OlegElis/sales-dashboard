@@ -536,19 +536,19 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
       </div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button class="cfg-btn" onclick="openSettings()" title="Настройки">⚙ Настройки</button>
-        <div class="status-pill"><div class="dot loading" id="sdot"></div><span id="stxt">Загрузка...</span></div>
-      </div>
+      <div class="status-pill"><div class="dot loading" id="sdot"></div><span id="stxt">Загрузка...</span></div>
       <div style="font-size:10px;color:var(--t3);" id="supd"></div>
     </div>
   </div>
 </div>
 
 <!-- VIEW TABS -->
-<div class="view-tabs">
-  <div class="vtab active" id="vtab-stats" onclick="switchView('stats')">Статистика</div>
-  <div class="vtab" id="vtab-portfolio" onclick="switchView('portfolio')">Портфель сделок</div>
+<div class="view-tabs" style="justify-content:space-between;">
+  <div style="display:flex;gap:4px;">
+    <div class="vtab active" id="vtab-stats" onclick="switchView('stats')">Статистика</div>
+    <div class="vtab" id="vtab-portfolio" onclick="switchView('portfolio')">Портфель сделок</div>
+  </div>
+  <button class="cfg-btn" onclick="openSettings()" title="Настройки">⚙ Настройки</button>
 </div>
 
 <div class="cfg" id="cfg">
