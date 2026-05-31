@@ -1474,7 +1474,7 @@ function renderKanban(rows){
     col.className='kanban-col';
     const sc=STAGE_COLOR[stage]||{hdr:'var(--s2)',bar:'var(--t3)'};
     const stageSum=stageRows.reduce((s,r)=>s+parseSum(r[COL.sum]),0);
-    const red=stageRows.filter(r=>daysSince(r[COL.lastContact])>7).length;
+    const red=stageRows.filter(r=>{const d=daysSince(r[COL.lastContact]);return d===null||d>7;}).length;
 
     col.innerHTML=`
       <div class="kanban-col-hdr" style="background:${sc.hdr};border-bottom:2px solid ${sc.bar};">
@@ -1511,7 +1511,7 @@ function renderKanban(rows){
       card.innerHTML=`
         <div class="k-card-top">
           <div class="k-card-client">${client}</div>
-          <span class="days-pill ${cls} k-card-days">${days!==null?days+' д':'—'}</span>
+          <span class="days-pill ${cls} k-card-days">${days!==null?days+' д':'нет касания'}</span>
         </div>
         <div class="k-card-bottom">
           <div class="k-card-mop">
@@ -1551,7 +1551,7 @@ function daysSince(dateStr){
 }
 
 function daysPillCls(days){
-  if(days===null)return'days-gray';
+  if(days===null)return'days-red';
   if(days<=2)return'days-green';
   if(days<=7)return'days-yellow';
   return'days-red';
@@ -1619,7 +1619,7 @@ function renderPortfolio(){
   const rows=portfolioMop?allPortfolioRows.filter(r=>r[COL.responsible]===portfolioMop):allPortfolioRows;
 
   // Сводка
-  const red=rows.filter(r=>daysSince(r[COL.lastContact])>7).length;
+  const red=rows.filter(r=>{const d=daysSince(r[COL.lastContact]);return d===null||d>7;}).length;
   const yellow=rows.filter(r=>{const d=daysSince(r[COL.lastContact]);return d!==null&&d>=3&&d<=7;}).length;
   const green=rows.filter(r=>{const d=daysSince(r[COL.lastContact]);return d!==null&&d<=2;}).length;
   const sumTotal=rows.reduce((s,r)=>s+parseSum(r[COL.sum]),0);
