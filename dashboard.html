@@ -600,31 +600,41 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
 
   <!-- [1,2] Статистика -->
   <div class="stats-strip" style="grid-template-columns:repeat(4,1fr);height:100%;">
-    <div class="stat-cell"><div class="stat-lbl">Сделок</div><div class="stat-val" id="m-deals">—</div><div class="stat-sub" id="m-deals-sub"></div></div>
-    <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
-    <div class="stat-cell"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">—</div><div class="stat-sub" id="m-avg-sub"></div></div>
-    <div class="stat-cell"><div class="stat-lbl">ФОТ</div><div class="stat-val" id="m-fot">—</div><div class="stat-sub" id="m-fot-sub"></div></div>
+
+    <!-- Строка 1: Встречи / сделки по направлениям -->
+    <div class="stat-cell" style="padding:5px 10px;">
+      <div class="stat-lbl" style="font-size:9px;">#1 встр / сд</div>
+      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;"><span id="m-meet1">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-deal1">—</span></div>
+    </div>
+    <div class="stat-cell" style="padding:5px 10px;">
+      <div class="stat-lbl" style="font-size:9px;">#2 встр / сд</div>
+      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;"><span id="m-meet2">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-deal2">—</span></div>
+    </div>
+    <div class="stat-cell" style="padding:5px 10px;">
+      <div class="stat-lbl" style="font-size:9px;">#3 встр / сд</div>
+      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;"><span id="m-meet3">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-deal3">—</span></div>
+    </div>
+    <div class="stat-cell" style="padding:5px 10px;">
+      <div class="stat-lbl" style="font-size:9px;">#4 встр / сд</div>
+      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;"><span id="m-meet4">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-deal4">—</span></div>
+    </div>
+
+    <!-- Строка 2: Ключевые метрики -->
+    <div class="stat-cell" style="border-top:1px solid var(--border)">
+      <div class="stat-lbl">Сделок</div>
+      <div class="stat-val" id="m-deals">—</div>
+      <div class="stat-sub" id="m-deals-sub"></div>
+      <div style="font-size:9px;color:var(--amber);margin-top:1px;" id="m-sameday"></div>
+    </div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">—</div><div class="stat-sub" id="m-avg-sub"></div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">ФОТ</div><div class="stat-val" id="m-fot">—</div><div class="stat-sub" id="m-fot-sub"></div></div>
+
+    <!-- Строка 3: Темп и встречи всего -->
     <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">День мес.</div><div class="stat-val" id="cd-day">—</div></div>
     <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">До плана</div><div class="stat-val" id="cd-need">—</div></div>
     <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Нужно/день</div><div class="stat-val" id="cd-perday">—</div></div>
     <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Темп/день</div><div class="stat-val" id="cd-pace">—</div></div>
-    <!-- Компактная строка: встречи + направления -->
-    <div class="stat-cell" style="border-top:1px solid var(--border);padding:5px 10px;">
-      <div class="stat-lbl">Встречи</div>
-      <div style="font-size:14px;letter-spacing:-.01em;" id="m-meet">—</div>
-    </div>
-    <div class="stat-cell" style="border-top:1px solid var(--border);padding:5px 10px;">
-      <div class="stat-lbl">#1 встр / сд</div>
-      <div style="font-size:13px;letter-spacing:-.01em;"><span id="m-meet1">—</span> / <span id="m-deal1">—</span></div>
-    </div>
-    <div class="stat-cell" style="border-top:1px solid var(--border);padding:5px 10px;">
-      <div class="stat-lbl">#2 встр / сд</div>
-      <div style="font-size:13px;letter-spacing:-.01em;"><span id="m-meet2">—</span> / <span id="m-deal2" >—</span></div>
-    </div>
-    <div class="stat-cell" style="border-top:1px solid var(--border);padding:5px 10px;">
-      <div class="stat-lbl">#3–4 встр / сд</div>
-      <div style="font-size:13px;letter-spacing:-.01em;"><span id="m-meet34">—</span> / <span id="m-deal34">—</span></div>
-    </div>
   </div>
 
   <!-- [2,1] Таблица менеджеров -->
@@ -1255,12 +1265,14 @@ function render(){
   // Сортировка по сделкам убыв
   mopResults.sort((a,b)=>b.d.deals-a.d.deals);
   const maxDeals=mopResults.length>0?mopResults[0].d.deals:1;
+  const totalSameDayDeals=mopResults.reduce((s,r)=>s+(r.d.sameDayDeals||0),0);
   const totalAvg=totalDeals>0?totalSum/totalDeals:0;
 
   // Топ-метрики
   document.getElementById('m-deals').textContent=totalDeals;
   document.getElementById('m-deals-sub').textContent='план '+PLAN_TOTAL+' шт';
   document.getElementById('m-deals-sub').className='metric-sub '+(totalDeals>=PLAN_TOTAL?'good':'bad');
+  document.getElementById('m-sameday').textContent=totalSameDayDeals>0?'⚡ '+totalSameDayDeals+' день в день':'';
   document.getElementById('m-sum').textContent=fmtM(totalSum);
   document.getElementById('m-sum-sub').textContent='план '+fmtM(PLAN_TOTAL*PLAN.avgCheck);
   document.getElementById('m-avg').textContent=fmtK(totalAvg);
@@ -1270,13 +1282,14 @@ function render(){
   document.getElementById('m-fot-sub').textContent=mops.length+' менеджеров';
 
   // Встречи и направления
-  document.getElementById('m-meet').textContent=totalMeetings;
   document.getElementById('m-meet1').textContent=meetDir[1];
   document.getElementById('m-meet2').textContent=meetDir[2];
-  document.getElementById('m-meet34').textContent=(meetDir[3]+meetDir[4]);
+  document.getElementById('m-meet3').textContent=meetDir[3];
+  document.getElementById('m-meet4').textContent=meetDir[4];
   document.getElementById('m-deal1').textContent=dealDir[1];
   document.getElementById('m-deal2').textContent=dealDir[2];
-  document.getElementById('m-deal34').textContent=(dealDir[3]+dealDir[4]);
+  document.getElementById('m-deal3').textContent=dealDir[3];
+  document.getElementById('m-deal4').textContent=dealDir[4];
 
   // Прогресс-бары
   const dP=Math.min(100,Math.round(totalDeals/PLAN_TOTAL*100));
