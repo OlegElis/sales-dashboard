@@ -794,9 +794,9 @@ function calcConversionsDirect(rows,mopName,year,monthsSet){
 }
 
 function calcConversions(rows,mopName,year,month){
-  // 3 предыдущих месяца
+  // текущий месяц + 2 предыдущих
   const months=[];
-  for(let i=3;i>=1;i--){
+  for(let i=2;i>=0;i--){
     const d=new Date(year,month-1-i,1);
     months.push({y:d.getFullYear(),m:d.getMonth()+1});
   }
