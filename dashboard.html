@@ -475,6 +475,14 @@ const SHEET_NAME = 'RawData_BFL';
 let PLAN = { deals:16, avgCheck:225000, conv1:25, conv24:65 };
 let PLAN_TOTAL = 120;
 
+// Технические специалисты — исключены из статистики, но показаны в таблице
+const TECH_MOPS_EXACT = new Set([
+  'Павличенко Елизавета Сергеевна',
+  'Шелков Александр Сергеевич',
+]);
+const TECH_MOPS_PREFIX = ['Гагарина Варвара'];
+function isTechMop(name){ return TECH_MOPS_EXACT.has(name)||TECH_MOPS_PREFIX.some(p=>(name||'').startsWith(p)); }
+
 // SETTINGS
 const SETTINGS_KEY='opora_settings_v3';
 const PLAN_DEFAULT={deals:16,avgCheck:225000,conv1:25,conv24:65,total:100};
@@ -1163,26 +1171,33 @@ function render(){
   const daysPassed=isSingleMonth?(activeDay??autoDay):null;
   const daysLeft=isSingleMonth?mdays-daysPassed:null;
 
-  // Базовый фильтр по периоду (все менеджеры — для таблицы)
-  const filteredAll=allRows.filter(r=>{
+  // Базовая функция фильтра по периоду
+  function periodFilter(r){
     if(!isPaidRow(r))return false;
     const dp=parseDate(r[COL.datePaid]);
     if(!dp)return false;
     if(dp.getFullYear()!==y)return false;
     if(activeMonths.size>0&&!activeMonths.has(dp.getMonth()+1))return false;
     if(isSingleMonth&&daysPassed!==null&&dp.getDate()>daysPassed)return false;
-    if(!selectedMops.has(r[COL.responsible]))return false;
     return true;
-  });
+  }
+
+  // Основные менеджеры (без тех. специалистов) — для статистики
+  const filteredAll=allRows.filter(r=>periodFilter(r)&&selectedMops.has(r[COL.responsible])&&!isTechMop(r[COL.responsible]));
+
+  // Тех. специалисты — только для таблицы, не для статистики
+  const filteredTech=allRows.filter(r=>periodFilter(r)&&isTechMop(r[COL.responsible]));
+
   // Фильтр для статистики/графиков (с учётом activeMop)
   const filtered=activeMop
     ? filteredAll.filter(r=>r[COL.responsible]===activeMop)
     : filteredAll;
 
-  // Менеджеры с данными в этом периоде (без учёта фильтра)
+  // Менеджеры с данными в этом периоде (без учёта фильтра, без тех.)
   const periodMopSet=new Set();
   allRows.forEach(r=>{
     if(!isPaidRow(r))return;
+    if(isTechMop(r[COL.responsible]))return;
     const dp=parseDate(r[COL.datePaid]);
     if(!dp||dp.getFullYear()!==y)return;
     if(activeMonths.size>0&&!activeMonths.has(dp.getMonth()+1))return;
@@ -1202,11 +1217,11 @@ function render(){
   // Если вручную всё снято — оставляем пустым (покажем "нет данных")
   buildMopChips();
 
-  // Встречи — созданные обращения в выбранном периоде (все, не только оплаченные)
+  // Встречи — только основные менеджеры (без тех.)
   const meetingData={};
   allRows.forEach(r=>{
     const name=r[COL.responsible];
-    if(!name||!selectedMops.has(name))return;
+    if(!name||!selectedMops.has(name)||isTechMop(name))return;
     const dc=parseDate(r[COL.dateCreated]);
     if(!dc||dc.getFullYear()!==y)return;
     if(activeMonths.size>0&&!activeMonths.has(dc.getMonth()+1))return;
@@ -1214,13 +1229,25 @@ function render(){
     meetingData[name]=(meetingData[name]||0)+1;
   });
 
-  // Встречи, сделки и день-в-день по направлениям
+  // Встречи тех. специалистов — отдельно, только для их строк в таблице
+  const techMeetingData={};
+  allRows.forEach(r=>{
+    const name=r[COL.responsible];
+    if(!name||!isTechMop(name))return;
+    const dc=parseDate(r[COL.dateCreated]);
+    if(!dc||dc.getFullYear()!==y)return;
+    if(activeMonths.size>0&&!activeMonths.has(dc.getMonth()+1))return;
+    if(isSingleMonth&&daysPassed!==null&&dc.getDate()>daysPassed)return;
+    techMeetingData[name]=(techMeetingData[name]||0)+1;
+  });
+
+  // Встречи, сделки и день-в-день по направлениям (без тех.)
   const meetDir={1:0,2:0,3:0,4:0};
   const dealDir={1:0,2:0,3:0,4:0};
   const sdDir={1:0,2:0,3:0,4:0};
   allRows.forEach(r=>{
     const name=r[COL.responsible];
-    if(!name||!selectedMops.has(name))return;
+    if(!name||!selectedMops.has(name)||isTechMop(name))return;
     const dir=parseInt((r[COL.direction]||'').replace('#',''));
     if(![1,2,3,4].includes(dir))return;
     const dc=parseDate(r[COL.dateCreated]);
@@ -1260,7 +1287,24 @@ function render(){
     mopData[name].meetings=meetingData[name];
   });
 
-  // Для таблицы — все менеджеры периода; для статистики — только через activeMops
+  // Агрегат тех. специалистов (только для их строк в таблице)
+  const techMopData={};
+  filteredTech.forEach(r=>{
+    const name=r[COL.responsible]||'Неизвестный';
+    if(!techMopData[name])techMopData[name]={deals:0,sum:0,rows:[],meetings:0,sameDayDeals:0};
+    techMopData[name].deals++;
+    techMopData[name].sum+=parseSum(r[COL.sum]);
+    techMopData[name].rows.push(r);
+    const dp=parseDate(r[COL.datePaid]);
+    const dc=parseDate(r[COL.dateCreated]);
+    if(dp&&dc&&dp.getDate()===dc.getDate()&&dp.getMonth()===dc.getMonth()&&dp.getFullYear()===dc.getFullYear())techMopData[name].sameDayDeals++;
+  });
+  Object.keys(techMeetingData).forEach(name=>{
+    if(!techMopData[name])techMopData[name]={deals:0,sum:0,rows:[],meetings:0,sameDayDeals:0};
+    techMopData[name].meetings=techMeetingData[name];
+  });
+
+  // Для таблицы — только основные менеджеры; для статистики — только через activeMops
   const mops=Object.keys(mopData);
   let totalDeals=0,totalSum=0,totalZP=0,totalMeetings=0;
   const mopResults=[];
@@ -1414,6 +1458,31 @@ function render(){
       <td class="r" style="font-weight:500;">${!isSingleMonth?'—':fmt(totalZP)+' ₽'}</td>
     `;
     tbody.appendChild(trTotal);
+
+    // Тех. специалисты — под чертой
+    const techNames=Object.keys(techMopData);
+    if(techNames.length>0){
+      const trSep=document.createElement('tr');
+      trSep.innerHTML=`<td colspan="8" style="padding:4px 10px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);background:var(--s2);border-top:1.5px solid var(--border2);border-bottom:1px solid var(--border);">Тестовые данные (не входят в статистику)</td>`;
+      tbody.appendChild(trSep);
+      techNames.sort().forEach(name=>{
+        const d=techMopData[name];
+        const c=getMopColor(name);
+        const tr=document.createElement('tr');
+        tr.style.opacity='.55';
+        tr.innerHTML=`
+          <td></td>
+          <td><span class="av" style="background:${c.bg};color:${c.tc}">${initials(name)}</span>${name}</td>
+          <td class="r" style="color:var(--t2);">${d.meetings||0}</td>
+          <td class="r" style="color:var(--t2);">${d.deals}</td>
+          <td class="r">${fmtM(d.sum)}</td>
+          <td class="r">${d.deals>0?fmtK(Math.round(d.sum/d.deals)):'—'}</td>
+          <td class="r" style="color:var(--t3);font-size:10px;">тест</td>
+          <td class="r" style="color:var(--t3);">—</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
   }
 
   buildDayBtns();
@@ -1428,6 +1497,7 @@ function renderChart(){
   const md={},ms={};
   allRows.forEach(r=>{
     if(!isPaidRow(r))return;
+    if(isTechMop(r[COL.responsible]))return;
     if(!activeMops.has(r[COL.responsible]))return;
     const dp=parseDate(r[COL.datePaid]);
     if(!dp)return;
@@ -1477,6 +1547,7 @@ function renderDailyChart(){
   const dailyDeals={};
   allRows.forEach(r=>{
     if(!isPaidRow(r))return;
+    if(isTechMop(r[COL.responsible]))return;
     const chartMops=activeMop?new Set([activeMop]):selectedMops;
     if(!chartMops.has(r[COL.responsible]))return;
     const dp=parseDate(r[COL.datePaid]);
@@ -1924,7 +1995,7 @@ async function init(){
     document.getElementById('stxt').textContent='Загрузка...';
     allRows=await loadData(id,SHEET_NAME);
     const mopSet=new Set();
-    allRows.forEach(r=>{if(r[COL.responsible]&&isPaidRow(r))mopSet.add(r[COL.responsible]);});
+    allRows.forEach(r=>{if(r[COL.responsible]&&isPaidRow(r)&&!isTechMop(r[COL.responsible]))mopSet.add(r[COL.responsible]);});
     allMops=Array.from(mopSet).sort();
     allMops.forEach(m=>getMopColor(m));
     selectedMops=new Set(allMops);
