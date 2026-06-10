@@ -1543,8 +1543,8 @@ function renderDailyChart(){
   const autoDay=isCurrentMonth?today.getDate():mdays;
   const daysPassed=activeDay??autoDay;
 
-  // Сделки по дням
-  const dailyDeals={};
+  // Сделки и сумма по дням
+  const dailyDeals={},dailySum={};
   allRows.forEach(r=>{
     if(!isPaidRow(r))return;
     if(isTechMop(r[COL.responsible]))return;
@@ -1554,14 +1554,16 @@ function renderDailyChart(){
     if(!dp||dp.getFullYear()!==y||dp.getMonth()+1!==m)return;
     const day=dp.getDate();
     dailyDeals[day]=(dailyDeals[day]||0)+1;
+    dailySum[day]=(dailySum[day]||0)+parseSum(r[COL.sum]);
   });
 
   // Накопленный факт
   const factArr=[];
-  let cumFact=0;
+  let cumFact=0,cumSum=0;
   for(let d=1;d<=mdays;d++){
     if(d<=daysPassed){
       cumFact+=(dailyDeals[d]||0);
+      cumSum+=(dailySum[d]||0);
       factArr.push(cumFact);
     }else{
       factArr.push(null);
@@ -1571,6 +1573,9 @@ function renderDailyChart(){
   // Темп: сделок в день (за прошедшие дни)
   const rate=daysPassed>0?cumFact/daysPassed:0;
   const forecastTotal=Math.round(rate*mdays);
+  // Средний чек факт и прогнозная сумма
+  const currentAvgCheck=cumFact>0?Math.round(cumSum/cumFact):0;
+  const forecastSum=forecastTotal*currentAvgCheck;
 
   // Прогнозная линия: от последней точки факта до конца месяца
   const forecastArr=[];
@@ -1597,15 +1602,32 @@ function renderDailyChart(){
 
   const pill=document.getElementById('daily-forecast-pill');
   if(isCurrentMonth){
-    const diff=forecastTotal-effectivePlan;
-    const cls=diff>=0?'pg':diff>=-3?'pa':'pr';
-    const sign=diff>=0?'+':'';
+    const diffD=forecastTotal-effectivePlan;
+    const clsD=diffD>=0?'pg':diffD>=-5?'pa':'pr';
+    const signD=diffD>=0?'+':'';
+
+    const planAvg=PLAN.avgCheck;
+    const diffA=currentAvgCheck-planAvg;
+    const clsA=diffA>=0?'pg':diffA>=-20000?'pa':'pr';
+    const signA=diffA>=0?'+':'';
+
+    const planSum=effectivePlan*planAvg;
+    const diffS=forecastSum-planSum;
+    const clsS=diffS>=0?'pg':diffS>=-5000000?'pa':'pr';
+    const signS=diffS>=0?'+':'';
+
     pill.innerHTML=`
       <span style="color:var(--t3);">Темп: <b style="color:var(--text)">${rate.toFixed(1)}</b> сд/день</span>
-      <span class="pill ${cls}">Прогноз ${forecastTotal} сд (${sign}${diff} к плану)</span>
+      <span class="pill ${clsD}">Сделок: ${forecastTotal} (${signD}${diffD} к плану)</span>
+      <span class="pill ${clsA}">Ср. чек: ${fmtK(currentAvgCheck)} (${signA}${fmtK(diffA)})</span>
+      <span class="pill ${clsS}">Сумма: ${fmtM(forecastSum)} (${signS}${fmtM(diffS)})</span>
     `;
   }else{
-    pill.innerHTML=`<span style="color:var(--t3);font-family:inherit;font-size:11px;">Итого за месяц: <b style="color:var(--text)">${cumFact}</b> сделок</span>`;
+    const totalSum=Object.values(dailySum).reduce((a,b)=>a+b,0);
+    const avgCheck=cumFact>0?Math.round(totalSum/cumFact):0;
+    pill.innerHTML=`
+      <span style="color:var(--t3);font-family:inherit;font-size:11px;">Итого: <b style="color:var(--text)">${cumFact}</b> сд · <b style="color:var(--text)">${fmtK(avgCheck)}</b> ср. чек · <b style="color:var(--text)">${fmtM(totalSum)}</b></span>
+    `;
   }
 
   if(myChartDaily)myChartDaily.destroy();
