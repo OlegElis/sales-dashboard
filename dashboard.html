@@ -483,6 +483,9 @@ const TECH_MOPS_EXACT = new Set([
 const TECH_MOPS_PREFIX = ['Гагарина Варвара'];
 function isTechMop(name){ return TECH_MOPS_EXACT.has(name)||TECH_MOPS_PREFIX.some(p=>(name||'').startsWith(p)); }
 
+// Менеджеры без расчёта ЗП (входят в статистику, но ЗП не считается)
+const NO_ZP_MOPS = new Set(['Кривчикова Мария Ивановна']);
+
 // SETTINGS
 const SETTINGS_KEY='opora_settings_v3';
 const PLAN_DEFAULT={deals:16,avgCheck:225000,conv1:25,conv24:65,total:100};
@@ -1329,8 +1332,8 @@ function render(){
       }
     }
     const{bonus:senBonus,years:senYears,daysToNext:senDays,startDate:senStart}=isSingleMonth?getSeniorityBonus(name,effectiveDays,mdays):{bonus:0,years:0,daysToNext:null,startDate:null};
-    const{zp,pills,bd}=!isSingleMonth?{zp:null,pills:[],bd:[]}:calcZP(d.deals,d.sum,conv.conv1,conv.conv24,effectiveDays,mdays,senBonus,senYears,senDays,senStart,conv);
-    if(isSingleMonth)totalZP+=zp;
+    const{zp,pills,bd}=(!isSingleMonth||NO_ZP_MOPS.has(name))?{zp:null,pills:[],bd:[]}:calcZP(d.deals,d.sum,conv.conv1,conv.conv24,effectiveDays,mdays,senBonus,senYears,senDays,senStart,conv);
+    if(isSingleMonth&&zp!==null)totalZP+=zp;
     mopResults.push({name,d,conv,zp,pills,bd,rows:d.rows});
   });
 
@@ -1430,8 +1433,8 @@ function render(){
           render();
           return;
         }
-        // клик по любой другой ячейке = карточка ЗП (только в режиме месяца)
-        if(!!isSingleMonth)openZpModal(name,zp,bd,conv,d,d.rows);
+        // клик по любой другой ячейке = карточка ЗП (только в режиме месяца, только если ЗП считается)
+        if(!!isSingleMonth&&!NO_ZP_MOPS.has(name))openZpModal(name,zp,bd,conv,d,d.rows);
       };
       // визуальное выделение на основе activeMop
       if(activeMop){
