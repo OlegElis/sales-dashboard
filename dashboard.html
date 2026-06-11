@@ -746,7 +746,7 @@ const colorMap={};let colorIdx=0;
 function getMopColor(n){if(!colorMap[n]){colorMap[n]=MOP_COLORS[colorIdx%MOP_COLORS.length];colorIdx++;}return colorMap[n];}
 function initials(n){return n.trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();}
 const fmt=n=>Math.round(n).toLocaleString('ru-RU');
-const fmtM=n=>n>=1000000?(n/1000000).toFixed(1)+' млн':(n/1000).toFixed(0)+' тыс.';
+const fmtM=n=>Math.abs(n)>=1000000?(n/1000000).toFixed(1)+' млн':(n/1000).toFixed(0)+' тыс.';
 const fmtK=n=>n>0?Math.round(n/1000)+' тыс.':'—';
 const pctColor=p=>p>=90?'var(--green)':p>=70?'var(--amber)':'var(--red)';
 const dealColor=(v,plan)=>v>=plan?'var(--green)':v>=plan*.8?'var(--amber)':'var(--red)';
