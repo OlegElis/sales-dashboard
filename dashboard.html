@@ -1515,12 +1515,14 @@ function render(){
 let myChartDaily=null;
 
 function renderChart(){
-  const activeMops=activeMop?new Set([activeMop]):selectedMops;
+  // Динамика по месяцам — всегда весь отдел (без тех.); фильтр менеджеров
+  // текущего периода НЕ применяем, иначе прошлые месяцы занижаются.
+  // Изоляция по клику на ФИО (activeMop) по-прежнему фильтрует график.
   const md={},ms={};
   allRows.forEach(r=>{
     if(!isPaidRow(r))return;
     if(isTechMop(r[COL.responsible]))return;
-    if(!activeMops.has(r[COL.responsible]))return;
+    if(activeMop&&r[COL.responsible]!==activeMop)return;
     const dp=parseDate(r[COL.datePaid]);
     if(!dp)return;
     const key=dp.getFullYear()+'-'+String(dp.getMonth()+1).padStart(2,'0');
