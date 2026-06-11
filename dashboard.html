@@ -777,17 +777,34 @@ async function loadData(id,sheet){
   return parseCSV(text);
 }
 function parseCSV(text){
-  return text.split('\n').slice(1).map(line=>{
-    const cols=[];let cur='',inQ=false;
-    for(let i=0;i<line.length;i++){
-      const c=line[i];
-      if(c==='"'){inQ=!inQ;continue;}
-      if(c===','&&!inQ){cols.push(cur.trim());cur='';continue;}
-      cur+=c;
+  // Полноценный посимвольный разбор: переносы строк и запятые внутри кавычек
+  // не разрывают строку; "" внутри кавычек — экранированная кавычка.
+  const rows=[];
+  let cols=[],cur='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQ){
+      if(c==='"'){
+        if(text[i+1]==='"'){cur+='"';i++;}  // экранированная кавычка
+        else inQ=false;
+      }else cur+=c;
+      continue;
     }
-    cols.push(cur.trim());
-    return cols;
-  }).filter(r=>r.length>5&&r[COL.id]);
+    if(c==='"'){inQ=true;continue;}
+    if(c===','){cols.push(cur.trim());cur='';continue;}
+    if(c==='\n'||c==='\r'){
+      if(c==='\r'&&text[i+1]==='\n')i++;  // \r\n как один разделитель
+      cols.push(cur.trim());
+      rows.push(cols);
+      cols=[];cur='';
+      continue;
+    }
+    cur+=c;
+  }
+  // последняя строка без завершающего перевода
+  if(cur!==''||cols.length>0){cols.push(cur.trim());rows.push(cols);}
+  // убираем строку заголовка и пустые/неполные строки
+  return rows.slice(1).filter(r=>r.length>5&&r[COL.id]);
 }
 
 function calcConversionsDirect(rows,mopName,year,monthsSet){
