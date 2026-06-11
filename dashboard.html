@@ -1009,7 +1009,9 @@ function buildMonthBtns(){
     btn.textContent=MONTHS_RU[m-1].slice(0,3);
     btn.onclick=()=>{
       if(activeMonths.has(m))activeMonths.delete(m);else activeMonths.add(m);
-      if(activeMonths.size!==1)activeDay=null;
+      // Смена месяца сбрасывает выбранный день: иначе прошлый месяц обрезается
+      // до сегодняшнего числа. Текущий месяц всё равно ограничится autoDay.
+      activeDay=null;
       buildMonthBtns();buildDayBtns();render();
     };
     wrap.appendChild(btn);
