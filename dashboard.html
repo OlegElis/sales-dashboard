@@ -1633,8 +1633,36 @@ function renderDailyChart(){
     `;
   }
 
+  // Выходные по дням месяца (true = сб/вс)
+  const weekendArr=Array.from({length:mdays},(_,i)=>{
+    const dow=new Date(y,m-1,i+1).getDay();
+    return dow===0||dow===6;
+  });
+
+  // Плагин: подпись количества сделок над столбцами
+  const barLabelsPlugin={
+    id:'barLabels',
+    afterDatasetsDraw(chart){
+      const{ctx}=chart;
+      const meta=chart.getDatasetMeta(0); // dataset 0 = Факт (bar)
+      if(!meta||meta.hidden)return;
+      ctx.save();
+      ctx.font='600 9px Inter, sans-serif';
+      ctx.fillStyle='#185FA5';
+      ctx.textAlign='center';
+      ctx.textBaseline='bottom';
+      meta.data.forEach((bar,i)=>{
+        const val=chart.data.datasets[0].data[i];
+        if(val===null||val===undefined||val===0)return;
+        ctx.fillText(val,bar.x,bar.y-2);
+      });
+      ctx.restore();
+    }
+  };
+
   if(myChartDaily)myChartDaily.destroy();
   myChartDaily=new Chart(document.getElementById('dailyChart'),{
+    plugins:[barLabelsPlugin],
     data:{labels,datasets:[
       {type:'bar',label:'Факт',data:factArr.map((v,i)=>i<daysPassed?(dailyDeals[i+1]||0):null),
         backgroundColor:'#B5D4F4',borderColor:'#378ADD',borderWidth:1.5,yAxisID:'y'},
@@ -1673,7 +1701,7 @@ function renderDailyChart(){
       scales:{
         y:{beginAtZero:true,ticks:{font:{size:10},color:'#888',stepSize:1},grid:{color:'rgba(0,0,0,0.04)'},title:{display:true,text:'шт/день',font:{size:9},color:'#aaa'}},
         y2:{position:'right',beginAtZero:true,ticks:{font:{size:10},color:'#185FA5'},grid:{display:false},title:{display:true,text:'накопл.',font:{size:9},color:'#aaa'}},
-        x:{ticks:{font:{size:9},color:'#888',autoSkip:true,maxTicksLimit:16},grid:{color:'rgba(0,0,0,0.03)'}}
+        x:{ticks:{font:(ctx)=>({size:9,weight:weekendArr[ctx.index]?'700':'400'}),color:(ctx)=>weekendArr[ctx.index]?'#A32D2D':'#888',autoSkip:false,maxRotation:0,minRotation:0},grid:{color:'rgba(0,0,0,0.03)'}}
       },
       onHover:(e)=>{e.native.target.style.cursor=e.chart.getElementsAtEventForMode(e.native,'nearest',{intersect:true},false).length?'pointer':'default';}
     }
