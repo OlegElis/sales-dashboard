@@ -1699,6 +1699,7 @@ function renderDailyChart(){
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
+      layout:{padding:{top:18}}, // место для подписи над самым высоким столбцом
       onClick:(e,elements)=>{
         if(!elements.length)return;
         const day=parseInt(labels[elements[0].index]);
