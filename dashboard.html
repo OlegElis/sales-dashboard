@@ -408,6 +408,55 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   .hdr-breadcrumb{font-size:9px;}
   .hdr-title{font-size:16px;}
 }
+
+/* ====== ПЕЧАТНАЯ ФОРМА (A4 портрет) ====== */
+.print-only{display:none;}
+.print-meta{margin-top:8px;}
+
+@media print{
+  @page{size:A4 portrait;margin:10mm;}
+  *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+  body{padding:0 !important;background:#fff !important;font-size:9.5px;}
+
+  /* Скрываем всё интерактивное и не относящееся к отчёту */
+  #login-screen,.view-tabs,.cfg,.cfg-btn,.no-print,
+  .page-grid>.filters,.mop-dd,.status-pill,#supd,
+  #portfolio-section,.settings-panel,.settings-overlay,
+  .zp-overlay,.day-overlay,.ai-block,.hdr-breadcrumb{display:none !important;}
+
+  /* Показываем печатные элементы */
+  .print-only{display:block !important;}
+
+  /* Шапка отчёта */
+  .hdr{margin-bottom:6px;}
+  .hdr-bottom{padding-bottom:6px;border-bottom:2px solid #111;}
+  .hdr-title{font-size:17px;}
+  .print-meta{display:flex !important;align-items:baseline;gap:10px;margin-top:6px;
+    padding-bottom:5px;border-bottom:1px solid #bbb;flex-wrap:wrap;}
+  .print-report-label{font-size:13px;font-weight:700;color:#111;}
+  .print-period{font-size:12px;font-weight:600;color:#185FA5;}
+  .print-generated{font-size:10px;color:#666;margin-left:auto;}
+
+  /* Грид → одна колонка, всё во всю ширину */
+  .page-grid{display:block !important;}
+  .stats-strip{margin:8px 0 !important;page-break-inside:avoid;border:1px solid #ccc !important;}
+  .stat-val{font-size:14px;}
+  .col-table{display:block !important;margin-bottom:8px;}
+  .col-table .rtable-wrap{overflow:visible !important;max-height:none !important;}
+  .rtable{font-size:9px;}
+  .rtable th,.rtable td{padding:2px 6px !important;}
+  .rtable tbody tr{page-break-inside:avoid;}
+
+  /* Прогресс к плану — во всю ширину, графики — рядом в 2 колонки */
+  .col-charts{display:grid !important;grid-template-columns:1fr 1fr;gap:8px;}
+  .col-charts .plan-block{grid-column:1 / -1;}
+  .plan-block,.chart-block{page-break-inside:avoid;margin:0 !important;border:1px solid #ccc !important;}
+  /* Высота графиков под печать */
+  .chart-block div[style*="height:160px"]{height:106px !important;}
+
+  /* Заголовок секции «Прогресс к плану» и т.п. читаемы */
+  .block-title{color:#444 !important;}
+}
 </style>
 </head>
 <body>
@@ -578,15 +627,24 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
       <div style="font-size:10px;color:var(--t3);" id="supd"></div>
     </div>
   </div>
+  <!-- Print-only: подзаголовок отчёта (период + дата формирования) -->
+  <div class="print-only print-meta" id="print-meta">
+    <span class="print-report-label">Ежедневный отчёт отдела продаж</span>
+    <span class="print-period" id="print-period"></span>
+    <span class="print-generated" id="print-generated"></span>
+  </div>
 </div>
 
 <!-- VIEW TABS -->
-<div class="view-tabs" style="justify-content:space-between;">
+<div class="view-tabs no-print" style="justify-content:space-between;">
   <div style="display:flex;gap:4px;">
     <div class="vtab active" id="vtab-stats" onclick="switchView('stats')">Статистика</div>
     <div class="vtab" id="vtab-portfolio" onclick="switchView('portfolio')">Портфель сделок</div>
   </div>
-  <button class="cfg-btn" onclick="openSettings()" title="Настройки">⚙ Настройки</button>
+  <div style="display:flex;gap:6px;">
+    <button class="cfg-btn" onclick="printReport()" title="Печать отчёта (A4)">🖨 Печать отчёта</button>
+    <button class="cfg-btn" onclick="openSettings()" title="Настройки">⚙ Настройки</button>
+  </div>
 </div>
 
 <div class="cfg" id="cfg">
@@ -1840,6 +1898,24 @@ function switchView(v){
   document.getElementById('vtab-portfolio').classList.toggle('active',v==='portfolio');
   if(v==='portfolio')renderPortfolio();
 }
+
+// PRINT REPORT (A4)
+function printReport(){
+  // Отчёт строится по виду «Статистика»
+  if(activeView!=='stats')switchView('stats');
+  const now=new Date();
+  const pd=document.getElementById('period-desc')?.textContent?.trim()||'';
+  const periodEl=document.getElementById('print-period');
+  const genEl=document.getElementById('print-generated');
+  if(periodEl)periodEl.textContent='Период: '+pd;
+  if(genEl)genEl.textContent='Сформирован: '+now.toLocaleString('ru-RU');
+  // даём DOM применить print-only поля, затем печать
+  setTimeout(()=>window.print(),60);
+}
+// Перерисовываем графики под размер печатной/экранной области
+function _resizeCharts(){try{myChart&&myChart.resize();myChartDaily&&myChartDaily.resize();}catch(e){}}
+window.addEventListener('beforeprint',_resizeCharts);
+window.addEventListener('afterprint',_resizeCharts);
 
 // PORTFOLIO
 

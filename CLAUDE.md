@@ -102,6 +102,7 @@ Uses **Chart.js 4.4.1** (CDN). Two charts:
 ## Current Status (as of June 2026)
 
 ### Recently completed
+- Print report: `printReport()` + `@media print` styles render the Статистика view as a one-page A4-portrait daily report for the CEO (interactive controls hidden, charts placed side-by-side, `beforeprint`/`afterprint` resize the canvases)
 - Favicon: cardiogram SVG in browser tab
 - Default period: opens on current day/month/year
 - ZP modal: full conversion detail tables (meeting-by-meeting list with paid/unpaid status)
