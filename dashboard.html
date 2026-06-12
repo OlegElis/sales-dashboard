@@ -435,8 +435,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
   /* Шапка отчёта */
   .hdr{margin-bottom:6px;}
-  .hdr-bottom{padding-bottom:6px;border-bottom:2px solid #111;}
-  .hdr-title{font-size:17px;}
+  .hdr-bottom{padding-bottom:3px;border-bottom:2px solid #111;}
+  .hdr-title{font-size:15px;}
   .print-meta{display:flex !important;align-items:baseline;gap:10px;margin-top:6px;
     padding-bottom:5px;border-bottom:1px solid #bbb;flex-wrap:wrap;}
   .print-report-label{font-size:13px;font-weight:700;color:#111;}
@@ -446,7 +446,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
   /* Грид → одна колонка, всё во всю ширину */
   .page-grid{display:block !important;}
-  .stats-strip{margin:8px 0 !important;page-break-inside:avoid;border:1px solid #ccc !important;}
+  .stats-strip{margin:6px 0 !important;page-break-inside:avoid;border:1px solid #ccc !important;}
+  .stats-strip .stat-cell{padding:4px 8px !important;}
   .stat-val{font-size:14px;}
   .col-table{display:block !important;margin-bottom:8px;}
   .col-table .rtable-wrap{overflow:visible !important;max-height:none !important;}
@@ -471,7 +472,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   /* Высота графиков под печать */
   .chart-block div[style*="height:160px"]{height:104px !important;}
   /* Дневной график пониже плана/месячного, но во всю ширину - читаемо */
-  .col-charts>*:nth-child(3) div[style*="height:160px"]{height:102px !important;}
+  .col-charts>*:nth-child(3) div[style*="height:160px"]{height:92px !important;}
+  /* ВАЖНО: жёстко вписываем canvas в контейнер. Chart.js при печати не
+     успевает пересчитать размер (beforeprint видит экранную ширину), из-за
+     чего широкий canvas обрезается по правому краю. width/height:100%
+     гарантируют, что график впишется в колонку. */
+  .chart-block canvas{width:100% !important;height:100% !important;max-width:100% !important;}
 
   /* Заголовок секции «Прогресс к плану» и т.п. читаемы */
   .block-title{color:#444 !important;}
