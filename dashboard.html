@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Пульс отдела продаж — ГК ОПОРА</title>
+<title>Пульс отдела продаж - ГК ОПОРА</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23fff'/%3E%3Cpolyline points='0,32 10,32 18,10 26,54 34,18 40,42 48,32 64,32' stroke='%23A32D2D' stroke-width='5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -95,9 +95,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .pace-val{font-size:15px;color:#633806;font-weight:500;}
 .pace-val.ok{color:var(--green);}
 
-/* ЕДИНЫЙ ДВУХКОЛОНОЧНЫЙ ГРИД — 4 ячейки: 2 строки × 2 колонки */
+/* ЕДИНЫЙ ДВУХКОЛОНОЧНЫЙ ГРИД - 4 ячейки: 2 строки × 2 колонки */
 .page-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr;gap:12px;}
-/* строка 1: фильтры | стрип статистики — одинаковая высота автоматически */
+/* строка 1: фильтры | стрип статистики - одинаковая высота автоматически */
 .page-grid>.filters{grid-column:1;grid-row:1;}
 .page-grid>.stats-strip{grid-column:2;grid-row:1;margin-bottom:0;}
 /* строка 2: таблица | прогресс+графики */
@@ -433,6 +433,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   .hdr-title{font-size:17px;}
   .print-meta{display:flex !important;align-items:baseline;gap:10px;margin-top:6px;
     padding-bottom:5px;border-bottom:1px solid #bbb;flex-wrap:wrap;}
+  .print-dept{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#185FA5;font-weight:700;
+    border:1px solid #185FA5;border-radius:4px;padding:1px 6px;}
   .print-report-label{font-size:13px;font-weight:700;color:#111;}
   .print-period{font-size:12px;font-weight:600;color:#185FA5;}
   .print-generated{font-size:10px;color:#666;margin-left:auto;}
@@ -447,7 +449,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   .rtable th,.rtable td{padding:2px 6px !important;}
   .rtable tbody tr{page-break-inside:avoid;}
 
-  /* Прогресс к плану — во всю ширину, графики — рядом в 2 колонки */
+  /* Прогресс к плану - во всю ширину, графики - рядом в 2 колонки */
   .col-charts{display:grid !important;grid-template-columns:1fr 1fr;gap:8px;}
   .col-charts .plan-block{grid-column:1 / -1;}
   .plan-block,.chart-block{page-break-inside:avoid;margin:0 !important;border:1px solid #ccc !important;}
@@ -524,7 +526,7 @@ const SHEET_NAME = 'RawData_BFL';
 let PLAN = { deals:16, avgCheck:225000, conv1:25, conv24:65 };
 let PLAN_TOTAL = 120;
 
-// Технические специалисты — исключены из статистики, но показаны в таблице
+// Технические специалисты - исключены из статистики, но показаны в таблице
 const TECH_MOPS_EXACT = new Set([
   'Павличенко Елизавета Сергеевна',
   'Шелков Александр Сергеевич',
@@ -538,7 +540,7 @@ const NO_ZP_MOPS = new Set(['Кривчикова Мария Ивановна'])
 // SETTINGS
 const SETTINGS_KEY='opora_settings_v3';
 const PLAN_DEFAULT={deals:16,avgCheck:225000,conv1:25,conv24:65,total:100};
-// planDefault всегда из кода — в localStorage только planMonths и startDates
+// planDefault всегда из кода - в localStorage только planMonths и startDates
 const START_DATES_DEFAULT={
   'Архипов Евгений Николаевич':          '13.07.2021',
   'Панова Анна Александровна':            '09.01.2023',
@@ -589,7 +591,7 @@ function getSeniorityBonus(name,periodDays,monthDays){
   const today=new Date();
   const msPerDay=1000*60*60*24;
   const years=Math.floor((today-start)/(365.25*msPerDay));
-  // Дата следующего повышения — ближайший день годовщины
+  // Дата следующего повышения - ближайший день годовщины
   const nextAnniv=new Date(start);
   nextAnniv.setFullYear(start.getFullYear()+years+1);
   const daysToNext=Math.ceil((nextAnniv-today)/msPerDay);
@@ -608,7 +610,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   <div class="hdr-breadcrumb">
     <span>УПР.Финансы</span>
     <span class="hdr-breadcrumb-sep">|</span>
-    <span>БФЛ — Банкротство физических лиц</span>
+    <span>БФЛ - Банкротство физических лиц</span>
   </div>
   <div class="hdr-bottom">
     <div style="display:flex;align-items:center;gap:12px;">
@@ -629,6 +631,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   </div>
   <!-- Print-only: подзаголовок отчёта (период + дата формирования) -->
   <div class="print-only print-meta" id="print-meta">
+    <span class="print-dept">УПР.Финансы</span>
     <span class="print-report-label">Ежедневный отчёт отдела продаж</span>
     <span class="print-period" id="print-period"></span>
     <span class="print-generated" id="print-generated"></span>
@@ -679,38 +682,38 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
     <div class="stat-cell">
       <div class="stat-lbl">Сделок</div>
       <div style="display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;">
-        <div class="stat-val" id="m-deals">—</div>
+        <div class="stat-val" id="m-deals">-</div>
         <div style="font-size:11px;color:var(--amber);white-space:nowrap;" id="m-sameday"></div>
       </div>
       <div class="stat-sub" id="m-deals-sub"></div>
     </div>
-    <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">—</div><div class="stat-sub" id="m-sum-sub"></div></div>
-    <div class="stat-cell"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">—</div><div class="stat-sub" id="m-avg-sub"></div></div>
-    <div class="stat-cell"><div class="stat-lbl">ФОТ</div><div class="stat-val" id="m-fot">—</div><div class="stat-sub" id="m-fot-sub"></div></div>
+    <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">-</div><div class="stat-sub" id="m-sum-sub"></div></div>
+    <div class="stat-cell"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">-</div><div class="stat-sub" id="m-avg-sub"></div></div>
+    <div class="stat-cell"><div class="stat-lbl">ФОТ</div><div class="stat-val" id="m-fot">-</div><div class="stat-sub" id="m-fot-sub"></div></div>
 
     <!-- Строка 2: Встречи / сделки ⚡ по направлениям -->
     <div class="stat-cell" style="border-top:1px solid var(--border);padding:5px 10px;">
-      <div class="stat-lbl" style="font-size:9px;">#1 встр / сд</div>
-      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-meet1">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-deal1">—</span><span style="font-size:9px;color:#854F0B;font-weight:400;" id="m-sd1"></span></div>
+      <div class="stat-lbl" style="font-size:9px;">#1 встр / сд / конв.</div>
+      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-meet1">-</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-deal1">-</span><span style="font-size:9px;color:#854F0B;font-weight:400;" id="m-sd1"></span><span style="font-size:11px;font-weight:600;margin-left:6px;" id="m-conv1"></span></div>
     </div>
     <div class="stat-cell" style="border-top:1px solid var(--border);padding:5px 10px;">
-      <div class="stat-lbl" style="font-size:9px;">#2 встр / сд</div>
-      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-meet2">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-deal2">—</span><span style="font-size:9px;color:#854F0B;font-weight:400;" id="m-sd2"></span></div>
+      <div class="stat-lbl" style="font-size:9px;">#2 встр / сд / конв.</div>
+      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-meet2">-</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-deal2">-</span><span style="font-size:9px;color:#854F0B;font-weight:400;" id="m-sd2"></span><span style="font-size:11px;font-weight:600;margin-left:6px;" id="m-conv2"></span></div>
     </div>
     <div class="stat-cell" style="border-top:1px solid var(--border);padding:5px 10px;">
-      <div class="stat-lbl" style="font-size:9px;">#3 встр / сд</div>
-      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-meet3">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-deal3">—</span><span style="font-size:9px;color:#854F0B;font-weight:400;" id="m-sd3"></span></div>
+      <div class="stat-lbl" style="font-size:9px;">#3 встр / сд / конв.</div>
+      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-meet3">-</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-deal3">-</span><span style="font-size:9px;color:#854F0B;font-weight:400;" id="m-sd3"></span><span style="font-size:11px;font-weight:600;margin-left:6px;" id="m-conv3"></span></div>
     </div>
     <div class="stat-cell" style="border-top:1px solid var(--border);padding:5px 10px;">
-      <div class="stat-lbl" style="font-size:9px;">#4 встр / сд</div>
-      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-meet4">—</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-deal4">—</span><span style="font-size:9px;color:#854F0B;font-weight:400;" id="m-sd4"></span></div>
+      <div class="stat-lbl" style="font-size:9px;">#4 встр / сд / конв.</div>
+      <div style="font-size:13px;letter-spacing:-.01em;font-weight:500;white-space:nowrap;"><span id="m-meet4">-</span><span style="color:var(--t3);font-weight:400;"> / </span><span id="m-deal4">-</span><span style="font-size:9px;color:#854F0B;font-weight:400;" id="m-sd4"></span><span style="font-size:11px;font-weight:600;margin-left:6px;" id="m-conv4"></span></div>
     </div>
 
     <!-- Строка 3: Темп и встречи всего -->
-    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">День мес.</div><div class="stat-val" id="cd-day">—</div></div>
-    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">До плана</div><div class="stat-val" id="cd-need">—</div></div>
-    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Нужно/день</div><div class="stat-val" id="cd-perday">—</div></div>
-    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Темп/день</div><div class="stat-val" id="cd-pace">—</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">День мес.</div><div class="stat-val" id="cd-day">-</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">До плана</div><div class="stat-val" id="cd-need">-</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Нужно/день</div><div class="stat-val" id="cd-perday">-</div></div>
+    <div class="stat-cell" style="border-top:1px solid var(--border)"><div class="stat-lbl">Темп/день</div><div class="stat-val" id="cd-pace">-</div></div>
   </div>
 
   <!-- [2,1] Таблица менеджеров -->
@@ -739,9 +742,9 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
 
     <div class="plan-block" style="margin-bottom:0;">
       <div class="block-title">Прогресс к плану</div>
-      <div class="plan-row"><div class="plan-lbl">Кол-во сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-deals" style="background:#378ADD;width:0%"></div></div><div class="plan-nums" id="pn-deals">—</div><div class="plan-pct" id="pp-deals">—</div></div>
-      <div class="plan-row"><div class="plan-lbl">Сумма сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-sum" style="background:#639922;width:0%"></div></div><div class="plan-nums" id="pn-sum">—</div><div class="plan-pct" id="pp-sum">—</div></div>
-      <div class="plan-row"><div class="plan-lbl">Средний чек</div><div class="plan-bw"><div class="plan-bf" id="bar-avg" style="background:#BA7517;width:0%"></div></div><div class="plan-nums" id="pn-avg">—</div><div class="plan-pct" id="pp-avg">—</div></div>
+      <div class="plan-row"><div class="plan-lbl">Кол-во сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-deals" style="background:#378ADD;width:0%"></div></div><div class="plan-nums" id="pn-deals">-</div><div class="plan-pct" id="pp-deals">-</div></div>
+      <div class="plan-row"><div class="plan-lbl">Сумма сделок</div><div class="plan-bw"><div class="plan-bf" id="bar-sum" style="background:#639922;width:0%"></div></div><div class="plan-nums" id="pn-sum">-</div><div class="plan-pct" id="pp-sum">-</div></div>
+      <div class="plan-row"><div class="plan-lbl">Средний чек</div><div class="plan-bw"><div class="plan-bf" id="bar-avg" style="background:#BA7517;width:0%"></div></div><div class="plan-nums" id="pn-avg">-</div><div class="plan-pct" id="pp-avg">-</div></div>
     </div>
     <div class="chart-block">
       <div class="block-title">Динамика по месяцам</div>
@@ -758,7 +761,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
     <div class="chart-block">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px;">
         <div>
-          <div class="block-title" style="margin-bottom:3px;">По дням — <span id="daily-title">текущий месяц</span></div>
+          <div class="block-title" style="margin-bottom:3px;">По дням - <span id="daily-title">текущий месяц</span></div>
           <div class="chart-legend">
             <span><span class="leg-sq" style="background:#B5D4F4"></span>Факт</span>
             <span><span class="leg-sq" style="background:#EAF3DE;border:1px solid #3B6D11"></span>Прогноз</span>
@@ -805,7 +808,7 @@ function getMopColor(n){if(!colorMap[n]){colorMap[n]=MOP_COLORS[colorIdx%MOP_COL
 function initials(n){return n.trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();}
 const fmt=n=>Math.round(n).toLocaleString('ru-RU');
 const fmtM=n=>Math.abs(n)>=1000000?(n/1000000).toFixed(1)+' млн':(n/1000).toFixed(0)+' тыс.';
-const fmtK=n=>n>0?Math.round(n/1000)+' тыс.':'—';
+const fmtK=n=>n>0?Math.round(n/1000)+' тыс.':'-';
 const pctColor=p=>p>=90?'var(--green)':p>=70?'var(--amber)':'var(--red)';
 const dealColor=(v,plan)=>v>=plan?'var(--green)':v>=plan*.8?'var(--amber)':'var(--red)';
 const pillCls=p=>p>=25?'pg':p>=15?'pa':'pr';
@@ -836,7 +839,7 @@ async function loadData(id,sheet){
 }
 function parseCSV(text){
   // Полноценный посимвольный разбор: переносы строк и запятые внутри кавычек
-  // не разрывают строку; "" внутри кавычек — экранированная кавычка.
+  // не разрывают строку; "" внутри кавычек - экранированная кавычка.
   const rows=[];
   let cols=[],cur='',inQ=false;
   for(let i=0;i<text.length;i++){
@@ -945,10 +948,10 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=
   }
   zp+=kpiD;
 
-  // Коэффициент пропорции дней (для конверсий — как оклад)
+  // Коэффициент пропорции дней (для конверсий - как оклад)
   const dayK=periodDays/monthDays;
 
-  // Конверсии и чек — только если есть сделки
+  // Конверсии и чек - только если есть сделки
   if(deals>0){
     // Конв. #1
     const dc1=conv1-PLAN.conv1;
@@ -967,19 +970,19 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=
     const kC1=Math.round(kC1raw*dayK);
     zp+=kC1;
 
-    // Конв. #2–4 (план 65%, порог 45%, штраф 900/ед, бонус 750/ед)
+    // Конв. #2-4 (план 65%, порог 45%, штраф 900/ед, бонус 750/ед)
     const dc24=conv24-PLAN.conv24;
     const src24=convRaw&&convRaw.c24>0?` [${convRaw.p24} опл. из ${convRaw.c24} встр.]`:'';
     let kC24raw;
     if(conv24<45){
       kC24raw=0;
-      row('Конв. #2–4',`${conv24}%${src24} < 45% (порог) = 0`,0,'pr');
+      row('Конв. #2-4',`${conv24}%${src24} < 45% (порог) = 0`,0,'pr');
     } else if(dc24<0){
       kC24raw=Math.max(0,18000+dc24*900);
-      row('Конв. #2–4',`${conv24}%${src24} (${sign(dc24)} к плану ${PLAN.conv24}%) = (18 000 + (${dc24})×900) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pa');
+      row('Конв. #2-4',`${conv24}%${src24} (${sign(dc24)} к плану ${PLAN.conv24}%) = (18 000 + (${dc24})×900) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pa');
     } else {
       kC24raw=18000+dc24*750;
-      row('Конв. #2–4',`${conv24}%${src24} (${sign(dc24)} к плану ${PLAN.conv24}%) = (18 000 + ${dc24}×750) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pg');
+      row('Конв. #2-4',`${conv24}%${src24} (${sign(dc24)} к плану ${PLAN.conv24}%) = (18 000 + ${dc24}×750) ÷ ${monthDays} × ${periodDays}`,Math.round(kC24raw*dayK),'pg');
     }
     const kC24=Math.round(kC24raw*dayK);
     zp+=kC24;
@@ -1048,7 +1051,7 @@ function updatePeriodDesc(){
   }else{
     const consec=ms.every((m,i)=>i===0||m===ms[i-1]+1);
     if(consec){
-      text=MONTHS_RU[ms[0]-1].slice(0,3)+' — '+MONTHS_RU[ms[ms.length-1]-1].slice(0,3)+' '+y;
+      text=MONTHS_RU[ms[0]-1].slice(0,3)+' - '+MONTHS_RU[ms[ms.length-1]-1].slice(0,3)+' '+y;
     }else{
       text=ms.map(m=>MONTHS_RU[m-1].slice(0,3)).join(', ')+' '+y;
     }
@@ -1164,7 +1167,7 @@ function buildMopChips(){
   const wasOpen=panel.classList.contains('open');
   panel.innerHTML='';
 
-  // «Все» — вверху
+  // «Все» - вверху
   const allItem=document.createElement('div');
   allItem.className='mop-dd-item';
   const allCb=document.createElement('input');
@@ -1175,7 +1178,7 @@ function buildMopChips(){
     if(allCb.checked){
       mopList.forEach(m=>selectedMops.add(m));
     } else {
-      // снимаем всех — не сбрасываем Set полностью, чтобы render не добавил их обратно
+      // снимаем всех - не сбрасываем Set полностью, чтобы render не добавил их обратно
       mopList.forEach(m=>selectedMops.delete(m));
     }
     buildMopChips();render();
@@ -1262,10 +1265,10 @@ function render(){
     return true;
   }
 
-  // Основные менеджеры (без тех. специалистов) — для статистики
+  // Основные менеджеры (без тех. специалистов) - для статистики
   const filteredAll=allRows.filter(r=>periodFilter(r)&&selectedMops.has(r[COL.responsible])&&!isTechMop(r[COL.responsible]));
 
-  // Тех. специалисты — только для таблицы, не для статистики
+  // Тех. специалисты - только для таблицы, не для статистики
   const filteredTech=allRows.filter(r=>periodFilter(r)&&isTechMop(r[COL.responsible]));
 
   // Фильтр для статистики/графиков (с учётом activeMop)
@@ -1286,7 +1289,7 @@ function render(){
   });
   const prevPeriodMops=periodMops.join(',');
   periodMops=Array.from(periodMopSet).sort();
-  // Если период сменился — полностью сбрасываем фильтр, выбираем всех
+  // Если период сменился - полностью сбрасываем фильтр, выбираем всех
   if(periodMops.join(',')!==prevPeriodMops){
     selectedMops.clear();
     periodMops.forEach(m=>selectedMops.add(m));
@@ -1294,10 +1297,10 @@ function render(){
     // Убираем из выбранных тех кого нет в текущем периоде
     selectedMops.forEach(m=>{if(!periodMopSet.has(m))selectedMops.delete(m);});
   }
-  // Если вручную всё снято — оставляем пустым (покажем "нет данных")
+  // Если вручную всё снято - оставляем пустым (покажем "нет данных")
   buildMopChips();
 
-  // Встречи — только основные менеджеры (без тех.)
+  // Встречи - только основные менеджеры (без тех.)
   const meetingData={};
   allRows.forEach(r=>{
     const name=r[COL.responsible];
@@ -1309,7 +1312,7 @@ function render(){
     meetingData[name]=(meetingData[name]||0)+1;
   });
 
-  // Встречи тех. специалистов — отдельно, только для их строк в таблице
+  // Встречи тех. специалистов - отдельно, только для их строк в таблице
   const techMeetingData={};
   allRows.forEach(r=>{
     const name=r[COL.responsible];
@@ -1346,7 +1349,7 @@ function render(){
     }
   });
 
-  // Агрегат по МОПам для ТАБЛИЦЫ — всегда все менеджеры (filteredAll)
+  // Агрегат по МОПам для ТАБЛИЦЫ - всегда все менеджеры (filteredAll)
   const mopData={};
   filteredAll.forEach(r=>{
     const name=r[COL.responsible]||'Неизвестный';
@@ -1384,7 +1387,7 @@ function render(){
     techMopData[name].meetings=techMeetingData[name];
   });
 
-  // Для таблицы — только основные менеджеры; для статистики — только через activeMops
+  // Для таблицы - только основные менеджеры; для статистики - только через activeMops
   const mops=Object.keys(mopData);
   let totalDeals=0,totalSum=0,totalZP=0,totalMeetings=0;
   const mopResults=[];
@@ -1397,7 +1400,7 @@ function render(){
     const conv=isSingleMonth
       ? calcConversions(allRows,name,y,m)
       : calcConversionsDirect(allRows,name,y,activeMonths);
-    // Эффективные дни: если нанят в этом месяце — считаем с даты найма
+    // Эффективные дни: если нанят в этом месяце - считаем с даты найма
     let effectiveDays=daysPassed;
     if(isSingleMonth){
       const ds=settings.startDates[name];
@@ -1431,7 +1434,7 @@ function render(){
   document.getElementById('m-avg').textContent=fmtK(totalAvg);
   document.getElementById('m-avg-sub').textContent='план 225 тыс.';
   document.getElementById('m-avg-sub').className='stat-sub '+(totalAvg>=PLAN.avgCheck?'good':'bad');
-  document.getElementById('m-fot').textContent=!isSingleMonth?'—':fmtM(totalZP);
+  document.getElementById('m-fot').textContent=!isSingleMonth?'-':fmtM(totalZP);
   document.getElementById('m-fot-sub').textContent=mops.length+' менеджеров';
 
   // Встречи и направления
@@ -1439,6 +1442,16 @@ function render(){
     document.getElementById('m-meet'+i).textContent=meetDir[i];
     document.getElementById('m-deal'+i).textContent=dealDir[i];
     document.getElementById('m-sd'+i).textContent=sdDir[i]>0?' ⚡'+sdDir[i]:'';
+    const convI=meetDir[i]>0?Math.round(dealDir[i]/meetDir[i]*100):0;
+    const convEl=document.getElementById('m-conv'+i);
+    if(meetDir[i]>0){
+      const cls=pillCls(convI);
+      convEl.textContent=convI+'%';
+      convEl.style.color=cls==='pg'?'var(--green)':cls==='pa'?'var(--amber)':'var(--red)';
+    }else{
+      convEl.textContent='-';
+      convEl.style.color='var(--t3)';
+    }
   });
 
   // Прогресс-бары
@@ -1458,11 +1471,11 @@ function render(){
 
   // Countdown
   if(!isSingleMonth){
-    document.getElementById('cd-day').textContent='—';
-    document.getElementById('cd-need').textContent='—';
+    document.getElementById('cd-day').textContent='-';
+    document.getElementById('cd-need').textContent='-';
     document.getElementById('cd-need').style.color='';
-    document.getElementById('cd-perday').textContent='—';
-    document.getElementById('cd-pace').textContent='—';
+    document.getElementById('cd-perday').textContent='-';
+    document.getElementById('cd-pace').textContent='-';
   }else{
     const need=Math.max(0,PLAN_TOTAL-totalDeals);
     const pace=daysPassed>0?(totalDeals/daysPassed).toFixed(1):'0';
@@ -1470,7 +1483,7 @@ function render(){
     document.getElementById('cd-day').textContent=daysPassed+' / '+mdays;
     document.getElementById('cd-need').textContent=need>0?need+' сд':'✓ план';
     document.getElementById('cd-need').style.color=need<=0?'var(--green)':'';
-    document.getElementById('cd-perday').textContent=daysLeft>0?perDay+' /д':'—';
+    document.getElementById('cd-perday').textContent=daysLeft>0?perDay+' /д':'-';
     document.getElementById('cd-pace').textContent=pace+' /д';
   }
 
@@ -1491,12 +1504,12 @@ function render(){
         <td class="r" style="color:var(--t2);">${d.meetings||0}</td>
         <td class="r" style="color:${d.deals>=PLAN.deals?'var(--green)':'var(--red)'};font-weight:500;white-space:nowrap;">${d.deals}${d.sameDayDeals>0?` <span style="font-size:10px;color:#854F0B;font-weight:400">⚡${d.sameDayDeals}</span>`:''}</td>
         <td class="r">${fmtM(d.sum)}</td>
-        <td class="r" style="color:${d.deals>0&&Math.round(d.sum/d.deals)>=PLAN.avgCheck?'var(--green)':'var(--t2)'}">${d.deals>0?fmtK(Math.round(d.sum/d.deals)):'—'}</td>
+        <td class="r" style="color:${d.deals>0&&Math.round(d.sum/d.deals)>=PLAN.avgCheck?'var(--green)':'var(--t2)'}">${d.deals>0?fmtK(Math.round(d.sum/d.deals)):'-'}</td>
         <td class="r" style="white-space:nowrap;">
           <span style="font-size:9px;color:var(--t3);font-family:inherit;">#1 </span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span>
-          <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2–4 </span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
+          <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2-4 </span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
         </td>
-        <td class="r" style="color:${zpColor};font-weight:500;">${zp===null?'—':fmt(zp)+' ₽'}</td>
+        <td class="r" style="color:${zpColor};font-weight:500;">${zp===null?'-':fmt(zp)+' ₽'}</td>
       `;
       tr.style.cursor='pointer';
       tr.dataset.name=name;
@@ -1505,7 +1518,7 @@ function render(){
         const td=e.target.closest('td');
         const cellIndex=td?td.cellIndex:-1;
         if(cellIndex===1){
-          // клик по ФИО — изоляция (только визуал + графики)
+          // клик по ФИО - изоляция (только визуал + графики)
           activeMop=(activeMop===name)?null:name;
           render();
           return;
@@ -1530,16 +1543,16 @@ function render(){
       <td class="r">${totalMeetings}</td>
       <td class="r" style="white-space:nowrap;"><b>${totalDeals}</b>${totalSameDayDeals>0?` <span style="font-size:10px;color:#854F0B;font-weight:400">⚡${totalSameDayDeals}</span>`:''}</td>
       <td class="r">${fmtM(totalSum)}</td>
-      <td class="r">${totalDeals>0?fmtK(Math.round(totalSum/totalDeals)):'—'}</td>
+      <td class="r">${totalDeals>0?fmtK(Math.round(totalSum/totalDeals)):'-'}</td>
       <td class="r" style="white-space:nowrap;">
           <span style="font-size:9px;color:var(--t3);font-family:inherit;">#1 </span><span class="pill ${pillCls(avgConv1)}">${avgConv1}%</span>
-          <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2–4 </span><span class="pill ${pillCls(avgConv24)}">${avgConv24}%</span>
+          <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2-4 </span><span class="pill ${pillCls(avgConv24)}">${avgConv24}%</span>
         </td>
-      <td class="r" style="font-weight:500;">${!isSingleMonth?'—':fmt(totalZP)+' ₽'}</td>
+      <td class="r" style="font-weight:500;">${!isSingleMonth?'-':fmt(totalZP)+' ₽'}</td>
     `;
     tbody.appendChild(trTotal);
 
-    // Тех. специалисты — под чертой
+    // Тех. специалисты - под чертой
     const techNames=Object.keys(techMopData);
     if(techNames.length>0){
       const trSep=document.createElement('tr');
@@ -1556,9 +1569,9 @@ function render(){
           <td class="r" style="color:var(--t2);">${d.meetings||0}</td>
           <td class="r" style="color:var(--t2);">${d.deals}</td>
           <td class="r">${fmtM(d.sum)}</td>
-          <td class="r">${d.deals>0?fmtK(Math.round(d.sum/d.deals)):'—'}</td>
+          <td class="r">${d.deals>0?fmtK(Math.round(d.sum/d.deals)):'-'}</td>
           <td class="r" style="color:var(--t3);font-size:10px;">тест</td>
-          <td class="r" style="color:var(--t3);">—</td>
+          <td class="r" style="color:var(--t3);">-</td>
         `;
         tbody.appendChild(tr);
       });
@@ -1573,7 +1586,7 @@ function render(){
 let myChartDaily=null;
 
 function renderChart(){
-  // Динамика по месяцам — всегда весь отдел (без тех.); фильтр менеджеров
+  // Динамика по месяцам - всегда весь отдел (без тех.); фильтр менеджеров
   // текущего периода НЕ применяем, иначе прошлые месяцы занижаются.
   // Изоляция по клику на ФИО (activeMop) по-прежнему фильтрует график.
   const md={},ms={};
@@ -1669,7 +1682,7 @@ function renderDailyChart(){
     }
   }
 
-  // План отдела фиксированный — всегда 120, независимо от фильтра менеджеров
+  // План отдела фиксированный - всегда 120, независимо от фильтра менеджеров
   const effectivePlan=PLAN_TOTAL;
 
   // Плановая линия: нарастающим итогом
@@ -1858,10 +1871,10 @@ function renderKanban(rows){
       const mopName=(r[COL.responsibleText]||r[COL.responsible]||'');
       const c=getMopColor(mopName);
       const mopShort=mopName.split(' ').slice(0,2).join(' ');
-      const client=(r[COL.clientName]||'—').trim();
+      const client=(r[COL.clientName]||'-').trim();
       const sum=parseSum(r[COL.sum]);
       const lc=parseDate(r[COL.lastContact]);
-      const lcStr=lc?lc.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}):'—';
+      const lcStr=lc?lc.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}):'-';
       const link=(r[COL.dealLink]||'').trim();
 
       const card=document.createElement('div');
@@ -1876,7 +1889,7 @@ function renderKanban(rows){
             <span class="av" style="background:${c.bg};color:${c.tc};width:20px;height:20px;font-size:8px;">${initials(mopName)}</span>
             ${mopShort}
           </div>
-          <div class="k-card-sum">${sum>0?fmt(sum)+' ₽':'—'}</div>
+          <div class="k-card-sum">${sum>0?fmt(sum)+' ₽':'-'}</div>
         </div>
         <div class="k-card-footer">
           <span class="k-card-date">Касание: ${lcStr}</span>
@@ -2063,7 +2076,7 @@ function loadPlanFields(){
     tag.textContent='Применяется ко всем месяцам без индивидуального плана';
     rst.style.display='none';
   }else{
-    tag.textContent=isOverride?'Индивидуальный план для этого месяца':'Значения из умолчаний — сохраните чтобы зафиксировать';
+    tag.textContent=isOverride?'Индивидуальный план для этого месяца':'Значения из умолчаний - сохраните чтобы зафиксировать';
     tag.style.color=isOverride?'var(--blue)':'var(--t3)';
     rst.style.display=isOverride?'':'none';
   }
@@ -2217,13 +2230,13 @@ function generateAiSummary(){
 
   // 1. Общий итог
   if(planPct>=100){
-    parts.push(`📈 ${period}${daysNote}: отдел перевыполнил план — ${totalDeals} сделок при плане ${PLAN_TOTAL} (${planPct}%).`);
+    parts.push(`📈 ${period}${daysNote}: отдел перевыполнил план - ${totalDeals} сделок при плане ${PLAN_TOTAL} (${planPct}%).`);
   } else if(planPct>=90){
-    parts.push(`${period}${daysNote}: план выполнен на ${planPct}% — закрыто ${totalDeals} из ${PLAN_TOTAL} сделок. Результат близкий к целевому.`);
+    parts.push(`${period}${daysNote}: план выполнен на ${planPct}% - закрыто ${totalDeals} из ${PLAN_TOTAL} сделок. Результат близкий к целевому.`);
   } else if(planPct>=70){
-    parts.push(`⚠️ ${period}${daysNote}: план выполнен на ${planPct}% — ${totalDeals} из ${PLAN_TOTAL} сделок. Отставание требует внимания.`);
+    parts.push(`⚠️ ${period}${daysNote}: план выполнен на ${planPct}% - ${totalDeals} из ${PLAN_TOTAL} сделок. Отставание требует внимания.`);
   } else {
-    parts.push(`🔴 ${period}${daysNote}: план выполнен лишь на ${planPct}% — ${totalDeals} из ${PLAN_TOTAL} сделок. Существенное отставание от цели.`);
+    parts.push(`🔴 ${period}${daysNote}: план выполнен лишь на ${planPct}% - ${totalDeals} из ${PLAN_TOTAL} сделок. Существенное отставание от цели.`);
   }
 
   // 2. Средний чек
@@ -2237,11 +2250,11 @@ function generateAiSummary(){
   if(leader){
     const ln=leader[0].split(' ');
     const lname=ln[0]+' '+(ln[1]?ln[1][0]+'.':(ln[2]?ln[2][0]+'.':''));
-    let mopNote=`Лидер месяца — ${lname} (${leader[1]} сд.).`;
+    let mopNote=`Лидер месяца - ${lname} (${leader[1]} сд.).`;
     if(outsider&&outsider[0]!==leader[0]&&outsider[1]<PLAN.deals){
       const on=outsider[0].split(' ');
       const oname=on[0]+' '+(on[1]?on[1][0]+'.':(on[2]?on[2][0]+'.':''));
-      mopNote+=` Требует поддержки — ${oname} (${outsider[1]} сд.).`;
+      mopNote+=` Требует поддержки - ${oname} (${outsider[1]} сд.).`;
     }
     parts.push(mopNote);
   }
@@ -2249,7 +2262,7 @@ function generateAiSummary(){
   // 4. Конверсии
   const c1note=avgC1>=PLAN.conv1?'в норме':'ниже плана';
   const c24note=avgC24>=PLAN.conv24?'в норме':'ниже плана';
-  parts.push(`Конверсия #1: ${avgC1}% (${c1note}), #2–4: ${avgC24}% (${c24note}).`);
+  parts.push(`Конверсия #1: ${avgC1}% (${c1note}), #2-4: ${avgC24}% (${c24note}).`);
 
   // 5. Рекомендация для текущего месяца
   if(isCurrentMonth&&totalDeals<PLAN_TOTAL){
@@ -2285,7 +2298,7 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
     <div class="zp-row"><span class="zp-row-lbl">Сумма договоров</span><span class="zp-row-val">${fmtM(d.sum)}</span></div>
     <div class="zp-row"><span class="zp-row-lbl">Средний чек</span><span class="zp-row-val">${fmtK(avg)} (план ${fmtK(PLAN.avgCheck)})</span></div>
     <div class="zp-row"><span class="zp-row-lbl">Конверсия #1</span><span class="zp-row-val">${conv.conv1}% (план ${PLAN.conv1}%)</span></div>
-    <div class="zp-row"><span class="zp-row-lbl">Конверсия #2–4</span><span class="zp-row-val">${conv.conv24}% (план ${PLAN.conv24}%)</span></div>
+    <div class="zp-row"><span class="zp-row-lbl">Конверсия #2-4</span><span class="zp-row-val">${conv.conv24}% (план ${PLAN.conv24}%)</span></div>
   `;
   // таблица формул
   const ftable=document.getElementById('zp-formula-table');
@@ -2313,11 +2326,11 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
     });
     tbody.innerHTML=sorted.map((r,i)=>{
       const dp=parseDate(r[COL.datePaid]);
-      const dateStr=dp?dp.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}):'—';
+      const dateStr=dp?dp.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}):'-';
       const sum=parseSum(r[COL.sum]);
-      const dir=(r[COL.direction]||'—').trim();
-      const client=(r[COL.clientName]||'—').trim();
-      const id=r[COL.id]||'—';
+      const dir=(r[COL.direction]||'-').trim();
+      const client=(r[COL.clientName]||'-').trim();
+      const id=r[COL.id]||'-';
       const dirCls=dir==='#1'?'pg':['#2','#3','#4'].includes(dir)?'pa':'';
       return`<tr>
         <td style="color:var(--t3);white-space:nowrap">${i+1}</td>
@@ -2359,20 +2372,20 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
       detail.forEach(({r,paid:isPaid,dir},i)=>{
         const dc=parseDate(r[COL.dateCreated]);
         const dp=parseDate(r[COL.datePaid]);
-        const dcStr=dc?dc.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}):'—';
-        const dpStr=dp?dp.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}):'—';
-        const client=(r[COL.clientName]||'—').trim();
+        const dcStr=dc?dc.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
+        const dpStr=dp?dp.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
+        const client=(r[COL.clientName]||'-').trim();
         const sum=parseSum(r[COL.sum]);
         const statusEl=isPaid
           ?`<span style="color:var(--green);font-size:12px;">✓</span>`
-          :`<span style="color:var(--t3);font-size:12px;">—</span>`;
+          :`<span style="color:var(--t3);font-size:12px;">-</span>`;
         const rowBg=isPaid?'':'background:#FAFAFA;';
         html+=`<tr style="${rowBg}border-bottom:.5px solid var(--border);">
           <td style="padding:4px 6px;color:var(--t3);">${i+1}</td>
           <td style="padding:4px 6px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${client}</td>
           <td style="padding:4px 6px;white-space:nowrap;color:var(--t2);">${dcStr}</td>
           <td style="padding:4px 6px;white-space:nowrap;color:${isPaid?'var(--green)':'var(--t3)'};">${dpStr}</td>
-          <td style="padding:4px 6px;text-align:right;white-space:nowrap;">${sum>0?fmt(sum)+' ₽':'—'}</td>
+          <td style="padding:4px 6px;text-align:right;white-space:nowrap;">${sum>0?fmt(sum)+' ₽':'-'}</td>
           <td style="padding:4px 6px;text-align:center;">${statusEl}</td>
         </tr>`;
       });
@@ -2386,7 +2399,7 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
         Детализация конверсий · период: ${periodLabel}
       </div>
       ${renderConvTable(conv.detail1,'#1')}
-      ${renderConvTable(conv.detail24,'#2–4')}
+      ${renderConvTable(conv.detail24,'#2-4')}
     `;
   }
 
@@ -2399,13 +2412,13 @@ function openDayModal(day){
   const y=activeYear,m=[...activeMonths][0]||new Date().getMonth()+1;
   const dateStr=`${day} ${MONTHS_RU[m-1]} ${y}`;
 
-  // Встречи — созданы в этот день
+  // Встречи - созданы в этот день
   const meetings=allRows.filter(r=>{
     const dc=parseDate(r[COL.dateCreated]);
     return dc&&dc.getFullYear()===y&&dc.getMonth()+1===m&&dc.getDate()===day;
   });
 
-  // Сделки — оплачены в этот день
+  // Сделки - оплачены в этот день
   const deals=allRows.filter(r=>{
     if(!isPaidRow(r))return false;
     const dp=parseDate(r[COL.datePaid]);
@@ -2432,15 +2445,15 @@ function openDayModal(day){
         const dir=(r[COL.direction]||'').trim();
         const dirCls=dir==='#1'?'pg':['#2','#3','#4'].includes(dir)?'pa':'';
         const sumVal=parseSum(r[COL.sum]);
-        const sum=sumVal>0?(isPaid?`<b>${fmt(sumVal)} ₽</b>`:`${fmt(sumVal)} ₽`):'—';
+        const sum=sumVal>0?(isPaid?`<b>${fmt(sumVal)} ₽</b>`:`${fmt(sumVal)} ₽`):'-';
         const manager=(r[COL.responsible]||'').split(' ').slice(0,2).join(' ');
         return`<tr class="${isSameDay?'same-day':''}">
           <td style="color:var(--t3)">${i+1}</td>
-          <td style="font-size:10px">${r[COL.id]||'—'}</td>
-          <td>${(r[COL.clientName]||'—').trim()}</td>
+          <td style="font-size:10px">${r[COL.id]||'-'}</td>
+          <td>${(r[COL.clientName]||'-').trim()}</td>
           <td class="r">${sum}</td>
           <td style="font-size:11px">${manager}</td>
-          <td><span class="pill ${dirCls}" style="font-size:9px">${dir||'—'}</span></td>
+          <td><span class="pill ${dirCls}" style="font-size:9px">${dir||'-'}</span></td>
         </tr>`;
       }).join('')}</tbody>
     </table>`;
@@ -2528,7 +2541,7 @@ init();
       <div class="s-row"><span class="s-lbl">Кол-во сделок (план)</span><input class="s-input" id="s-deals" type="number" min="1"></div>
       <div class="s-row"><span class="s-lbl">Средний чек (план, ₽)</span><input class="s-input" id="s-avgcheck" type="number" min="1"></div>
       <div class="s-row"><span class="s-lbl">Конверсия #1 (план, %)</span><input class="s-input" id="s-conv1" type="number" min="0" max="100"></div>
-      <div class="s-row"><span class="s-lbl">Конверсия #2–4 (план, %)</span><input class="s-input" id="s-conv24" type="number" min="0" max="100"></div>
+      <div class="s-row"><span class="s-lbl">Конверсия #2-4 (план, %)</span><input class="s-input" id="s-conv24" type="number" min="0" max="100"></div>
       <div class="s-row"><span class="s-lbl">Общий план сделок (отдел)</span><input class="s-input" id="s-total" type="number" min="1"></div>
       <button onclick="resetMonthPlan()" style="font-size:10px;color:var(--t3);background:none;border:none;cursor:pointer;padding:2px 0;text-decoration:underline;" id="s-reset-btn">Сбросить к умолчанию</button>
     </div>
