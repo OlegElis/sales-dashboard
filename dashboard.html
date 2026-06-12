@@ -436,7 +436,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   .print-dept{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#185FA5;font-weight:700;
     border:1px solid #185FA5;border-radius:4px;padding:1px 6px;}
   .print-report-label{font-size:13px;font-weight:700;color:#111;}
-  .print-period{font-size:12px;font-weight:600;color:#185FA5;}
+  .print-date{font-size:12px;font-weight:700;color:#111;}
+  .print-period{font-size:11px;font-weight:500;color:#185FA5;}
   .print-generated{font-size:10px;color:#666;margin-left:auto;}
 
   /* Грид → одна колонка, всё во всю ширину */
@@ -638,6 +639,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   <div class="print-only print-meta" id="print-meta">
     <span class="print-dept">УПР.Финансы</span>
     <span class="print-report-label">Ежедневный отчёт отдела продаж</span>
+    <span class="print-date" id="print-date"></span>
     <span class="print-period" id="print-period"></span>
     <span class="print-generated" id="print-generated"></span>
   </div>
@@ -824,6 +826,7 @@ let activeYear=_initNow.getFullYear(),activeMonths=new Set([_initNow.getMonth()+
 let myChart=null;
 
 const MONTHS_RU=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const MONTHS_RU_GEN=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 
 function parseDate(s){
   if(!s)return null;
@@ -1923,8 +1926,18 @@ function printReport(){
   if(activeView!=='stats')switchView('stats');
   const now=new Date();
   const pd=document.getElementById('period-desc')?.textContent?.trim()||'';
+  const dateEl=document.getElementById('print-date');
   const periodEl=document.getElementById('print-period');
   const genEl=document.getElementById('print-generated');
+  // Дата, на которую собраны данные (последний учтённый день периода)
+  let reportDate='';
+  if(activeMonths.size===1){
+    const m=[...activeMonths][0],y=activeYear,t=new Date();
+    const isCurMonth=(y===t.getFullYear()&&m===t.getMonth()+1);
+    const lastDay=activeDay??(isCurMonth?t.getDate():daysInMonth(y,m));
+    reportDate=lastDay+' '+MONTHS_RU_GEN[m-1]+' '+y+' г.';
+  }
+  if(dateEl)dateEl.textContent=reportDate?'По состоянию на '+reportDate:'';
   if(periodEl)periodEl.textContent='Период: '+pd;
   if(genEl)genEl.textContent='Сформирован: '+now.toLocaleString('ru-RU');
   // даём DOM применить print-only поля, затем печать
