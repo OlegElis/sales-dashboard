@@ -422,10 +422,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   #login-screen,.view-tabs,.cfg,.cfg-btn,.no-print,
   .page-grid>.filters,.mop-dd,.status-pill,#supd,
   #portfolio-section,.settings-panel,.settings-overlay,
-  .zp-overlay,.day-overlay,.ai-block,.hdr-breadcrumb{display:none !important;}
+  .zp-overlay,.day-overlay,.ai-block,.print-dept{display:none !important;}
 
   /* Показываем печатные элементы */
   .print-only{display:block !important;}
+
+  /* Колонтитул-бланк сверху: УПР.Финансы | БФЛ - ... */
+  .hdr-breadcrumb{display:flex !important;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+    color:#185FA5;font-weight:700;border-bottom:1.5px solid #185FA5;
+    padding-bottom:3px;margin-bottom:5px;gap:6px;}
+  .hdr-breadcrumb-sep{color:#999;font-weight:400;}
 
   /* Шапка отчёта */
   .hdr{margin-bottom:6px;}
@@ -433,8 +439,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   .hdr-title{font-size:17px;}
   .print-meta{display:flex !important;align-items:baseline;gap:10px;margin-top:6px;
     padding-bottom:5px;border-bottom:1px solid #bbb;flex-wrap:wrap;}
-  .print-dept{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#185FA5;font-weight:700;
-    border:1px solid #185FA5;border-radius:4px;padding:1px 6px;}
   .print-report-label{font-size:13px;font-weight:700;color:#111;}
   .print-date{font-size:12px;font-weight:700;color:#111;}
   .print-period{font-size:11px;font-weight:500;color:#185FA5;}
@@ -467,7 +471,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   /* Высота графиков под печать */
   .chart-block div[style*="height:160px"]{height:104px !important;}
   /* Дневной график пониже плана/месячного, но во всю ширину - читаемо */
-  .col-charts>*:nth-child(3) div[style*="height:160px"]{height:110px !important;}
+  .col-charts>*:nth-child(3) div[style*="height:160px"]{height:102px !important;}
 
   /* Заголовок секции «Прогресс к плану» и т.п. читаемы */
   .block-title{color:#444 !important;}
@@ -644,7 +648,6 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   </div>
   <!-- Print-only: подзаголовок отчёта (период + дата формирования) -->
   <div class="print-only print-meta" id="print-meta">
-    <span class="print-dept">УПР.Финансы</span>
     <span class="print-report-label">Ежедневный отчёт отдела продаж</span>
     <span class="print-date" id="print-date"></span>
     <span class="print-period" id="print-period"></span>
