@@ -1948,7 +1948,9 @@ function printReport(){
     reportDate=lastDay+' '+MONTHS_RU_GEN[m-1]+' '+y+' г.';
   }
   if(dateEl)dateEl.textContent=reportDate?'По состоянию на '+reportDate:'';
-  if(periodEl)periodEl.textContent='Период: '+pd;
+  // «Период» показываем только когда нет конкретной даты отчёта (несколько
+  // месяцев / весь год), иначе он дублирует месяц из «По состоянию на».
+  if(periodEl)periodEl.textContent=reportDate?'':'Период: '+pd;
   if(genEl)genEl.textContent='Сформирован: '+now.toLocaleString('ru-RU');
   // даём DOM применить print-only поля, затем печать
   setTimeout(()=>window.print(),60);
