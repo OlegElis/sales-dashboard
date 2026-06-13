@@ -1299,18 +1299,9 @@ function render(){
     return true;
   }
 
-  // Основные менеджеры (без тех. специалистов) - для статистики
-  const filteredAll=allRows.filter(r=>periodFilter(r)&&selectedMops.has(r[COL.responsible])&&!isTechMop(r[COL.responsible]));
-
-  // Тех. специалисты - только для таблицы, не для статистики
-  const filteredTech=allRows.filter(r=>periodFilter(r)&&isTechMop(r[COL.responsible]));
-
-  // Фильтр для статистики/графиков (с учётом activeMop)
-  const filtered=activeMop
-    ? filteredAll.filter(r=>r[COL.responsible]===activeMop)
-    : filteredAll;
-
-  // Менеджеры с данными в этом периоде (без учёта фильтра, без тех.)
+  // Менеджеры с данными в этом периоде (без учёта фильтра, без тех.).
+  // ВАЖНО: пересчитываем selectedMops ДО filteredAll, иначе таблица и графики
+  // используют разные наборы менеджеров (рассинхрон при смене периода).
   const periodMopSet=new Set();
   allRows.forEach(r=>{
     if(!isPaidRow(r))return;
@@ -1333,6 +1324,17 @@ function render(){
   }
   // Если вручную всё снято - оставляем пустым (покажем "нет данных")
   buildMopChips();
+
+  // Основные менеджеры (без тех. специалистов) - для статистики
+  const filteredAll=allRows.filter(r=>periodFilter(r)&&selectedMops.has(r[COL.responsible])&&!isTechMop(r[COL.responsible]));
+
+  // Тех. специалисты - только для таблицы, не для статистики
+  const filteredTech=allRows.filter(r=>periodFilter(r)&&isTechMop(r[COL.responsible]));
+
+  // Фильтр для статистики/графиков (с учётом activeMop)
+  const filtered=activeMop
+    ? filteredAll.filter(r=>r[COL.responsible]===activeMop)
+    : filteredAll;
 
   // Встречи - только основные менеджеры (без тех.)
   const meetingData={};
