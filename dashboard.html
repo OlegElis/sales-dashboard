@@ -435,14 +435,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
   /* Шапка отчёта */
   .hdr{margin-bottom:6px;}
+  .hdr{position:relative;}
   .hdr-bottom{padding-bottom:3px;border-bottom:2px solid #111;}
   .hdr-title{font-size:15px;}
-  .print-meta{display:flex !important;align-items:baseline;gap:10px;margin-top:6px;
-    padding-bottom:5px;border-bottom:1px solid #bbb;flex-wrap:wrap;}
-  .print-report-label{font-size:13px;font-weight:700;color:#111;}
-  .print-date{font-size:12px;font-weight:700;color:#111;}
-  .print-period{font-size:11px;font-weight:500;color:#185FA5;}
-  .print-generated{font-size:10px;color:#666;margin-left:auto;}
+  /* Строка отчёта — справа на уровне заголовка, прижата к правому краю */
+  .print-meta{position:absolute !important;right:0;top:21px;
+    display:flex !important;flex-direction:column;align-items:flex-end;gap:1px;
+    margin:0 !important;padding:0 !important;border:none !important;text-align:right;max-width:48%;}
+  .print-report-label{font-size:12px;font-weight:700;color:#111;}
+  .print-date{font-size:11px;font-weight:600;color:#185FA5;}
+  .print-period{font-size:10px;font-weight:500;color:#185FA5;}
+  .print-generated{font-size:8.5px;color:#888;margin:0 !important;}
 
   /* Грид → одна колонка, всё во всю ширину */
   .page-grid{display:block !important;}
@@ -654,7 +657,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   </div>
   <!-- Print-only: подзаголовок отчёта (период + дата формирования) -->
   <div class="print-only print-meta" id="print-meta">
-    <span class="print-report-label">Ежедневный отчёт отдела продаж</span>
+    <span class="print-report-label">Ежедневный отчёт</span>
     <span class="print-date" id="print-date"></span>
     <span class="print-period" id="print-period"></span>
     <span class="print-generated" id="print-generated"></span>
@@ -1953,11 +1956,12 @@ function printReport(){
     const lastDay=activeDay??(isCurMonth?t.getDate():daysInMonth(y,m));
     reportDate=lastDay+' '+MONTHS_RU_GEN[m-1]+' '+y+' г.';
   }
-  if(dateEl)dateEl.textContent=reportDate?'По состоянию на '+reportDate:'';
+  if(dateEl)dateEl.textContent=reportDate?'на '+reportDate:'';
   // «Период» показываем только когда нет конкретной даты отчёта (несколько
   // месяцев / весь год), иначе он дублирует месяц из «По состоянию на».
-  if(periodEl)periodEl.textContent=reportDate?'':'Период: '+pd;
-  if(genEl)genEl.textContent='Сформирован: '+now.toLocaleString('ru-RU');
+  if(periodEl)periodEl.textContent=reportDate?'':pd;
+  const gen=now.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  if(genEl)genEl.textContent='сформирован '+gen;
   // даём DOM применить print-only поля, затем печать
   setTimeout(()=>window.print(),60);
 }
