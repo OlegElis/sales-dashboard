@@ -1463,7 +1463,9 @@ function render(){
   document.getElementById('m-deals').textContent=totalDeals;
   document.getElementById('m-deals-sub').textContent='план '+PLAN_TOTAL+' шт';
   document.getElementById('m-deals-sub').className='stat-sub '+(totalDeals>=PLAN_TOTAL?'good':'bad');
-  document.getElementById('m-sameday').textContent=totalSameDayDeals>0?'⚡ '+totalSameDayDeals+' день в день':'';
+  {const sd=document.getElementById('m-sameday');
+   sd.textContent=totalSameDayDeals>0?'⚡ '+totalSameDayDeals+' в день встречи':'';
+   sd.title=totalSameDayDeals>0?'Сделок, оплаченных в тот же день, когда создана встреча (закрытие «день-в-день»)':'';}
   document.getElementById('m-sum').textContent=fmtM(totalSum);
   document.getElementById('m-sum-sub').textContent='план '+fmtM(PLAN_TOTAL*PLAN.avgCheck);
   document.getElementById('m-sum-sub').className='stat-sub '+(totalSum>=PLAN_TOTAL*PLAN.avgCheck?'good':'bad');
