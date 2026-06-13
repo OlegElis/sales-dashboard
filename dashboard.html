@@ -427,11 +427,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   /* Показываем печатные элементы */
   .print-only{display:block !important;}
 
-  /* Колонтитул-бланк сверху: УПР.Финансы | БФЛ - ... */
+  /* Колонтитул-бланк сверху: УПР.Финансы | БФЛ - ... (приглушённый, как в HTML) */
   .hdr-breadcrumb{display:flex !important;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
-    color:#185FA5;font-weight:700;border-bottom:1.5px solid #185FA5;
+    color:#9b9a95;font-weight:500;border-bottom:1px solid #e2e0db;
     padding-bottom:3px;margin-bottom:5px;gap:6px;}
-  .hdr-breadcrumb-sep{color:#999;font-weight:400;}
+  .hdr-breadcrumb-sep{color:#c4c2bc;font-weight:400;}
 
   /* Шапка отчёта */
   .hdr{margin-bottom:6px;}
@@ -442,10 +442,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   .print-meta{position:absolute !important;right:0;top:21px;
     display:flex !important;flex-direction:column;align-items:flex-end;gap:1px;
     margin:0 !important;padding:0 !important;border:none !important;text-align:right;max-width:48%;}
-  .print-report-label{font-size:12px;font-weight:700;color:#111;}
-  .print-date{font-size:11px;font-weight:600;color:#185FA5;}
-  .print-period{font-size:10px;font-weight:500;color:#185FA5;}
-  .print-generated{font-size:8.5px;color:#888;margin:0 !important;}
+  .print-report-label{font-size:12px;font-weight:600;color:#6b6a65;}
+  .print-date{font-size:11px;font-weight:500;color:#9b9a95;}
+  .print-period{font-size:10px;font-weight:500;color:#9b9a95;}
+  .print-generated{font-size:8.5px;color:#b0aea8;margin:0 !important;}
 
   /* Грид → одна колонка, всё во всю ширину */
   .page-grid{display:block !important;}
