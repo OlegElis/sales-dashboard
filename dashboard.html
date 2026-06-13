@@ -1273,6 +1273,13 @@ function render(){
   const isSingleMonth=activeMonths.size===1;
   // Применяем план для текущего периода
   applyPlanToGlobals(getPlanForMonth(y, isSingleMonth?[...activeMonths][0]:0));
+  // Для периода из нескольких месяцев / всего года план по сделкам (и, как
+  // следствие, по сумме) суммируем по выбранным месяцам. Средний чек — это
+  // целевой чек на сделку, он не суммируется и остаётся как в плане.
+  if(!isSingleMonth){
+    const planMonths=activeMonths.size>0?[...activeMonths]:[1,2,3,4,5,6,7,8,9,10,11,12];
+    PLAN_TOTAL=planMonths.reduce((s,mm)=>s+getPlanForMonth(y,mm).total,0);
+  }
   const m=isSingleMonth?[...activeMonths][0]:null;
   const mdays=isSingleMonth?daysInMonth(y,m):null;
   const today=new Date();
