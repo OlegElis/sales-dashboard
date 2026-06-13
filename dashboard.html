@@ -1503,23 +1503,35 @@ function render(){
     document.getElementById(id).style.color=pctColor(p);
   });
 
-  // Countdown
-  if(!isSingleMonth){
-    document.getElementById('cd-day').textContent='-';
-    document.getElementById('cd-need').textContent='-';
-    document.getElementById('cd-need').style.color='';
-    document.getElementById('cd-perday').textContent='-';
-    document.getElementById('cd-pace').textContent='-';
+  // Countdown — работает и для месяца, и для года/нескольких месяцев
+  let cdElapsed,cdTotal;
+  if(isSingleMonth){
+    cdElapsed=daysPassed; cdTotal=mdays;
   }else{
-    const need=Math.max(0,PLAN_TOTAL-totalDeals);
-    const pace=daysPassed>0?(totalDeals/daysPassed).toFixed(1):'0';
-    const perDay=daysLeft>0?(need/daysLeft).toFixed(1):'0';
-    document.getElementById('cd-day').textContent=daysPassed+' / '+mdays;
-    document.getElementById('cd-need').textContent=need>0?need+' сд':'✓ план';
-    document.getElementById('cd-need').style.color=need<=0?'var(--green)':'';
-    document.getElementById('cd-perday').textContent=daysLeft>0?perDay+' /д':'-';
-    document.getElementById('cd-pace').textContent=pace+' /д';
+    // считаем дни по всем выбранным месяцам (или по всему году)
+    const monthsList=activeMonths.size>0?[...activeMonths]:[1,2,3,4,5,6,7,8,9,10,11,12];
+    const tdy=new Date();
+    cdElapsed=0; cdTotal=0;
+    monthsList.forEach(mm=>{
+      const dim=daysInMonth(y,mm);
+      cdTotal+=dim;
+      if(y<tdy.getFullYear())cdElapsed+=dim;
+      else if(y===tdy.getFullYear()){
+        const curM=tdy.getMonth()+1;
+        if(mm<curM)cdElapsed+=dim;
+        else if(mm===curM)cdElapsed+=tdy.getDate();
+      }
+    });
   }
+  const cdLeft=Math.max(0,cdTotal-cdElapsed);
+  const need=Math.max(0,PLAN_TOTAL-totalDeals);
+  const pace=cdElapsed>0?(totalDeals/cdElapsed).toFixed(1):'0';
+  const perDay=cdLeft>0?(need/cdLeft).toFixed(1):'0';
+  document.getElementById('cd-day').textContent=cdElapsed+' / '+cdTotal;
+  document.getElementById('cd-need').textContent=need>0?need+' сд':'✓ план';
+  document.getElementById('cd-need').style.color=need<=0?'var(--green)':'';
+  document.getElementById('cd-perday').textContent=cdLeft>0?perDay+' /д':'-';
+  document.getElementById('cd-pace').textContent=pace+' /д';
 
   // Таблица рейтинга (6 колонок)
   const tbody=document.getElementById('rtbody');
