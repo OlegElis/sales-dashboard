@@ -1671,9 +1671,8 @@ function renderChart(){
 
 function renderDailyChart(){
   if(activeMonths.size!==1){
-    if(myChartDaily){myChartDaily.destroy();myChartDaily=null;}
-    document.getElementById('daily-title').textContent='выберите месяц';
-    document.getElementById('daily-forecast-pill').innerHTML='';
+    // Год или несколько месяцев — строим график по всем дням периода
+    renderPeriodDailyChart();
     return;
   }
   const y=activeYear,m=[...activeMonths][0];
@@ -1843,6 +1842,126 @@ function renderDailyChart(){
         x:{ticks:{font:(ctx)=>({size:9,weight:weekendArr[ctx.index]?'700':'400'}),color:(ctx)=>weekendArr[ctx.index]?'#A32D2D':'#888',autoSkip:false,maxRotation:0,minRotation:0},grid:{color:'rgba(0,0,0,0.03)'}}
       },
       onHover:(e)=>{e.native.target.style.cursor=e.chart.getElementsAtEventForMode(e.native,'nearest',{intersect:true},false).length?'pointer':'default';}
+    }
+  });
+}
+
+// График по дням за год / несколько месяцев: накопительный факт vs план
+function renderPeriodDailyChart(){
+  const y=activeYear;
+  const monthsList=activeMonths.size>0?[...activeMonths].sort((a,b)=>a-b):[1,2,3,4,5,6,7,8,9,10,11,12];
+  const today=new Date();
+
+  // Последовательность дней периода
+  const seq=[]; // {m,d,isPast}
+  monthsList.forEach(mm=>{
+    const dim=daysInMonth(y,mm);
+    for(let d=1;d<=dim;d++){
+      let isPast;
+      if(y<today.getFullYear())isPast=true;
+      else if(y>today.getFullYear())isPast=false;
+      else{const curM=today.getMonth()+1;isPast=mm<curM||(mm===curM&&d<=today.getDate());}
+      seq.push({m:mm,d,isPast});
+    }
+  });
+  const N=seq.length;
+  const cutoff=seq.filter(s=>s.isPast).length;
+
+  // Индекс позиции по "месяц-день"
+  const posIndex={};
+  seq.forEach((s,i)=>posIndex[s.m+'-'+s.d]=i);
+
+  // Сделки и сумма по позициям
+  const chartMops=activeMop?new Set([activeMop]):selectedMops;
+  const dailyDeals=new Array(N).fill(0),dailySum=new Array(N).fill(0);
+  allRows.forEach(r=>{
+    if(!isPaidRow(r))return;
+    if(isTechMop(r[COL.responsible]))return;
+    if(!chartMops.has(r[COL.responsible]))return;
+    const dp=parseDate(r[COL.datePaid]);
+    if(!dp||dp.getFullYear()!==y)return;
+    const pos=posIndex[(dp.getMonth()+1)+'-'+dp.getDate()];
+    if(pos===undefined)return;
+    dailyDeals[pos]++;dailySum[pos]+=parseSum(r[COL.sum]);
+  });
+
+  // Накопленный факт до cutoff
+  const factArr=[];let cumFact=0,cumSum=0;
+  for(let i=0;i<N;i++){
+    if(i<cutoff){cumFact+=dailyDeals[i];cumSum+=dailySum[i];factArr.push(cumFact);}
+    else factArr.push(null);
+  }
+  const rate=cutoff>0?cumFact/cutoff:0;
+  const forecastTotal=Math.round(rate*N);
+  const currentAvgCheck=cumFact>0?Math.round(cumSum/cumFact):0;
+
+  // Прогнозная линия от последней точки факта до конца периода
+  const forecastArr=[];
+  for(let i=0;i<N;i++){if(i<cutoff-1)forecastArr.push(null);else forecastArr.push(Math.round(rate*(i+1)));}
+
+  // Плановая линия нарастающим итогом
+  const effectivePlan=PLAN_TOTAL;
+  const planArr=Array.from({length:N},(_,i)=>+(effectivePlan/N*(i+1)).toFixed(1));
+
+  // Метки: короткое имя месяца на 1-м числе, иначе пусто
+  const labels=seq.map(s=>s.d===1?MONTHS_RU[s.m-1].slice(0,3):'');
+  const fullLabels=seq.map(s=>s.d+' '+MONTHS_RU[s.m-1].slice(0,3));
+
+  // Заголовок = описание периода
+  document.getElementById('daily-title').textContent=
+    document.getElementById('period-desc').textContent;
+
+  // Пилл прогноза
+  const pill=document.getElementById('daily-forecast-pill');
+  const isCurrentYear=(y===today.getFullYear());
+  if(isCurrentYear&&cutoff<N){
+    const diffD=forecastTotal-effectivePlan;
+    const clsD=diffD>=0?'pg':diffD>=-20?'pa':'pr';
+    const signD=diffD>=0?'+':'';
+    pill.innerHTML=`
+      <span style="color:var(--t3);">Темп: <b style="color:var(--text)">${rate.toFixed(1)}</b> сд/день</span>
+      <span class="pill ${clsD}">Прогноз ${forecastTotal} сд (${signD}${diffD} к плану)</span>`;
+  }else{
+    pill.innerHTML=`<span style="color:var(--t3);font-family:inherit;font-size:11px;">Итого: <b style="color:var(--text)">${cumFact}</b> сд · <b style="color:var(--text)">${fmtK(currentAvgCheck)}</b> ср. чек · <b style="color:var(--text)">${fmtM(cumSum)}</b></span>`;
+  }
+
+  if(myChartDaily)myChartDaily.destroy();
+  myChartDaily=new Chart(document.getElementById('dailyChart'),{
+    data:{labels,datasets:[
+      {type:'bar',label:'Факт',data:dailyDeals.map((v,i)=>i<cutoff?v:null),
+        backgroundColor:'#B5D4F4',borderColor:'#378ADD',borderWidth:.5,yAxisID:'y'},
+      {type:'line',label:'Накоплено',data:factArr,
+        borderColor:'#185FA5',backgroundColor:'rgba(24,95,165,0.07)',
+        pointRadius:0,tension:.2,yAxisID:'y2',fill:true},
+      {type:'line',label:'Прогноз',data:forecastArr,
+        borderColor:'#3B6D11',backgroundColor:'transparent',
+        pointRadius:0,borderDash:[5,4],tension:.2,yAxisID:'y2',fill:false},
+      {type:'line',label:'План',data:planArr,
+        borderColor:'#E24B4A',backgroundColor:'transparent',
+        pointRadius:0,borderDash:[4,3],borderWidth:2,tension:0,yAxisID:'y2'}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            title:items=>fullLabels[items[0].dataIndex]||'',
+            label:item=>{
+              if(item.dataset.label==='Факт')return'Сделок за день: '+(item.raw??0);
+              if(item.dataset.label==='Накоплено')return'Накоплено: '+item.raw;
+              if(item.dataset.label==='Прогноз')return'Прогноз (накопл.): '+item.raw;
+              if(item.dataset.label==='План')return'План (накопл.): '+item.raw?.toFixed(0);
+              return'';
+            }
+          }
+        }
+      },
+      scales:{
+        y:{beginAtZero:true,ticks:{font:{size:10},color:'#888'},grid:{color:'rgba(0,0,0,0.04)'},title:{display:true,text:'шт/день',font:{size:9},color:'#aaa'}},
+        y2:{position:'right',beginAtZero:true,ticks:{font:{size:10},color:'#185FA5'},grid:{display:false},title:{display:true,text:'накопл.',font:{size:9},color:'#aaa'}},
+        x:{ticks:{font:{size:9},color:'#888',autoSkip:false,maxRotation:0,minRotation:0},grid:{display:false}}
+      }
     }
   });
 }
