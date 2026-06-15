@@ -523,6 +523,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   function tryLogin(){
     if(inp.value===PWD){
       sessionStorage.setItem(SESSION_KEY,'1');
+      window.dispatchEvent(new Event('opora-auth'));
       screen.style.opacity='0';
       screen.style.transition='opacity .3s';
       setTimeout(()=>screen.style.display='none',300);
@@ -652,6 +653,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
       <div class="status-pill"><div class="dot loading" id="sdot"></div><span id="stxt">Загрузка...</span></div>
+      <div class="status-pill no-print" id="online-pill" style="display:none;"><div class="dot" style="background:var(--green)"></div><span>Сейчас на сайте: <b id="online-count">0</b></span></div>
       <div style="font-size:10px;color:var(--t3);" id="supd"></div>
     </div>
   </div>
@@ -2828,6 +2830,62 @@ init();
     <div class="s-hint">Настройки сохраняются в браузере</div>
   </div>
 </div>
+
+<!-- ПРИСУТСТВИЕ НА САЙТЕ (Firebase Realtime Database) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+(function(){
+  const firebaseConfig = {
+    apiKey: "AIzaSyCg7wKzgAnwd3qWHlz6nBaL1ffuxMSnLTI",
+    authDomain: "pulse-op-2ffe2.firebaseapp.com",
+    databaseURL: "https://pulse-op-2ffe2-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "pulse-op-2ffe2",
+    storageBucket: "pulse-op-2ffe2.firebasestorage.app",
+    messagingSenderId: "280252649380",
+    appId: "1:280252649380:web:6b3b0c1a4a47f4147cfb31"
+  };
+  let db, sessionRef, timeOffset=0, started=false;
+  const STALE_MS=60000;     // сессия считается живой, если «пульс» был < 60 сек назад
+  const BEAT_MS=20000;      // частота «пульса»
+
+  try{
+    firebase.initializeApp(firebaseConfig);
+    db=firebase.database();
+  }catch(e){ console.warn('Firebase init failed:', e); return; }
+
+  // серверное смещение времени — чтобы корректно отсекать «протухшие» сессии
+  db.ref('.info/serverTimeOffset').on('value', s=>{ timeOffset=s.val()||0; });
+
+  function startPresence(){
+    if(started) return;
+    started=true;
+    const sid=(self.crypto&&crypto.randomUUID)?crypto.randomUUID():('s'+Date.now()+Math.random().toString(36).slice(2));
+    sessionRef=db.ref('presence/'+sid);
+    sessionRef.set({ ts: firebase.database.ServerValue.TIMESTAMP, name: '' });
+    // авто-удаление при закрытии вкладки/потере связи
+    sessionRef.onDisconnect().remove();
+    // «пульс»
+    setInterval(()=>{ sessionRef.update({ ts: firebase.database.ServerValue.TIMESTAMP }); }, BEAT_MS);
+    window.addEventListener('pagehide', ()=>{ try{ sessionRef.remove(); }catch(e){} });
+
+    // подписка на список присутствующих
+    db.ref('presence').on('value', snap=>{
+      const now=Date.now()+timeOffset;
+      let count=0;
+      snap.forEach(ch=>{ const v=ch.val(); if(v&&v.ts&&(now-v.ts)<STALE_MS) count++; });
+      const pill=document.getElementById('online-pill');
+      const cnt=document.getElementById('online-count');
+      if(cnt) cnt.textContent=count;
+      if(pill) pill.style.display='';
+    });
+  }
+
+  // запускаем после авторизации
+  if(sessionStorage.getItem('opora_auth')==='1') startPresence();
+  window.addEventListener('opora-auth', startPresence);
+})();
+</script>
 
 </body>
 </html>
