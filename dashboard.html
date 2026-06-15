@@ -2582,7 +2582,7 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
       return`<table style="width:100%;border-collapse:collapse;font-size:10.5px;font-family:inherit;margin:1px 0 6px;"><tbody>`+
         rows.map((r,i)=>{
           const d=parseDate(byPaid?r[COL.datePaid]:r[COL.dateCreated]);
-          const ds=d?d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
+          const ds=d?d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'}):'-';
           const client=(r[COL.clientName]||'-').trim();
           const sum=parseSum(r[COL.sum]);
           return`<tr style="border-bottom:.5px solid var(--border);"><td style="padding:2px 5px;color:var(--t3);">${i+1}</td><td style="padding:2px 5px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${client}</td><td style="padding:2px 5px;white-space:nowrap;color:var(--t2);">${ds}</td><td style="padding:2px 5px;text-align:right;white-space:nowrap;">${sum>0?fmt(sum)+' ₽':'-'}</td></tr>`;
