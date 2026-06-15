@@ -686,6 +686,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
         onkeydown="if(event.key==='Enter')searchById()">
       <button class="cfg-btn" style="border-radius:0 var(--rs) var(--rs) 0;border-left:none;" onclick="searchById()" title="Найти сделку по ID или ФИО клиента">🔍</button>
     </div>
+    <button class="cfg-btn" onclick="openHelp()" title="Справка: как всё считается">❔ Справка</button>
     <button class="cfg-btn" onclick="printReport()" title="Печать отчёта (A4)">🖨 Печать отчёта</button>
     <button class="cfg-btn" onclick="openSettings()" title="Настройки">⚙ Настройки</button>
   </div>
@@ -2746,6 +2747,10 @@ function buildIdCard(r){
 function openIdModal(){document.getElementById('id-overlay').classList.add('open');}
 function closeIdModal(){document.getElementById('id-overlay').classList.remove('open');}
 
+function openHelp(){document.getElementById('help-overlay').classList.add('open');}
+function closeHelp(){document.getElementById('help-overlay').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeHelp();});
+
 init();
 </script>
 
@@ -2772,6 +2777,94 @@ init();
     <div class="day-card-sub" id="id-result-sub"></div>
     <div id="id-result-body"></div>
     <button class="day-close" onclick="closeIdModal()">Закрыть</button>
+  </div>
+</div>
+
+<!-- СПРАВКА -->
+<div class="day-overlay" id="help-overlay" onclick="if(event.target===this)closeHelp()">
+  <div class="day-card" style="max-width:780px;">
+    <div class="day-card-title">Справка — как устроен дашборд и как считаются показатели</div>
+    <div class="day-card-sub">Пульс отдела продаж · ГК ОПОРА · БФЛ</div>
+
+    <style>
+      .help-h{font-size:13px;font-weight:600;color:var(--text);margin:18px 0 6px;padding-bottom:5px;border-bottom:1.5px solid var(--border2);}
+      .help-p{font-size:12px;line-height:1.65;color:var(--t2);margin-bottom:8px;}
+      .help-p b{color:var(--text);}
+      .help-list{font-size:12px;line-height:1.65;color:var(--t2);margin:0 0 8px 18px;}
+      .help-list li{margin-bottom:3px;}
+      .help-f{font-size:12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:8px 11px;margin:6px 0 10px;color:var(--text);line-height:1.6;}
+      .help-note{font-size:11px;color:var(--amber);background:var(--abg);border:1px solid var(--aborder);border-radius:var(--rs);padding:7px 10px;margin:6px 0 10px;line-height:1.55;}
+    </style>
+
+    <div class="help-h">1. Что это</div>
+    <div class="help-p">Дашборд показывает результаты отдела продаж (БФЛ — банкротство физлиц): сделки, суммы, средний чек, конверсии, прогресс к плану, рейтинг менеджеров, расчётную ЗП и портфель сделок. Данные берутся из CRM (через выгрузку), обновляются автоматически.</div>
+
+    <div class="help-h">2. Разделы и фильтры</div>
+    <ul class="help-list">
+      <li><b>Статистика</b> — основной экран: метрики, рейтинг менеджеров, графики, прогресс к плану.</li>
+      <li><b>Портфель сделок</b> — канбан по стадиям CRM, подсветка «срочных» (давно без касания).</li>
+      <li><b>Период</b> — год, месяц(ы), день. Можно выбрать один месяц, несколько или весь год.</li>
+      <li><b>Поиск по ID / клиенту</b> — показывает, к какому менеджеру привязана сделка и как она участвует в расчётах.</li>
+      <li><b>🖨 Печать отчёта</b> — выгрузка экрана «Статистика» на один лист A4 для руководителя.</li>
+      <li><b>Сейчас на сайте</b> — счётчик активных пользователей дашборда.</li>
+    </ul>
+
+    <div class="help-h">3. Что входит и не входит в расчёты</div>
+    <div class="help-p"><b>Сделка</b> — строка с заполненной <b>датой оплаты</b>. Нет даты оплаты → это только встреча (заявка), не сделка.</div>
+    <div class="help-p"><b>Встреча</b> — строка с датой создания (заявка/обращение).</div>
+    <ul class="help-list">
+      <li>В конверсию входят только направления <b>#1</b> и <b>#2–4</b>. Направления #5, пустые и прочие — не входят.</li>
+      <li><b>Технические специалисты</b> (вносят тестовые данные) исключены из всей статистики — показаны отдельно под чертой в таблице.</li>
+      <li><b>Кривчикова М.И.</b> — входит в статистику, но ЗП по ней не рассчитывается (руководитель).</li>
+    </ul>
+
+    <div class="help-h">4. Конверсия</div>
+    <div class="help-p">Считается раздельно по двум группам направлений: <b>#1</b> и <b>#2–4</b> (каналы 2, 3, 4 вместе).</div>
+    <div class="help-f"><b>Конверсия за месяц</b> = (сделки, <b>оплаченные</b> в месяце) ÷ (встречи, <b>созданные</b> в месяце) × 100%</div>
+    <div class="help-p">Числитель — сделки с датой оплаты в этом месяце (= число сделок месяца по направлению). Знаменатель — встречи, созданные в этом месяце.</div>
+    <div class="help-p">В рейтинге и в расчёте ЗП используется <b>сглаженная конверсия за 3 месяца</b> (текущий + 2 предыдущих):</div>
+    <div class="help-f"><b>Конв. (сглаж.)</b> = (сделки за 3 мес.) ÷ (встречи за 3 мес.) × 100%<br><span style="color:var(--t3);font-size:11px;">суммируем за 3 месяца и делим, а не среднее из трёх процентов</span></div>
+    <div class="help-note">⚠️ Конверсия может быть больше 100% — если в месяце оплатили много встреч прошлых периодов, а новых встреч было мало. Поздняя оплата старой встречи задним числом улучшает конверсию её месяца.</div>
+
+    <div class="help-h">5. Расчёт ЗП</div>
+    <div class="help-p"><b>ЗП = Оклад + Надбавка за стаж + KPI (сделки) + Конв. #1 + Конв. #2–4 + Средний чек</b> (итог не меньше 0).</div>
+    <div class="help-p">Планы по умолчанию (настраиваются помесячно): <b>16 сделок</b>, конв. #1 — <b>25%</b>, конв. #2–4 — <b>65%</b>, средний чек — <b>225 000 ₽</b>.</div>
+    <div class="help-note">«Прорейчено по дням» = умножается на (отработанных дней ÷ дней в месяце). На середину месяца — частичная сумма, к концу месяца — полная. <b>KPI за сделки по дням НЕ прорейчивается</b> — по факту числа сделок.</div>
+
+    <div class="help-p" style="font-weight:600;color:var(--text);margin-top:10px;">1) Оклад</div>
+    <div class="help-f">30 000 ₽ ÷ дней в месяце × отработанных дней</div>
+
+    <div class="help-p" style="font-weight:600;color:var(--text);">2) Надбавка за стаж</div>
+    <div class="help-f">(полных лет стажа) × 2 000 ₽ — прорейчено по дням.<br><span style="color:var(--t3);font-size:11px;">начисляется при стаже от 1 полного года</span></div>
+
+    <div class="help-p" style="font-weight:600;color:var(--text);">3) KPI за сделки (НЕ прорейчено)</div>
+    <div class="help-f">База <b>72 000 ₽</b> при выполнении плана (16 сделок).<br>
+      • Сделок ≥ плана: 72 000 + (сделки − план) × <b>5 000 ₽</b><br>
+      • Сделок &lt; плана: 72 000 + (сделки − план) × <b>4 500 ₽</b>, но не меньше 0<br>
+      • 0 сделок → 0</div>
+
+    <div class="help-p" style="font-weight:600;color:var(--text);">4) Конверсия #1 (база 18 000 ₽, план 25%, порог 15%) — прорейчено</div>
+    <div class="help-f">
+      • &lt; 15% → 0<br>
+      • 15%…25%: 18 000 + (конв − 25) × <b>1 800</b>, не меньше 0<br>
+      • ≥ 25%: 18 000 + (конв − 25) × <b>750</b></div>
+
+    <div class="help-p" style="font-weight:600;color:var(--text);">5) Конверсия #2–4 (база 18 000 ₽, план 65%, порог 45%) — прорейчено</div>
+    <div class="help-f">
+      • &lt; 45% → 0<br>
+      • 45%…65%: 18 000 + (конв − 65) × <b>900</b>, не меньше 0<br>
+      • ≥ 65%: 18 000 + (конв − 65) × <b>750</b></div>
+
+    <div class="help-p" style="font-weight:600;color:var(--text);">6) Средний чек (база 12 000 ₽, план 225к, порог 150к) — прорейчено</div>
+    <div class="help-f">Δ = (средний чек − 225 000) ÷ 1 000 (в тысячах)<br>
+      • чек &lt; 150 000 → 0<br>
+      • 150к…225к: 12 000 + Δ × <b>160</b><br>
+      • ≥ 225 000: 12 000 + Δ × <b>1 000</b></div>
+    <div class="help-note">Пункты 4–6 (конверсии и чек) начисляются только если есть хотя бы 1 сделка. Конверсия в ЗП — сглаженная за 3 месяца.</div>
+
+    <div class="help-p" style="font-size:11px;color:var(--t3);margin-top:12px;">Клик по строке менеджера открывает карточку с полным расчётом ЗП и помесячной детализацией конверсии. Клик по ФИО — изоляция менеджера на графиках.</div>
+
+    <button class="day-close" onclick="closeHelp()">Закрыть</button>
   </div>
 </div>
 
