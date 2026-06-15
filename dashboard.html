@@ -1604,7 +1604,6 @@ function render(){
         <td class="r" style="white-space:nowrap;" title="${conv.smoothed?'Сглаженная конверсия за текущий + 2 предыдущих месяца':'Конверсия за выбранный период'}">
           <span style="font-size:9px;color:var(--t3);font-family:inherit;">#1 </span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span>
           <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2-4 </span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
-          ${conv.smoothed?'<div style="font-size:8px;color:var(--t3);font-family:inherit;margin-top:2px;">за 3 мес</div>':''}
         </td>
         <td class="r" style="color:${zpColor};font-weight:500;">${zp===null?'-':fmt(zp)+' ₽'}</td>
       `;
