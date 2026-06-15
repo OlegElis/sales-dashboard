@@ -652,8 +652,10 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
       </div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-      <div class="status-pill"><div class="dot loading" id="sdot"></div><span id="stxt">Загрузка...</span></div>
-      <div class="status-pill no-print" id="online-pill" style="display:none;"><div class="dot" style="background:var(--green)"></div><span>Сейчас на сайте: <b id="online-count">0</b></span></div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+        <div class="status-pill"><div class="dot loading" id="sdot"></div><span id="stxt">Загрузка...</span></div>
+        <div class="status-pill no-print" id="online-pill" style="display:none;"><div class="dot" style="background:var(--green)"></div><span>Сейчас на сайте: <b id="online-count">0</b></span></div>
+      </div>
       <div style="font-size:10px;color:var(--t3);" id="supd"></div>
     </div>
   </div>
