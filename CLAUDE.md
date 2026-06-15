@@ -78,7 +78,14 @@ Called only in single-month mode. Components:
 
 ### Conversion calculation (`calcConversions`)
 
-Looks at **current month + 2 previous months**. Counts all rows where `dateCreated` falls in that window, grouped by direction (`#1` vs `#2–4`). A meeting is "converted" if `isPaidRow()` is true (payment date exists, regardless of when payment occurred).
+**Period-flow definition** (per selected month): `conv = (deals paid in the month) / (meetings created in the month)`, split by direction (`#1` vs `#2–4`).
+- Denominator anchored to `dateCreated` (meetings created in the period).
+- Numerator anchored to `datePaid` (deals paid in the period) — so the numerator equals the period's deal count per direction.
+- These are different row sets, so conversion **can exceed 100%** (many old meetings paid in a month with few new meetings).
+- `calcConversionsDirect` does the same for multi-month / whole-year selections (selected months, or all 12 for a year).
+- This matches the stats-strip `#N встр / сд / конв` numbers.
+
+(Historical note: previously a 3-month cohort method — "of meetings created in current+2 prev months, how many ever got paid". Changed to period-flow per user so the numerator equals monthly deals.)
 
 ### Views
 

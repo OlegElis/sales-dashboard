@@ -911,44 +911,45 @@ function parseCSV(text){
 }
 
 function calcConversionsDirect(rows,mopName,year,monthsSet){
+  // Несколько месяцев / год: числитель = сделки, оплаченные в выбранных месяцах;
+  // знаменатель = встречи, созданные в выбранных месяцах.
   let c1=0,p1=0,c24=0,p24=0;
+  const inSel=d=>d&&d.getFullYear()===year&&(monthsSet.size===0||monthsSet.has(d.getMonth()+1));
   rows.forEach(r=>{
     if(r[COL.responsible]!==mopName)return;
-    const dc=parseDate(r[COL.dateCreated]);
-    if(!dc||dc.getFullYear()!==year)return;
-    if(monthsSet.size>0&&!monthsSet.has(dc.getMonth()+1))return;
     const dir=(r[COL.direction]||'').trim();
-    const paid=isPaidRow(r);
-    if(dir==='#1'){c1++;if(paid)p1++;}
-    else if(['#2','#3','#4'].includes(dir)){c24++;if(paid)p24++;}
+    const b=dir==='#1'?1:(['#2','#3','#4'].includes(dir)?24:0);
+    if(!b)return;
+    if(inSel(parseDate(r[COL.dateCreated]))){if(b===1)c1++;else c24++;}
+    if(isPaidRow(r)&&inSel(parseDate(r[COL.datePaid]))){if(b===1)p1++;else p24++;}
   });
   return{conv1:c1>0?Math.round(p1/c1*100):0,conv24:c24>0?Math.round(p24/c24*100):0,c1,c24,p1,p24};
 }
 
 function calcConversions(rows,mopName,year,month){
-  // текущий месяц + 2 предыдущих
-  const months=[];
-  for(let i=2;i>=0;i--){
-    const d=new Date(year,month-1-i,1);
-    months.push({y:d.getFullYear(),m:d.getMonth()+1});
-  }
+  // МЕСЯЦ: числитель = сделки, ОПЛАЧЕННЫЕ в этом месяце (по дате оплаты);
+  // знаменатель = встречи, СОЗДАННЫЕ в этом месяце (по дате создания). По направлениям.
   let c1=0,p1=0,c24=0,p24=0;
-  const detail1=[],detail24=[];
+  const meet1=[],meet24=[],deal1=[],deal24=[];
   rows.forEach(r=>{
     if(r[COL.responsible]!==mopName)return;
-    const dc=parseDate(r[COL.dateCreated]);
-    if(!dc)return;
-    const ym=months.find(x=>x.y===dc.getFullYear()&&x.m===(dc.getMonth()+1));
-    if(!ym)return;
     const dir=(r[COL.direction]||'').trim();
-    const paid=isPaidRow(r);
-    if(dir==='#1'){c1++;if(paid)p1++;detail1.push({r,paid});}
-    else if(['#2','#3','#4'].includes(dir)){c24++;if(paid)p24++;detail24.push({r,paid,dir});}
+    const b=dir==='#1'?1:(['#2','#3','#4'].includes(dir)?24:0);
+    if(!b)return;
+    const dc=parseDate(r[COL.dateCreated]);
+    if(dc&&dc.getFullYear()===year&&dc.getMonth()+1===month){
+      if(b===1){c1++;meet1.push(r);}else{c24++;meet24.push(r);}
+    }
+    const dp=parseDate(r[COL.datePaid]);
+    if(isPaidRow(r)&&dp&&dp.getFullYear()===year&&dp.getMonth()+1===month){
+      if(b===1){p1++;deal1.push(r);}else{p24++;deal24.push(r);}
+    }
   });
-  // сортировка по дате создания
-  detail1.sort((a,b)=>(parseDate(a.r[COL.dateCreated])||0)-(parseDate(b.r[COL.dateCreated])||0));
-  detail24.sort((a,b)=>(parseDate(a.r[COL.dateCreated])||0)-(parseDate(b.r[COL.dateCreated])||0));
-  return{conv1:c1>0?Math.round(p1/c1*100):0,conv24:c24>0?Math.round(p24/c24*100):0,c1,c24,p1,p24,months,detail1,detail24};
+  meet1.sort((a,b)=>(parseDate(a[COL.dateCreated])||0)-(parseDate(b[COL.dateCreated])||0));
+  meet24.sort((a,b)=>(parseDate(a[COL.dateCreated])||0)-(parseDate(b[COL.dateCreated])||0));
+  deal1.sort((a,b)=>(parseDate(a[COL.datePaid])||0)-(parseDate(b[COL.datePaid])||0));
+  deal24.sort((a,b)=>(parseDate(a[COL.datePaid])||0)-(parseDate(b[COL.datePaid])||0));
+  return{conv1:c1>0?Math.round(p1/c1*100):0,conv24:c24>0?Math.round(p24/c24*100):0,c1,c24,p1,p24,month:{y:year,m:month},meet1,meet24,deal1,deal24};
 }
 
 function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=0,seniorityYears=0,seniorityDaysToNext=null,seniorityStartDate=null,convRaw=null){
@@ -997,7 +998,7 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=
   if(deals>0){
     // Конв. #1
     const dc1=conv1-PLAN.conv1;
-    const src1=convRaw&&convRaw.c1>0?` [${convRaw.p1} опл. из ${convRaw.c1} встр.]`:'';
+    const src1=convRaw&&convRaw.c1>0?` [${convRaw.p1} сд / ${convRaw.c1} встр]`:'';
     let kC1raw;
     if(conv1<15){
       kC1raw=0;
@@ -1014,7 +1015,7 @@ function calcZP(deals,sumTotal,conv1,conv24,periodDays,monthDays,seniorityBonus=
 
     // Конв. #2-4 (план 65%, порог 45%, штраф 900/ед, бонус 750/ед)
     const dc24=conv24-PLAN.conv24;
-    const src24=convRaw&&convRaw.c24>0?` [${convRaw.p24} опл. из ${convRaw.c24} встр.]`:'';
+    const src24=convRaw&&convRaw.c24>0?` [${convRaw.p24} сд / ${convRaw.c24} встр]`:'';
     let kC24raw;
     if(conv24<45){
       kC24raw=0;
@@ -2540,63 +2541,50 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
     }).join('');
   }
 
-  // Детализация конверсий
+  // Детализация конверсий (месяц: сделки месяца / встречи месяца)
   const convDetail=document.getElementById('zp-conv-detail');
   convDetail.innerHTML='';
-  if(conv&&conv.months&&(conv.detail1||conv.detail24)){
-    const periodLabel=conv.months.map(x=>MONTHS_RU[x.m-1].slice(0,3)+' '+x.y).join(', ');
+  if(conv&&conv.month&&(conv.meet1||conv.meet24)){
+    const ml=MONTHS_RU[conv.month.m-1]+' '+conv.month.y;
 
-    function renderConvTable(detail,label){
-      if(!detail||!detail.length)return`<div style="font-size:11px;color:var(--t3);padding:6px 0;">Встреч не было</div>`;
-      const paid=detail.filter(x=>x.paid).length;
-      const total=detail.length;
-      const pct=total>0?Math.round(paid/total*100):0;
-      const pctCls=label==='#1'?pillCls(pct):pillCls(pct);
-      let html=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="font-size:11px;font-weight:600;color:var(--text);">${label}</span>
-        <span class="pill ${pctCls}">${pct}%</span>
-        <span style="font-size:11px;color:var(--t3);">${paid} оплат из ${total} встреч</span>
-      </div>`;
-      html+=`<table style="width:100%;border-collapse:collapse;font-size:11px;font-family:inherit;margin-bottom:12px;">
-        <thead><tr style="border-bottom:1px solid var(--border);">
-          <th style="padding:3px 6px;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-weight:500;text-align:left;">#</th>
-          <th style="padding:3px 6px;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-weight:500;text-align:left;">Клиент</th>
-          <th style="padding:3px 6px;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-weight:500;text-align:left;">Создан</th>
-          <th style="padding:3px 6px;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-weight:500;text-align:left;">Оплачен</th>
-          <th style="padding:3px 6px;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-weight:500;text-align:right;">Сумма</th>
-          <th style="padding:3px 6px;text-align:center;">Статус</th>
-        </tr></thead><tbody>`;
-      detail.forEach(({r,paid:isPaid,dir},i)=>{
-        const dc=parseDate(r[COL.dateCreated]);
-        const dp=parseDate(r[COL.datePaid]);
-        const dcStr=dc?dc.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
-        const dpStr=dp?dp.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
+    function miniTable(title,list,byPaid){
+      if(!list||!list.length)return`<div style="font-size:10px;color:var(--t3);margin:2px 0 8px;">${title}: нет</div>`;
+      let h=`<div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);margin:4px 0 2px;">${title} (${list.length})</div>`;
+      h+=`<table style="width:100%;border-collapse:collapse;font-size:11px;font-family:inherit;margin-bottom:8px;"><tbody>`;
+      list.forEach((r,i)=>{
+        const d=parseDate(byPaid?r[COL.datePaid]:r[COL.dateCreated]);
+        const ds=d?d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
         const client=(r[COL.clientName]||'-').trim();
         const sum=parseSum(r[COL.sum]);
-        const statusEl=isPaid
-          ?`<span style="color:var(--green);font-size:12px;">✓</span>`
-          :`<span style="color:var(--t3);font-size:12px;">-</span>`;
-        const rowBg=isPaid?'':'background:#FAFAFA;';
-        html+=`<tr style="${rowBg}border-bottom:.5px solid var(--border);">
-          <td style="padding:4px 6px;color:var(--t3);">${i+1}</td>
-          <td style="padding:4px 6px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${client}</td>
-          <td style="padding:4px 6px;white-space:nowrap;color:var(--t2);">${dcStr}</td>
-          <td style="padding:4px 6px;white-space:nowrap;color:${isPaid?'var(--green)':'var(--t3)'};">${dpStr}</td>
-          <td style="padding:4px 6px;text-align:right;white-space:nowrap;">${sum>0?fmt(sum)+' ₽':'-'}</td>
-          <td style="padding:4px 6px;text-align:center;">${statusEl}</td>
+        h+=`<tr style="border-bottom:.5px solid var(--border);">
+          <td style="padding:3px 6px;color:var(--t3);">${i+1}</td>
+          <td style="padding:3px 6px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${client}</td>
+          <td style="padding:3px 6px;white-space:nowrap;color:var(--t2);">${ds}</td>
+          <td style="padding:3px 6px;text-align:right;white-space:nowrap;">${sum>0?fmt(sum)+' ₽':'-'}</td>
         </tr>`;
       });
-      html+=`</tbody></table>`;
-      return html;
+      h+=`</tbody></table>`;
+      return h;
+    }
+    function renderConvSection(label,meetings,deals){
+      const c=meetings.length,p=deals.length;
+      const pct=c>0?Math.round(p/c*100):0;
+      return`<div style="display:flex;align-items:center;gap:8px;margin:10px 0 4px;">
+          <span style="font-size:11px;font-weight:600;color:var(--text);">${label}</span>
+          <span class="pill ${pillCls(pct)}">${pct}%</span>
+          <span style="font-size:11px;color:var(--t3);">${p} сд / ${c} встр</span>
+        </div>
+        ${miniTable('Встречи (созданы в месяце)',meetings,false)}
+        ${miniTable('Сделки (оплачены в месяце)',deals,true)}`;
     }
 
     convDetail.innerHTML=`
       <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-      <div style="font-size:9px;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">
-        Детализация конверсий · период: ${periodLabel}
+      <div style="font-size:9px;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">
+        Детализация конверсий · ${ml}
       </div>
-      ${renderConvTable(conv.detail1,'#1')}
-      ${renderConvTable(conv.detail24,'#2-4')}
+      ${renderConvSection('#1',conv.meet1,conv.deal1)}
+      ${renderConvSection('#2-4',conv.meet24,conv.deal24)}
     `;
   }
 
