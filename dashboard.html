@@ -671,10 +671,10 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
   </div>
   <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
     <div style="display:flex;gap:0;align-items:center;">
-      <input id="id-search-input" type="text" inputmode="numeric" placeholder="ID сделки…" autocomplete="off"
-        style="font-size:12px;font-family:inherit;padding:5px 9px;border:1px solid var(--border2);border-radius:var(--rs) 0 0 var(--rs);background:var(--s2);color:var(--text);outline:none;width:120px;"
+      <input id="id-search-input" type="text" placeholder="ID или клиент…" autocomplete="off"
+        style="font-size:12px;font-family:inherit;padding:5px 9px;border:1px solid var(--border2);border-radius:var(--rs) 0 0 var(--rs);background:var(--s2);color:var(--text);outline:none;width:150px;"
         onkeydown="if(event.key==='Enter')searchById()">
-      <button class="cfg-btn" style="border-radius:0 var(--rs) var(--rs) 0;border-left:none;" onclick="searchById()" title="Найти сделку по ID">🔍</button>
+      <button class="cfg-btn" style="border-radius:0 var(--rs) var(--rs) 0;border-left:none;" onclick="searchById()" title="Найти сделку по ID или ФИО клиента">🔍</button>
     </div>
     <button class="cfg-btn" onclick="printReport()" title="Печать отчёта (A4)">🖨 Печать отчёта</button>
     <button class="cfg-btn" onclick="openSettings()" title="Настройки">⚙ Настройки</button>
@@ -2660,10 +2660,17 @@ function searchById(){
   const q=(inp.value||'').trim();
   const body=document.getElementById('id-result-body');
   const sub=document.getElementById('id-result-sub');
-  if(!q){sub.textContent='';body.innerHTML='<div class="day-empty">Введите ID сделки</div>';openIdModal();return;}
+  if(!q){sub.textContent='';body.innerHTML='<div class="day-empty">Введите ID сделки или ФИО клиента</div>';openIdModal();return;}
+  const ql=q.toLowerCase();
+  // Сначала точное совпадение по ID, иначе — частичное по ID / клиенту / контакту
   let rows=allRows.filter(r=>String(r[COL.id]).trim()===q);
-  if(rows.length===0)rows=allRows.filter(r=>String(r[COL.id]).trim().includes(q));
-  if(rows.length===0){sub.textContent='';body.innerHTML=`<div class="day-empty">Сделка с ID «${q}» не найдена</div>`;openIdModal();return;}
+  if(rows.length===0)rows=allRows.filter(r=>{
+    const id=String(r[COL.id]||'').toLowerCase();
+    const client=String(r[COL.clientName]||'').toLowerCase();
+    const contact=String(r[COL.responsibleText]||'').toLowerCase();
+    return id.includes(ql)||client.includes(ql)||contact.includes(ql);
+  });
+  if(rows.length===0){sub.textContent='';body.innerHTML=`<div class="day-empty">Ничего не найдено по запросу «${q}»</div>`;openIdModal();return;}
   sub.textContent=rows.length===1?'Найдена 1 сделка':`Найдено сделок: ${rows.length}`;
   body.innerHTML=rows.slice(0,30).map(buildIdCard).join('');
   openIdModal();
