@@ -308,7 +308,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .s-hint{font-size:10px;color:var(--t3);margin-top:6px;text-align:center;}
 
 /* VIEW TABS */
-.view-tabs{display:flex;gap:4px;margin-bottom:12px;}
+.view-tabs{display:flex;gap:4px;margin-bottom:12px;align-items:center;}
 .vtab{font-size:12px;font-family:inherit;padding:6px 16px;border-radius:99px;border:1px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;font-weight:500;transition:all .15s;}
 .vtab.active{background:var(--text);color:#fff;border-color:transparent;}
 
@@ -362,6 +362,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 /* MOBILE */
 @media(max-width:680px){
   body{padding:12px 10px;}
+
+  /* Панель вкладок: вкладки сверху, управление снизу — без растягивания */
+  .view-tabs{flex-direction:column;align-items:stretch;gap:8px;}
+  .view-tabs>div{justify-content:flex-start;}
+  .vtab{flex:1;text-align:center;}
+  #id-search-input{flex:1;width:auto !important;}
 
   /* Шапка */
   .hdr-bottom{flex-direction:column;align-items:flex-start;gap:8px;}
