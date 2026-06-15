@@ -1467,9 +1467,19 @@ function render(){
     totalDeals+=d.deals;
     totalSum+=d.sum;
     totalMeetings+=(d.meetings||0);
-    const conv=isSingleMonth
-      ? calcConversions(allRows,name,y,m)
-      : calcConversionsDirect(allRows,name,y,activeMonths);
+    // В режиме месяца основная конверсия — СГЛАЖЕННАЯ за 3 мес (текущий + 2 пред.),
+    // используется и в таблице, и в расчёте ЗП. Помесячная разбивка — для расшифровки.
+    let conv;
+    if(isSingleMonth){
+      conv=calcConversionsWindow(allRows,name,y,m,3);
+      conv.perMonth=conv.win.map(w=>{
+        const cc=calcConversions(allRows,name,w.y,w.m);
+        return{y:w.y,m:w.m,conv1:cc.conv1,c1:cc.c1,p1:cc.p1,conv24:cc.conv24,c24:cc.c24,p24:cc.p24};
+      });
+      conv.smoothed=true;
+    }else{
+      conv=calcConversionsDirect(allRows,name,y,activeMonths);
+    }
     // Эффективные дни: если нанят в этом месяце - считаем с даты найма
     let effectiveDays=daysPassed;
     if(isSingleMonth){
@@ -1581,8 +1591,6 @@ function render(){
       const c=getMopColor(name);
       const zpColor=zp===null?'var(--t3)':zp>=150000?'var(--green)':zp>=100000?'var(--amber)':'var(--red)';
       const convAvg=Math.round((conv.conv1+conv.conv24)/2);
-      // средняя конверсия за текущий + 2 предыдущих месяца (только в режиме месяца)
-      const conv3=isSingleMonth?calcConversionsWindow(allRows,name,y,m,3):null;
       const tr=document.createElement('tr');
       tr.innerHTML=`
         <td><span class="rank">${i+1}</span></td>
@@ -1591,10 +1599,10 @@ function render(){
         <td class="r" style="color:${d.deals>=PLAN.deals?'var(--green)':'var(--red)'};font-weight:500;white-space:nowrap;">${d.deals}${d.sameDayDeals>0?` <span style="font-size:10px;color:#854F0B;font-weight:400">⚡${d.sameDayDeals}</span>`:''}</td>
         <td class="r">${fmtM(d.sum)}</td>
         <td class="r" style="color:${d.deals>0&&Math.round(d.sum/d.deals)>=PLAN.avgCheck?'var(--green)':'var(--t2)'}">${d.deals>0?fmtK(Math.round(d.sum/d.deals)):'-'}</td>
-        <td class="r" style="white-space:nowrap;">
+        <td class="r" style="white-space:nowrap;" title="${conv.smoothed?'Сглаженная конверсия за текущий + 2 предыдущих месяца':'Конверсия за выбранный период'}">
           <span style="font-size:9px;color:var(--t3);font-family:inherit;">#1 </span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span>
           <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2-4 </span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
-          ${conv3?`<div style="font-size:9px;color:var(--t3);font-family:inherit;margin-top:3px;white-space:nowrap;" title="Средняя конверсия за текущий + 2 предыдущих месяца (сделки/встречи за 3 мес.)">Ø3м: #1 <span class="pill ${pillCls(conv3.conv1)}" style="font-size:8px;padding:1px 5px">${conv3.conv1}%</span> #2-4 <span class="pill ${pillCls(conv3.conv24)}" style="font-size:8px;padding:1px 5px">${conv3.conv24}%</span></div>`:''}
+          ${conv.smoothed?'<div style="font-size:8px;color:var(--t3);font-family:inherit;margin-top:2px;">за 3 мес</div>':''}
         </td>
         <td class="r" style="color:${zpColor};font-weight:500;">${zp===null?'-':fmt(zp)+' ₽'}</td>
       `;
@@ -2562,51 +2570,35 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
     }).join('');
   }
 
-  // Детализация конверсий (месяц: сделки месяца / встречи месяца)
+  // Детализация конверсий: сглажено за 3 мес. + по каждому месяцу отдельно
   const convDetail=document.getElementById('zp-conv-detail');
   convDetail.innerHTML='';
-  if(conv&&conv.month&&(conv.meet1||conv.meet24)){
-    const ml=MONTHS_RU[conv.month.m-1]+' '+conv.month.y;
-
-    function miniTable(title,list,byPaid){
-      if(!list||!list.length)return`<div style="font-size:10px;color:var(--t3);margin:2px 0 8px;">${title}: нет</div>`;
-      let h=`<div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);margin:4px 0 2px;">${title} (${list.length})</div>`;
-      h+=`<table style="width:100%;border-collapse:collapse;font-size:11px;font-family:inherit;margin-bottom:8px;"><tbody>`;
-      list.forEach((r,i)=>{
-        const d=parseDate(byPaid?r[COL.datePaid]:r[COL.dateCreated]);
-        const ds=d?d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
-        const client=(r[COL.clientName]||'-').trim();
-        const sum=parseSum(r[COL.sum]);
-        h+=`<tr style="border-bottom:.5px solid var(--border);">
-          <td style="padding:3px 6px;color:var(--t3);">${i+1}</td>
-          <td style="padding:3px 6px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${client}</td>
-          <td style="padding:3px 6px;white-space:nowrap;color:var(--t2);">${ds}</td>
-          <td style="padding:3px 6px;text-align:right;white-space:nowrap;">${sum>0?fmt(sum)+' ₽':'-'}</td>
-        </tr>`;
-      });
-      h+=`</tbody></table>`;
-      return h;
-    }
-    function renderConvSection(label,meetings,deals){
-      const c=meetings.length,p=deals.length;
-      const pct=c>0?Math.round(p/c*100):0;
-      return`<div style="display:flex;align-items:center;gap:8px;margin:10px 0 4px;">
-          <span style="font-size:11px;font-weight:600;color:var(--text);">${label}</span>
-          <span class="pill ${pillCls(pct)}">${pct}%</span>
-          <span style="font-size:11px;color:var(--t3);">${p} сд / ${c} встр</span>
-        </div>
-        ${miniTable('Встречи (созданы в месяце)',meetings,false)}
-        ${miniTable('Сделки (оплачены в месяце)',deals,true)}`;
-    }
-
+  if(conv&&conv.perMonth){
+    const th='padding:4px 6px;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-weight:500;text-align:left;';
+    function cell(pct,p,c){return`<span class="pill ${pillCls(pct)}">${pct}%</span> <span style="color:var(--t3);font-size:10px;">${p}/${c}</span>`;}
+    const rows=conv.perMonth.map(pm=>`
+      <tr style="border-bottom:.5px solid var(--border);">
+        <td style="padding:4px 6px;color:var(--t2);white-space:nowrap;">${MONTHS_RU[pm.m-1].slice(0,3)} ${pm.y}</td>
+        <td style="padding:4px 6px;white-space:nowrap;">${cell(pm.conv1,pm.p1,pm.c1)}</td>
+        <td style="padding:4px 6px;white-space:nowrap;">${cell(pm.conv24,pm.p24,pm.c24)}</td>
+      </tr>`).join('');
+    const totalRow=`
+      <tr style="border-top:1.5px solid var(--border2);font-weight:600;">
+        <td style="padding:5px 6px;white-space:nowrap;">Итого 3 мес</td>
+        <td style="padding:5px 6px;white-space:nowrap;">${cell(conv.conv1,conv.p1,conv.c1)}</td>
+        <td style="padding:5px 6px;white-space:nowrap;">${cell(conv.conv24,conv.p24,conv.c24)}</td>
+      </tr>`;
     convDetail.innerHTML=`
       <div style="height:1px;background:var(--border);margin:14px 0;"></div>
       <div style="font-size:9px;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">
-        Детализация конверсий · ${ml}
+        Детализация конверсий · сглажено за 3 мес. (сделки / встречи)
       </div>
-      ${renderConvSection('#1',conv.meet1,conv.deal1)}
-      ${renderConvSection('#2-4',conv.meet24,conv.deal24)}
-    `;
+      <table style="width:100%;border-collapse:collapse;font-family:inherit;">
+        <thead><tr style="border-bottom:1px solid var(--border);">
+          <th style="${th}">Месяц</th><th style="${th}">#1</th><th style="${th}">#2-4</th>
+        </tr></thead>
+        <tbody>${rows}${totalRow}</tbody>
+      </table>`;
   }
 
   document.getElementById('zp-overlay').classList.add('open');
