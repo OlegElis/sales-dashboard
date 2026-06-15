@@ -1475,7 +1475,8 @@ function render(){
       conv=calcConversionsWindow(allRows,name,y,m,3);
       conv.perMonth=conv.win.map(w=>{
         const cc=calcConversions(allRows,name,w.y,w.m);
-        return{y:w.y,m:w.m,conv1:cc.conv1,c1:cc.c1,p1:cc.p1,conv24:cc.conv24,c24:cc.c24,p24:cc.p24};
+        return{y:w.y,m:w.m,conv1:cc.conv1,c1:cc.c1,p1:cc.p1,conv24:cc.conv24,c24:cc.c24,p24:cc.p24,
+          meet1:cc.meet1,deal1:cc.deal1,meet24:cc.meet24,deal24:cc.deal24};
       });
       conv.smoothed=true;
     }else{
@@ -2571,35 +2572,61 @@ function openZpModal(name,zp,bd,conv,d,dealRows){
     }).join('');
   }
 
-  // Детализация конверсий: сглажено за 3 мес. + по каждому месяцу отдельно
+  // Детализация конверсий: сглажено за 3 мес. + раскрывающаяся развёртка по месяцам
   const convDetail=document.getElementById('zp-conv-detail');
   convDetail.innerHTML='';
   if(conv&&conv.perMonth){
-    const th='padding:4px 6px;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-weight:500;text-align:left;';
-    function cell(pct,p,c){return`<span class="pill ${pillCls(pct)}">${pct}%</span> <span style="color:var(--t3);font-size:10px;">${p}/${c}</span>`;}
-    const rows=conv.perMonth.map(pm=>`
-      <tr style="border-bottom:.5px solid var(--border);">
-        <td style="padding:4px 6px;color:var(--t2);white-space:nowrap;">${MONTHS_RU[pm.m-1].slice(0,3)} ${pm.y}</td>
-        <td style="padding:4px 6px;white-space:nowrap;">${cell(pm.conv1,pm.p1,pm.c1)}</td>
-        <td style="padding:4px 6px;white-space:nowrap;">${cell(pm.conv24,pm.p24,pm.c24)}</td>
-      </tr>`).join('');
-    const totalRow=`
-      <tr style="border-top:1.5px solid var(--border2);font-weight:600;">
-        <td style="padding:5px 6px;white-space:nowrap;">Итого 3 мес</td>
-        <td style="padding:5px 6px;white-space:nowrap;">${cell(conv.conv1,conv.p1,conv.c1)}</td>
-        <td style="padding:5px 6px;white-space:nowrap;">${cell(conv.conv24,conv.p24,conv.c24)}</td>
-      </tr>`;
+    const cell=(pct,p,c)=>`<span class="pill ${pillCls(pct)}">${pct}%</span> <span style="color:var(--t3);font-size:10px;">${p}/${c}</span>`;
+    function miniList(rows,byPaid){
+      if(!rows||!rows.length)return`<div style="font-size:10px;color:var(--t3);padding:2px 0 4px;">нет</div>`;
+      return`<table style="width:100%;border-collapse:collapse;font-size:10.5px;font-family:inherit;margin:1px 0 6px;"><tbody>`+
+        rows.map((r,i)=>{
+          const d=parseDate(byPaid?r[COL.datePaid]:r[COL.dateCreated]);
+          const ds=d?d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
+          const client=(r[COL.clientName]||'-').trim();
+          const sum=parseSum(r[COL.sum]);
+          return`<tr style="border-bottom:.5px solid var(--border);"><td style="padding:2px 5px;color:var(--t3);">${i+1}</td><td style="padding:2px 5px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${client}</td><td style="padding:2px 5px;white-space:nowrap;color:var(--t2);">${ds}</td><td style="padding:2px 5px;text-align:right;white-space:nowrap;">${sum>0?fmt(sum)+' ₽':'-'}</td></tr>`;
+        }).join('')+`</tbody></table>`;
+    }
+    function dirBlock(label,meetings,deals){
+      const c=(meetings||[]).length,p=(deals||[]).length,pct=c>0?Math.round(p/c*100):0;
+      return`<div style="margin:8px 0;">
+        <div style="font-size:11px;font-weight:600;margin-bottom:2px;">${label} ${cell(pct,p,c)}</div>
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);margin:3px 0 1px;">Встречи (созданы в месяце)</div>
+        ${miniList(meetings,false)}
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);margin:2px 0 1px;">Сделки (оплачены в месяце)</div>
+        ${miniList(deals,true)}
+      </div>`;
+    }
+    const monthsHtml=conv.perMonth.map(pm=>`
+      <details class="zp-mdet" style="border:1px solid var(--border);border-radius:var(--rs);margin-bottom:6px;overflow:hidden;">
+        <summary style="cursor:pointer;padding:7px 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;">
+          <span class="zp-mdet-arr" style="color:var(--t3);font-size:10px;transition:transform .15s;">▸</span>
+          <span style="font-weight:600;font-size:12px;">${MONTHS_RU[pm.m-1].slice(0,3)} ${pm.y}</span>
+          <span style="font-size:11px;color:var(--t3);">#1 ${cell(pm.conv1,pm.p1,pm.c1)}</span>
+          <span style="font-size:11px;color:var(--t3);">#2-4 ${cell(pm.conv24,pm.p24,pm.c24)}</span>
+        </summary>
+        <div style="padding:0 10px 8px;border-top:1px solid var(--border);">
+          ${dirBlock('#1',pm.meet1,pm.deal1)}
+          ${dirBlock('#2-4',pm.meet24,pm.deal24)}
+        </div>
+      </details>`).join('');
     convDetail.innerHTML=`
+      <style>
+        .zp-mdet summary::-webkit-details-marker{display:none;}
+        .zp-mdet[open] .zp-mdet-arr{transform:rotate(90deg);}
+        .zp-mdet summary:hover{background:var(--s2);}
+      </style>
       <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-      <div style="font-size:9px;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">
-        Детализация конверсий · сглажено за 3 мес. (сделки / встречи)
+      <div style="font-size:9px;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">
+        Детализация конверсий · сглажено за 3 мес. (нажмите месяц для развёртки)
       </div>
-      <table style="width:100%;border-collapse:collapse;font-family:inherit;">
-        <thead><tr style="border-bottom:1px solid var(--border);">
-          <th style="${th}">Месяц</th><th style="${th}">#1</th><th style="${th}">#2-4</th>
-        </tr></thead>
-        <tbody>${rows}${totalRow}</tbody>
-      </table>`;
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:7px 10px;background:var(--s2);border-radius:var(--rs);margin-bottom:8px;font-weight:600;">
+        <span style="font-size:12px;">Итого 3 мес</span>
+        <span style="font-size:11px;color:var(--t3);">#1 ${cell(conv.conv1,conv.p1,conv.c1)}</span>
+        <span style="font-size:11px;color:var(--t3);">#2-4 ${cell(conv.conv24,conv.p24,conv.c24)}</span>
+      </div>
+      ${monthsHtml}`;
   }
 
   document.getElementById('zp-overlay').classList.add('open');
