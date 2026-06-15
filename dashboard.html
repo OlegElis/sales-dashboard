@@ -926,6 +926,24 @@ function calcConversionsDirect(rows,mopName,year,monthsSet){
   return{conv1:c1>0?Math.round(p1/c1*100):0,conv24:c24>0?Math.round(p24/c24*100):0,c1,c24,p1,p24};
 }
 
+// Конверсия за окно N месяцев (по умолчанию текущий + 2 предыдущих), тот же
+// принцип: суммарно сделки окна / суммарно встречи окна (с переходом года).
+function calcConversionsWindow(rows,mopName,year,month,n=3){
+  const win=[];
+  for(let i=n-1;i>=0;i--){const d=new Date(year,month-1-i,1);win.push({y:d.getFullYear(),m:d.getMonth()+1});}
+  const inWin=d=>d&&win.some(x=>x.y===d.getFullYear()&&x.m===d.getMonth()+1);
+  let c1=0,p1=0,c24=0,p24=0;
+  rows.forEach(r=>{
+    if(r[COL.responsible]!==mopName)return;
+    const dir=(r[COL.direction]||'').trim();
+    const b=dir==='#1'?1:(['#2','#3','#4'].includes(dir)?24:0);
+    if(!b)return;
+    if(inWin(parseDate(r[COL.dateCreated]))){if(b===1)c1++;else c24++;}
+    if(isPaidRow(r)&&inWin(parseDate(r[COL.datePaid]))){if(b===1)p1++;else p24++;}
+  });
+  return{conv1:c1>0?Math.round(p1/c1*100):0,conv24:c24>0?Math.round(p24/c24*100):0,c1,c24,p1,p24,win};
+}
+
 function calcConversions(rows,mopName,year,month){
   // МЕСЯЦ: числитель = сделки, ОПЛАЧЕННЫЕ в этом месяце (по дате оплаты);
   // знаменатель = встречи, СОЗДАННЫЕ в этом месяце (по дате создания). По направлениям.
@@ -1563,6 +1581,8 @@ function render(){
       const c=getMopColor(name);
       const zpColor=zp===null?'var(--t3)':zp>=150000?'var(--green)':zp>=100000?'var(--amber)':'var(--red)';
       const convAvg=Math.round((conv.conv1+conv.conv24)/2);
+      // средняя конверсия за текущий + 2 предыдущих месяца (только в режиме месяца)
+      const conv3=isSingleMonth?calcConversionsWindow(allRows,name,y,m,3):null;
       const tr=document.createElement('tr');
       tr.innerHTML=`
         <td><span class="rank">${i+1}</span></td>
@@ -1574,6 +1594,7 @@ function render(){
         <td class="r" style="white-space:nowrap;">
           <span style="font-size:9px;color:var(--t3);font-family:inherit;">#1 </span><span class="pill ${pillCls(conv.conv1)}">${conv.conv1}%</span>
           <span style="font-size:9px;color:var(--t3);font-family:inherit;margin-left:4px">#2-4 </span><span class="pill ${pillCls(conv.conv24)}">${conv.conv24}%</span>
+          ${conv3?`<div style="font-size:9px;color:var(--t3);font-family:inherit;margin-top:3px;white-space:nowrap;" title="Средняя конверсия за текущий + 2 предыдущих месяца (сделки/встречи за 3 мес.)">Ø3м: #1 <span class="pill ${pillCls(conv3.conv1)}" style="font-size:8px;padding:1px 5px">${conv3.conv1}%</span> #2-4 <span class="pill ${pillCls(conv3.conv24)}" style="font-size:8px;padding:1px 5px">${conv3.conv24}%</span></div>`:''}
         </td>
         <td class="r" style="color:${zpColor};font-weight:500;">${zp===null?'-':fmt(zp)+' ₽'}</td>
       `;
