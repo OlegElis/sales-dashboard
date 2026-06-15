@@ -363,7 +363,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 @media(max-width:680px){
   body{padding:12px 10px;}
 
-  /* Панель вкладок: вкладки сверху, управление снизу — без растягивания */
+  /* Панель вкладок: вкладки сверху, управление снизу - без растягивания */
   .view-tabs{flex-direction:column;align-items:stretch;gap:8px;}
   .view-tabs>div{justify-content:flex-start;}
   .vtab{flex:1;text-align:center;}
@@ -444,7 +444,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   .hdr{position:relative;}
   .hdr-bottom{padding-bottom:3px;border-bottom:2px solid #111;}
   .hdr-title{font-size:15px;}
-  /* Строка отчёта — справа на уровне заголовка, прижата к правому краю */
+  /* Строка отчёта - справа на уровне заголовка, прижата к правому краю */
   .print-meta{position:absolute !important;right:0;top:21px;
     display:flex !important;flex-direction:column;align-items:flex-end;gap:1px;
     margin:0 !important;padding:0 !important;border:none !important;text-align:right;max-width:48%;}
@@ -1309,7 +1309,7 @@ function render(){
   // Применяем план для текущего периода
   applyPlanToGlobals(getPlanForMonth(y, isSingleMonth?[...activeMonths][0]:0));
   // Для периода из нескольких месяцев / всего года план по сделкам (и, как
-  // следствие, по сумме) суммируем по выбранным месяцам. Средний чек — это
+  // следствие, по сумме) суммируем по выбранным месяцам. Средний чек - это
   // целевой чек на сделку, он не суммируется и остаётся как в плане.
   if(!isSingleMonth){
     const planMonths=activeMonths.size>0?[...activeMonths]:[1,2,3,4,5,6,7,8,9,10,11,12];
@@ -1468,8 +1468,8 @@ function render(){
     totalDeals+=d.deals;
     totalSum+=d.sum;
     totalMeetings+=(d.meetings||0);
-    // В режиме месяца основная конверсия — СГЛАЖЕННАЯ за 3 мес (текущий + 2 пред.),
-    // используется и в таблице, и в расчёте ЗП. Помесячная разбивка — для расшифровки.
+    // В режиме месяца основная конверсия - СГЛАЖЕННАЯ за 3 мес (текущий + 2 пред.),
+    // используется и в таблице, и в расчёте ЗП. Помесячная разбивка - для расшифровки.
     let conv;
     if(isSingleMonth){
       conv=calcConversionsWindow(allRows,name,y,m,3);
@@ -1553,7 +1553,7 @@ function render(){
     document.getElementById(id).style.color=pctColor(p);
   });
 
-  // Countdown — работает и для месяца, и для года/нескольких месяцев
+  // Countdown - работает и для месяца, и для года/нескольких месяцев
   let cdElapsed,cdTotal;
   if(isSingleMonth){
     cdElapsed=daysPassed; cdTotal=mdays;
@@ -1721,7 +1721,7 @@ function renderChart(){
 
 function renderDailyChart(){
   if(activeMonths.size!==1){
-    // Год или несколько месяцев — строим график по всем дням периода
+    // Год или несколько месяцев - строим график по всем дням периода
     renderPeriodDailyChart();
     return;
   }
@@ -2700,7 +2700,7 @@ function searchById(){
   const sub=document.getElementById('id-result-sub');
   if(!q){sub.textContent='';body.innerHTML='<div class="day-empty">Введите ID сделки или ФИО клиента</div>';openIdModal();return;}
   const ql=q.toLowerCase();
-  // Сначала точное совпадение по ID, иначе — частичное по ID / клиенту / контакту
+  // Сначала точное совпадение по ID, иначе - частичное по ID / клиенту / контакту
   let rows=allRows.filter(r=>String(r[COL.id]).trim()===q);
   if(rows.length===0)rows=allRows.filter(r=>{
     const id=String(r[COL.id]||'').toLowerCase();
@@ -2714,25 +2714,25 @@ function searchById(){
   openIdModal();
 }
 function buildIdCard(r){
-  // Менеджер — как в статистике/конверсии (COL.responsible)
-  const name=(r[COL.responsible]||'—').trim();
+  // Менеджер - как в статистике/конверсии (COL.responsible)
+  const name=(r[COL.responsible]||'-').trim();
   const contact=(r[COL.responsibleText]||'').trim();
-  const client=(r[COL.clientName]||'—').trim();
+  const client=(r[COL.clientName]||'-').trim();
   const c=getMopColor(name);
   const dir=(r[COL.direction]||'').trim();
-  const bucket=dir==='#1'?'#1':['#2','#3','#4'].includes(dir)?'#2–4':null;
+  const bucket=dir==='#1'?'#1':['#2','#3','#4'].includes(dir)?'#2-4':null;
   const dc=parseDate(r[COL.dateCreated]);
   const dp=parseDate(r[COL.datePaid]);
   const paid=isPaidRow(r);
   const sum=parseSum(r[COL.sum]);
-  const stage=(r[COL.dealStage]||'—').trim();
+  const stage=(r[COL.dealStage]||'-').trim();
   const tech=isTechMop(r[COL.responsible]);
   const noZp=NO_ZP_MOPS.has(r[COL.responsible]);
-  const fmtD=d=>d?d.toLocaleDateString('ru-RU'):'—';
+  const fmtD=d=>d?d.toLocaleDateString('ru-RU'):'-';
 
   let convHtml;
-  if(!dc){convHtml='нет даты создания — в конверсии не участвует';}
-  else if(!bucket){convHtml=`направление «${dir||'нет'}» — в конверсии не участвует (нужно #1–#4)`;}
+  if(!dc){convHtml='нет даты создания - в конверсии не участвует';}
+  else if(!bucket){convHtml=`направление «${dir||'нет'}» - в конверсии не участвует (нужно #1-#4)`;}
   else{
     const months=[];
     for(let k=0;k<3;k++){const d=new Date(dc.getFullYear(),dc.getMonth()+k,1);months.push(MONTHS_RU[d.getMonth()].slice(0,3)+' '+d.getFullYear());}
@@ -2742,7 +2742,7 @@ function buildIdCard(r){
   const dealHtml=(paid&&dp)?`учитывается в «Сделки / Сумма» за <b>${MONTHS_RU[dp.getMonth()].slice(0,3)+' '+dp.getFullYear()}</b>`:'в «Сделки / Сумма» не входит (нет оплаты)';
 
   const flags=[];
-  if(tech)flags.push('<span class="pill pr">тех. специалист — исключён из статистики</span>');
+  if(tech)flags.push('<span class="pill pr">тех. специалист - исключён из статистики</span>');
   if(noZp)flags.push('<span class="pill pa">ЗП не рассчитывается</span>');
 
   return `<div style="border:1px solid var(--border);border-radius:var(--rs);padding:12px 14px;margin-bottom:10px;">
@@ -2758,7 +2758,7 @@ function buildIdCard(r){
     <table class="day-table"><tbody>
       <tr><td style="color:var(--t3)">Клиент</td><td class="r">${client}</td></tr>
       ${contact&&contact!==name?`<tr><td style="color:var(--t3)">Контакт в Б24</td><td class="r">${contact}</td></tr>`:''}
-      <tr><td style="color:var(--t3)">Сумма</td><td class="r">${sum>0?fmt(sum)+' ₽':'—'}</td></tr>
+      <tr><td style="color:var(--t3)">Сумма</td><td class="r">${sum>0?fmt(sum)+' ₽':'-'}</td></tr>
       <tr><td style="color:var(--t3)">Дата создания (встреча)</td><td class="r">${fmtD(dc)}</td></tr>
       <tr><td style="color:var(--t3)">Дата оплаты</td><td class="r">${paid?fmtD(dp):'<span style="color:var(--red)">не оплачено</span>'}</td></tr>
       <tr><td style="color:var(--t3)">Стадия</td><td class="r">${stage}</td></tr>
@@ -2809,7 +2809,7 @@ init();
 <!-- СПРАВКА -->
 <div class="day-overlay" id="help-overlay" onclick="if(event.target===this)closeHelp()">
   <div class="day-card" style="max-width:780px;">
-    <div class="day-card-title">Справка — как устроен дашборд и как считаются показатели</div>
+    <div class="day-card-title">Справка - как устроен дашборд и как считаются показатели</div>
     <div class="day-card-sub">Пульс отдела продаж · ГК ОПОРА · БФЛ</div>
 
     <style>
@@ -2823,45 +2823,45 @@ init();
     </style>
 
     <div class="help-h">1. Что это</div>
-    <div class="help-p">Дашборд показывает результаты отдела продаж (БФЛ — банкротство физлиц): сделки, суммы, средний чек, конверсии, прогресс к плану, рейтинг менеджеров, расчётную ЗП и портфель сделок. Данные берутся из CRM (через выгрузку), обновляются автоматически.</div>
+    <div class="help-p">Дашборд показывает результаты отдела продаж (БФЛ - банкротство физлиц): сделки, суммы, средний чек, конверсии, прогресс к плану, рейтинг менеджеров, расчётную ЗП и портфель сделок. Данные берутся из CRM (через выгрузку), обновляются автоматически.</div>
 
     <div class="help-h">2. Разделы и фильтры</div>
     <ul class="help-list">
-      <li><b>Статистика</b> — основной экран: метрики, рейтинг менеджеров, графики, прогресс к плану.</li>
-      <li><b>Портфель сделок</b> — канбан по стадиям CRM, подсветка «срочных» (давно без касания).</li>
-      <li><b>Период</b> — год, месяц(ы), день. Можно выбрать один месяц, несколько или весь год.</li>
-      <li><b>Поиск по ID / клиенту</b> — показывает, к какому менеджеру привязана сделка и как она участвует в расчётах.</li>
-      <li><b>🖨 Печать отчёта</b> — выгрузка экрана «Статистика» на один лист A4 для руководителя.</li>
-      <li><b>Сейчас на сайте</b> — счётчик активных пользователей дашборда.</li>
+      <li><b>Статистика</b> - основной экран: метрики, рейтинг менеджеров, графики, прогресс к плану.</li>
+      <li><b>Портфель сделок</b> - канбан по стадиям CRM, подсветка «срочных» (давно без касания).</li>
+      <li><b>Период</b> - год, месяц(ы), день. Можно выбрать один месяц, несколько или весь год.</li>
+      <li><b>Поиск по ID / клиенту</b> - показывает, к какому менеджеру привязана сделка и как она участвует в расчётах.</li>
+      <li><b>🖨 Печать отчёта</b> - выгрузка экрана «Статистика» на один лист A4 для руководителя.</li>
+      <li><b>Сейчас на сайте</b> - счётчик активных пользователей дашборда.</li>
     </ul>
 
     <div class="help-h">3. Что входит и не входит в расчёты</div>
-    <div class="help-p"><b>Сделка</b> — строка с заполненной <b>датой оплаты</b>. Нет даты оплаты → это только встреча (заявка), не сделка.</div>
-    <div class="help-p"><b>Встреча</b> — строка с датой создания (заявка/обращение).</div>
+    <div class="help-p"><b>Сделка</b> - строка с заполненной <b>датой оплаты</b>. Нет даты оплаты → это только встреча (заявка), не сделка.</div>
+    <div class="help-p"><b>Встреча</b> - строка с датой создания (заявка/обращение).</div>
     <ul class="help-list">
-      <li>В конверсию входят только направления <b>#1</b> и <b>#2–4</b>. Направления #5, пустые и прочие — не входят.</li>
-      <li><b>Технические специалисты</b> (вносят тестовые данные) исключены из всей статистики — показаны отдельно под чертой в таблице.</li>
-      <li><b>Кривчикова М.И.</b> — входит в статистику, но ЗП по ней не рассчитывается (руководитель).</li>
+      <li>В конверсию входят только направления <b>#1</b> и <b>#2-4</b>. Направления #5, пустые и прочие - не входят.</li>
+      <li><b>Технические специалисты</b> (вносят тестовые данные) исключены из всей статистики - показаны отдельно под чертой в таблице.</li>
+      <li><b>Кривчикова М.И.</b> - входит в статистику, но ЗП по ней не рассчитывается (руководитель).</li>
     </ul>
 
     <div class="help-h">4. Конверсия</div>
-    <div class="help-p">Считается раздельно по двум группам направлений: <b>#1</b> и <b>#2–4</b> (каналы 2, 3, 4 вместе).</div>
+    <div class="help-p">Считается раздельно по двум группам направлений: <b>#1</b> и <b>#2-4</b> (каналы 2, 3, 4 вместе).</div>
     <div class="help-f"><b>Конверсия за месяц</b> = (сделки, <b>оплаченные</b> в месяце) ÷ (встречи, <b>созданные</b> в месяце) × 100%</div>
-    <div class="help-p">Числитель — сделки с датой оплаты в этом месяце (= число сделок месяца по направлению). Знаменатель — встречи, созданные в этом месяце.</div>
+    <div class="help-p">Числитель - сделки с датой оплаты в этом месяце (= число сделок месяца по направлению). Знаменатель - встречи, созданные в этом месяце.</div>
     <div class="help-p">В рейтинге и в расчёте ЗП используется <b>сглаженная конверсия за 3 месяца</b> (текущий + 2 предыдущих):</div>
     <div class="help-f"><b>Конв. (сглаж.)</b> = (сделки за 3 мес.) ÷ (встречи за 3 мес.) × 100%<br><span style="color:var(--t3);font-size:11px;">суммируем за 3 месяца и делим, а не среднее из трёх процентов</span></div>
-    <div class="help-note">⚠️ Конверсия может быть больше 100% — если в месяце оплатили много встреч прошлых периодов, а новых встреч было мало. Поздняя оплата старой встречи задним числом улучшает конверсию её месяца.</div>
+    <div class="help-note">⚠️ Конверсия может быть больше 100% - если в месяце оплатили много встреч прошлых периодов, а новых встреч было мало. Поздняя оплата старой встречи задним числом улучшает конверсию её месяца.</div>
 
     <div class="help-h">5. Расчёт ЗП</div>
-    <div class="help-p"><b>ЗП = Оклад + Надбавка за стаж + KPI (сделки) + Конв. #1 + Конв. #2–4 + Средний чек</b> (итог не меньше 0).</div>
-    <div class="help-p">Планы по умолчанию (настраиваются помесячно): <b>16 сделок</b>, конв. #1 — <b>25%</b>, конв. #2–4 — <b>65%</b>, средний чек — <b>225 000 ₽</b>.</div>
-    <div class="help-note"><b>«Пропорционально отработанным дням»</b> = сумма берётся не целиком, а × (отработанных дней ÷ дней в месяце). На середину месяца — частичная сумма, к концу месяца — полная. <b>KPI за сделки по дням НЕ делится</b> — считается по фактическому числу сделок.</div>
+    <div class="help-p"><b>ЗП = Оклад + Надбавка за стаж + KPI (сделки) + Конв. #1 + Конв. #2-4 + Средний чек</b> (итог не меньше 0).</div>
+    <div class="help-p">Планы по умолчанию (настраиваются помесячно): <b>16 сделок</b>, конв. #1 - <b>25%</b>, конв. #2-4 - <b>65%</b>, средний чек - <b>225 000 ₽</b>.</div>
+    <div class="help-note"><b>«Пропорционально отработанным дням»</b> = сумма берётся не целиком, а × (отработанных дней ÷ дней в месяце). На середину месяца - частичная сумма, к концу месяца - полная. <b>KPI за сделки по дням НЕ делится</b> - считается по фактическому числу сделок.</div>
 
     <div class="help-p" style="font-weight:600;color:var(--text);margin-top:10px;">1) Оклад</div>
     <div class="help-f">30 000 ₽ ÷ дней в месяце × отработанных дней</div>
 
     <div class="help-p" style="font-weight:600;color:var(--text);">2) Надбавка за стаж</div>
-    <div class="help-f">(полных лет стажа) × 2 000 ₽ — пропорционально отработанным дням.<br><span style="color:var(--t3);font-size:11px;">начисляется при стаже от 1 полного года</span></div>
+    <div class="help-f">(полных лет стажа) × 2 000 ₽ - пропорционально отработанным дням.<br><span style="color:var(--t3);font-size:11px;">начисляется при стаже от 1 полного года</span></div>
 
     <div class="help-p" style="font-weight:600;color:var(--text);">3) KPI за сделки (по дням не делится)</div>
     <div class="help-f">База <b>72 000 ₽</b> при выполнении плана (16 сделок).<br>
@@ -2869,26 +2869,26 @@ init();
       • Сделок &lt; плана: 72 000 + (сделки − план) × <b>4 500 ₽</b>, но не меньше 0<br>
       • 0 сделок → 0</div>
 
-    <div class="help-p" style="font-weight:600;color:var(--text);">4) Конверсия #1 (база 18 000 ₽, план 25%, порог 15%) — пропорц. дням</div>
+    <div class="help-p" style="font-weight:600;color:var(--text);">4) Конверсия #1 (база 18 000 ₽, план 25%, порог 15%) - пропорц. дням</div>
     <div class="help-f">
       • &lt; 15% → 0<br>
       • 15%…25%: 18 000 + (конв − 25) × <b>1 800</b>, не меньше 0<br>
       • ≥ 25%: 18 000 + (конв − 25) × <b>750</b></div>
 
-    <div class="help-p" style="font-weight:600;color:var(--text);">5) Конверсия #2–4 (база 18 000 ₽, план 65%, порог 45%) — пропорц. дням</div>
+    <div class="help-p" style="font-weight:600;color:var(--text);">5) Конверсия #2-4 (база 18 000 ₽, план 65%, порог 45%) - пропорц. дням</div>
     <div class="help-f">
       • &lt; 45% → 0<br>
       • 45%…65%: 18 000 + (конв − 65) × <b>900</b>, не меньше 0<br>
       • ≥ 65%: 18 000 + (конв − 65) × <b>750</b></div>
 
-    <div class="help-p" style="font-weight:600;color:var(--text);">6) Средний чек (база 12 000 ₽, план 225к, порог 150к) — пропорц. дням</div>
+    <div class="help-p" style="font-weight:600;color:var(--text);">6) Средний чек (база 12 000 ₽, план 225к, порог 150к) - пропорц. дням</div>
     <div class="help-f">Δ = (средний чек − 225 000) ÷ 1 000 (в тысячах)<br>
       • чек &lt; 150 000 → 0<br>
       • 150к…225к: 12 000 + Δ × <b>160</b><br>
       • ≥ 225 000: 12 000 + Δ × <b>1 000</b></div>
-    <div class="help-note">Пункты 4–6 (конверсии и чек) начисляются только если есть хотя бы 1 сделка. Конверсия в ЗП — сглаженная за 3 месяца.</div>
+    <div class="help-note">Пункты 4-6 (конверсии и чек) начисляются только если есть хотя бы 1 сделка. Конверсия в ЗП - сглаженная за 3 месяца.</div>
 
-    <div class="help-p" style="font-size:11px;color:var(--t3);margin-top:12px;">Клик по строке менеджера открывает карточку с полным расчётом ЗП и помесячной детализацией конверсии. Клик по ФИО — изоляция менеджера на графиках.</div>
+    <div class="help-p" style="font-size:11px;color:var(--t3);margin-top:12px;">Клик по строке менеджера открывает карточку с полным расчётом ЗП и помесячной детализацией конверсии. Клик по ФИО - изоляция менеджера на графиках.</div>
 
     <button class="day-close" onclick="closeHelp()">Закрыть</button>
   </div>
@@ -2982,7 +2982,7 @@ init();
     db=firebase.database();
   }catch(e){ console.warn('Firebase init failed:', e); return; }
 
-  // серверное смещение времени — чтобы корректно отсекать «протухшие» сессии
+  // серверное смещение времени - чтобы корректно отсекать «протухшие» сессии
   db.ref('.info/serverTimeOffset').on('value', s=>{ timeOffset=s.val()||0; });
 
   function startPresence(){
