@@ -613,7 +613,10 @@ function loadSettings(){
   applyPlanToGlobals(settings.planDefault);
 }
 function saveSettings(){
+  // локальный кэш для мгновенной загрузки
   localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));
+  // общее хранилище для всех пользователей
+  if(window.saveSettingsToFirebase)window.saveSettingsToFirebase(settings);
 }
 
 // Активный месяц в панели настроек
@@ -2984,6 +2987,28 @@ init();
 
   // серверное смещение времени - чтобы корректно отсекать «протухшие» сессии
   db.ref('.info/serverTimeOffset').on('value', s=>{ timeOffset=s.val()||0; });
+
+  // --- Общие настройки (планы по месяцам, даты найма) через Firebase ---
+  window.saveSettingsToFirebase=function(s){
+    try{
+      db.ref('settings').set({
+        planMonths: s.planMonths||{},
+        startDates: s.startDates||{},
+        planDefault: s.planDefault||{}
+      });
+    }catch(e){ console.warn('settings save failed:', e); }
+  };
+  db.ref('settings').on('value', snap=>{
+    const fb=snap.val();
+    if(!fb||typeof settings==='undefined')return;
+    if(fb.planMonths)settings.planMonths=fb.planMonths;
+    if(fb.startDates)settings.startDates={...(typeof START_DATES_DEFAULT!=='undefined'?START_DATES_DEFAULT:{}),...fb.startDates};
+    if(fb.planDefault)settings.planDefault={...(typeof PLAN_DEFAULT!=='undefined'?PLAN_DEFAULT:{}),...fb.planDefault};
+    if(typeof applyPlanToGlobals==='function')applyPlanToGlobals(settings.planDefault);
+    try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch(e){}
+    // перерисовать, если данные уже загружены
+    if(typeof allRows!=='undefined'&&allRows.length&&typeof render==='function')render();
+  });
 
   function startPresence(){
     if(started) return;
