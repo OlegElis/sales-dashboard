@@ -860,6 +860,8 @@ const dealColor=(v,plan)=>v>=plan?'var(--green)':v>=plan*.8?'var(--amber)':'var(
 const pillCls=p=>p>=25?'pg':p>=15?'pa':'pr';
 
 let allRows=[],allMops=[],periodMops=[],selectedMops=new Set();
+// Ориентиры по году (для графика): скорр. план и прогноз итога
+let dealsAdjusted=null, dealsForecast=null;
 const _initNow=new Date();
 let activeYear=_initNow.getFullYear(),activeMonths=new Set([_initNow.getMonth()+1]),activeDay=_initNow.getDate();
 let myChart=null;
@@ -1555,6 +1557,8 @@ function render(){
         }
       }
     }
+    // сохраняем для пилла на графике
+    dealsAdjusted=adjustedPlan; dealsForecast=forecast;
     if(adjustedPlan!==null){
       const delta=v=>{const d=v-PLAN_TOTAL;const col=d>=0?'var(--green)':d>=-Math.round(PLAN_TOTAL*0.05)?'var(--amber)':'var(--red)';return ` <span style="color:${col}">(${d>=0?'+':''}${d})</span>`;};
       let html='<div title="Факт за завершённые месяцы + план за текущий и оставшиеся">с учётом факта: <b style="color:var(--text)">'+adjustedPlan+'</b>'+delta(adjustedPlan)+'</div>';
@@ -2042,16 +2046,14 @@ function renderPeriodDailyChart(){
   document.getElementById('daily-title').textContent=
     document.getElementById('period-desc').textContent;
 
-  // Пилл прогноза
+  // Пилл - те же ориентиры, что и в верхнем баре (план / с учётом факта / прогноз)
   const pill=document.getElementById('daily-forecast-pill');
   if(isCurrentYear&&cutoff<N){
-    const diffD=forecastTotal-effectivePlan;
-    const clsD=diffD>=0?'pg':diffD>=-20?'pa':'pr';
-    const signD=diffD>=0?'+':'';
-    const fLabel=activeMonths.size===0?'Прогноз на год':'Прогноз';
-    pill.innerHTML=`
-      <span style="color:var(--t3);">Темп посл. 3 мес: <b style="color:var(--text)">${recentPerMonth}</b> сд/мес</span>
-      <span class="pill ${clsD}">${fLabel}: ${forecastTotal} сд (${signD}${diffD} к плану)</span>`;
+    const delta=v=>{const d=v-effectivePlan;const col=d>=0?'var(--green)':d>=-Math.round(effectivePlan*0.05)?'var(--amber)':'var(--red)';return ` <span style="color:${col}">(${d>=0?'+':''}${d})</span>`;};
+    let h=`<span style="color:var(--t3);font-size:11px;">план <b style="color:var(--text)">${effectivePlan}</b></span>`;
+    if(dealsAdjusted!==null)h+=`<span style="color:var(--t3);font-size:11px;">с учётом факта <b style="color:var(--text)">${dealsAdjusted}</b>${delta(dealsAdjusted)}</span>`;
+    if(dealsForecast!==null)h+=`<span style="color:var(--t3);font-size:11px;">прогноз <b style="color:var(--text)">${dealsForecast}</b>${delta(dealsForecast)}</span>`;
+    pill.innerHTML=h;
   }else{
     pill.innerHTML=`<span style="color:var(--t3);font-family:inherit;font-size:11px;">Итого: <b style="color:var(--text)">${cumFact}</b> сд · <b style="color:var(--text)">${fmtK(currentAvgCheck)}</b> ср. чек · <b style="color:var(--text)">${fmtM(cumSum)}</b></span>`;
   }
