@@ -1513,16 +1513,16 @@ function render(){
   document.getElementById('m-deals').textContent=totalDeals;
   document.getElementById('m-deals-sub').textContent='план '+PLAN_TOTAL+' шт';
   document.getElementById('m-deals-sub').className='stat-sub '+(totalDeals>=PLAN_TOTAL?'good':'bad');
-  // Скорректированный план (для года/нескольких месяцев): факт за завершённые
-  // месяцы + план за текущий и оставшиеся месяцы.
+  // Для года/нескольких месяцев: скорректированный план и прогноз итога.
   {
     const sub2=document.getElementById('m-deals-sub2');
-    let adjustedPlan=null;
+    let adjustedPlan=null, forecast=null;
     if(!isSingleMonth){
       const tdy=new Date();
       const curM=tdy.getMonth()+1;
       const monthsList=activeMonths.size>0?[...activeMonths]:[1,2,3,4,5,6,7,8,9,10,11,12];
-      const hasOpenMonth=(y>tdy.getFullYear())||(y===tdy.getFullYear()&&monthsList.some(mm=>mm>=curM));
+      const isCurYear=(y===tdy.getFullYear());
+      const hasOpenMonth=(y>tdy.getFullYear())||(isCurYear&&monthsList.some(mm=>mm>=curM));
       if(hasOpenMonth){
         // факт по месяцам (нетех., выбранные менеджеры)
         const dbm={};
@@ -1531,21 +1531,37 @@ function render(){
           const dp=parseDate(r[COL.datePaid]); if(!dp||dp.getFullYear()!==y)return;
           const mm=dp.getMonth()+1; dbm[mm]=(dbm[mm]||0)+1;
         });
+        // 1) Скорректированный план: завершённые мес. по факту + остаток по плану
         adjustedPlan=0;
+        let cdTotal=0,cdElapsed=0;
         monthsList.forEach(mm=>{
-          let completed;
-          if(y<tdy.getFullYear())completed=true;
-          else if(y>tdy.getFullYear())completed=false;
-          else completed=mm<curM; // строго до текущего месяца
+          const completed=(y<tdy.getFullYear())?true:(y>tdy.getFullYear()?false:mm<curM);
           adjustedPlan+=completed?(dbm[mm]||0):getPlanForMonth(y,mm).total;
+          // дни периода - для прогноза
+          const dim=daysInMonth(y,mm); cdTotal+=dim;
+          if(y<tdy.getFullYear())cdElapsed+=dim;
+          else if(isCurYear){ if(mm<curM)cdElapsed+=dim; else if(mm===curM)cdElapsed+=tdy.getDate(); }
         });
+        // 2) Прогноз по темпу последних ~3 мес (только текущий год)
+        if(isCurYear){
+          const ms90=tdy.getTime()-90*86400000;
+          let recent90=0;
+          allRows.forEach(r=>{
+            if(!isPaidRow(r))return; if(isTechMop(r[COL.responsible]))return; if(!selectedMops.has(r[COL.responsible]))return;
+            const dp=parseDate(r[COL.datePaid]); if(!dp)return; const t=dp.getTime();
+            if(t>ms90&&t<=tdy.getTime())recent90++;
+          });
+          forecast=Math.round(totalDeals+(recent90/90)*Math.max(0,cdTotal-cdElapsed));
+        }
       }
     }
     if(adjustedPlan!==null){
+      const delta=v=>{const d=v-PLAN_TOTAL;const col=d>=0?'var(--green)':d>=-Math.round(PLAN_TOTAL*0.05)?'var(--amber)':'var(--red)';return ` <span style="color:${col}">(${d>=0?'+':''}${d})</span>`;};
+      let html='<div title="Факт за завершённые месяцы + план за текущий и оставшиеся">с учётом факта: <b style="color:var(--text)">'+adjustedPlan+'</b>'+delta(adjustedPlan)+'</div>';
+      if(forecast!==null)html+='<div title="Факт на сегодня + темп последних ~3 месяцев на оставшиеся дни года">прогноз: <b style="color:var(--text)">'+forecast+'</b>'+delta(forecast)+'</div>';
       sub2.style.display='';
-      sub2.innerHTML='с учётом факта: <b style="color:var(--text)">'+adjustedPlan+'</b> шт';
-      sub2.title='Факт за завершённые месяцы + план за текущий и оставшиеся месяцы';
-      sub2.className='stat-sub '+(totalDeals>=adjustedPlan?'good':'');
+      sub2.className='stat-sub';
+      sub2.innerHTML=html;
     }else{
       sub2.style.display='none';sub2.textContent='';
     }
