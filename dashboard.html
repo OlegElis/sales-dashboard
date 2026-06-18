@@ -731,6 +731,7 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
         <div style="font-size:11px;color:var(--amber);white-space:nowrap;" id="m-sameday"></div>
       </div>
       <div class="stat-sub" id="m-deals-sub"></div>
+      <div class="stat-sub" id="m-deals-sub2" style="white-space:normal;"></div>
     </div>
     <div class="stat-cell"><div class="stat-lbl">Сумма</div><div class="stat-val" id="m-sum">-</div><div class="stat-sub" id="m-sum-sub"></div></div>
     <div class="stat-cell"><div class="stat-lbl">Ср. чек</div><div class="stat-val" id="m-avg">-</div><div class="stat-sub" id="m-avg-sub"></div></div>
@@ -1512,6 +1513,43 @@ function render(){
   document.getElementById('m-deals').textContent=totalDeals;
   document.getElementById('m-deals-sub').textContent='план '+PLAN_TOTAL+' шт';
   document.getElementById('m-deals-sub').className='stat-sub '+(totalDeals>=PLAN_TOTAL?'good':'bad');
+  // Скорректированный план (для года/нескольких месяцев): факт за завершённые
+  // месяцы + план за текущий и оставшиеся месяцы.
+  {
+    const sub2=document.getElementById('m-deals-sub2');
+    let adjustedPlan=null;
+    if(!isSingleMonth){
+      const tdy=new Date();
+      const curM=tdy.getMonth()+1;
+      const monthsList=activeMonths.size>0?[...activeMonths]:[1,2,3,4,5,6,7,8,9,10,11,12];
+      const hasOpenMonth=(y>tdy.getFullYear())||(y===tdy.getFullYear()&&monthsList.some(mm=>mm>=curM));
+      if(hasOpenMonth){
+        // факт по месяцам (нетех., выбранные менеджеры)
+        const dbm={};
+        allRows.forEach(r=>{
+          if(!isPaidRow(r))return; if(isTechMop(r[COL.responsible]))return; if(!selectedMops.has(r[COL.responsible]))return;
+          const dp=parseDate(r[COL.datePaid]); if(!dp||dp.getFullYear()!==y)return;
+          const mm=dp.getMonth()+1; dbm[mm]=(dbm[mm]||0)+1;
+        });
+        adjustedPlan=0;
+        monthsList.forEach(mm=>{
+          let completed;
+          if(y<tdy.getFullYear())completed=true;
+          else if(y>tdy.getFullYear())completed=false;
+          else completed=mm<curM; // строго до текущего месяца
+          adjustedPlan+=completed?(dbm[mm]||0):getPlanForMonth(y,mm).total;
+        });
+      }
+    }
+    if(adjustedPlan!==null){
+      sub2.style.display='';
+      sub2.innerHTML='с учётом факта: <b style="color:var(--text)">'+adjustedPlan+'</b> шт';
+      sub2.title='Факт за завершённые месяцы + план за текущий и оставшиеся месяцы';
+      sub2.className='stat-sub '+(totalDeals>=adjustedPlan?'good':'');
+    }else{
+      sub2.style.display='none';sub2.textContent='';
+    }
+  }
   {const sd=document.getElementById('m-sameday');
    sd.textContent=totalSameDayDeals>0?'⚡ '+totalSameDayDeals+' в день встречи':'';
    sd.title=totalSameDayDeals>0?'Сделок, оплаченных в тот же день, когда создана встреча (закрытие «день-в-день»)':'';}
