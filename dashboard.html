@@ -1797,27 +1797,43 @@ function renderDynVolume(){
     md[key]=(md[key]||0)+1;
     ms[key]=(ms[key]||0)+parseSum(r[COL.sum]);
   });
+  // Средняя конверсия по месяцам: сделки #1-4 (по оплате) / встречи #1-4 (по созданию)
+  const cMeet={},cDeal={};
+  allRows.forEach(r=>{
+    if(isTechMop(r[COL.responsible]))return;
+    if(activeMop&&r[COL.responsible]!==activeMop)return;
+    const dir=parseInt((r[COL.direction]||'').replace('#',''));
+    if(![1,2,3,4].includes(dir))return;
+    const dc=parseDate(r[COL.dateCreated]);
+    if(dc)cMeet[dc.getFullYear()+'-'+String(dc.getMonth()+1).padStart(2,'0')]=(cMeet[dc.getFullYear()+'-'+String(dc.getMonth()+1).padStart(2,'0')]||0)+1;
+    if(isPaidRow(r)){const dp=parseDate(r[COL.datePaid]);if(dp)cDeal[dp.getFullYear()+'-'+String(dp.getMonth()+1).padStart(2,'0')]=(cDeal[dp.getFullYear()+'-'+String(dp.getMonth()+1).padStart(2,'0')]||0)+1;}
+  });
   const keys=Object.keys(md).sort().filter(chartKeyAllowed);
   const labels=keys.map(k=>{const[y,m]=k.split('-');return MONTHS_RU[+m-1].slice(0,3)+' '+String(y).slice(2);});
   const dealsData=keys.map(k=>md[k]);
   const avgData=keys.map(k=>md[k]>0?Math.round(ms[k]/md[k]/1000):0);
   const sumData=keys.map(k=>+(ms[k]/1000000).toFixed(2));
+  const convData=keys.map(k=>cMeet[k]>0?Math.round((cDeal[k]||0)/cMeet[k]*100):null);
   document.getElementById('dyn-legend').innerHTML=
     '<span><span class="leg-sq" style="background:#B5D4F4"></span>Сделок (шт)</span>'+
     '<span><span class="leg-ln" style="background:#BA7517"></span>Ср. чек (тыс. ₽)</span>'+
-    '<span><span class="leg-ln" style="background:#3B6D11"></span>Сумма (млн ₽)</span>';
+    '<span><span class="leg-ln" style="background:#3B6D11"></span>Сумма (млн ₽)</span>'+
+    '<span><span class="leg-ln" style="background:#7c3aed"></span>Ср. конверсия (%)</span>';
   if(myChart)myChart.destroy();
   myChart=new Chart(document.getElementById('dynChart'),{
     data:{labels,datasets:[
       {type:'bar',label:'Сделки',data:dealsData,backgroundColor:'#B5D4F4',borderColor:'#378ADD',borderWidth:1.5,yAxisID:'y'},
       {type:'line',label:'Ср. чек',data:avgData,borderColor:'#BA7517',backgroundColor:'transparent',pointBackgroundColor:'#BA7517',tension:.3,yAxisID:'y2',borderDash:[4,3]},
-      {type:'line',label:'Сумма',data:sumData,borderColor:'#3B6D11',backgroundColor:'rgba(59,109,17,0.07)',pointBackgroundColor:'#3B6D11',pointRadius:2,tension:.3,yAxisID:'y3',fill:true}
+      {type:'line',label:'Сумма',data:sumData,borderColor:'#3B6D11',backgroundColor:'rgba(59,109,17,0.07)',pointBackgroundColor:'#3B6D11',pointRadius:2,tension:.3,yAxisID:'y3',fill:true},
+      {type:'line',label:'Ср. конверсия',data:convData,borderColor:'#7c3aed',backgroundColor:'transparent',pointBackgroundColor:'#7c3aed',pointRadius:2,tension:.3,yAxisID:'y4',spanGaps:true}
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:it=>it.dataset.label==='Ср. конверсия'?'Ср. конверсия: '+(it.raw==null?'-':it.raw+'%'):undefined}}},
       scales:{
         y:{beginAtZero:true,ticks:{font:{size:10},color:'#888'},grid:{color:'rgba(0,0,0,0.05)'}},
         y2:{position:'right',min:150,max:350,ticks:{font:{size:10},color:'#BA7517',callback:v=>v+' тыс.'},grid:{display:false}},
         y3:{position:'right',beginAtZero:true,ticks:{font:{size:10},color:'#3B6D11',callback:v=>v+' млн'},grid:{display:false}},
+        y4:{position:'right',min:0,suggestedMax:100,display:false},
         x:{ticks:{font:{size:10},color:'#888',autoSkip:false,maxRotation:45},grid:{display:false}}
       }}
   });
