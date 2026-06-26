@@ -793,13 +793,14 @@ function isPaidRow(r){ return !!(r[COL.datePaid]&&r[COL.datePaid].trim()); }
       <div class="plan-row"><div class="plan-lbl">Средний чек</div><div class="plan-bw"><div class="plan-bf" id="bar-avg" style="background:#BA7517;width:0%"></div></div><div class="plan-nums" id="pn-avg">-</div><div class="plan-pct" id="pp-avg">-</div></div>
     </div>
     <div class="chart-block">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-bottom:5px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
         <div class="block-title" style="margin-bottom:0;">Динамика по месяцам</div>
         <div style="display:flex;gap:3px;" class="no-print">
           <div class="mbtn active" id="dynmode-volume" onclick="setChartMode('volume')">Объёмы</div>
           <div class="mbtn" id="dynmode-conv" onclick="setChartMode('conversion')">Конверсия</div>
         </div>
       </div>
+      <div class="no-print" id="dyn-year-btns" style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px;"></div>
       <div class="chart-legend" id="dyn-legend"></div>
       <div style="position:relative;width:100%;height:160px;">
         <canvas id="dynChart"></canvas>
@@ -1751,11 +1752,29 @@ function render(){
 let myChartDaily=null;
 
 let chartMode='volume'; // 'volume' | 'conversion'
+let chartYear=0;        // 0 = с 2025 по сегодня; иначе конкретный год
+const CHART_FROM_YEAR=2025;
 function setChartMode(mode){
   chartMode=mode;
   document.getElementById('dynmode-volume').classList.toggle('active',mode==='volume');
   document.getElementById('dynmode-conv').classList.toggle('active',mode==='conversion');
   renderChart();
+}
+// разрешён ли месяц (ключ "ГГГГ-ММ") при текущем выборе года графика
+function chartKeyAllowed(k){const yr=+k.slice(0,4);return chartYear===0?yr>=CHART_FROM_YEAR:yr===chartYear;}
+function buildChartYearBtns(){
+  const wrap=document.getElementById('dyn-year-btns');
+  if(!wrap)return;
+  const opts=[{label:'С '+CHART_FROM_YEAR,val:0}].concat(getAvailableYears().map(y=>({label:String(y),val:y})));
+  wrap.innerHTML='';
+  opts.forEach(o=>{
+    const b=document.createElement('div');
+    b.className='mbtn'+(chartYear===o.val?' active':'');
+    b.style.cssText='font-size:10px;padding:2px 8px;';
+    b.textContent=o.label;
+    b.onclick=()=>{chartYear=o.val;buildChartYearBtns();renderChart();};
+    wrap.appendChild(b);
+  });
 }
 
 function renderChart(){
@@ -1778,7 +1797,7 @@ function renderDynVolume(){
     md[key]=(md[key]||0)+1;
     ms[key]=(ms[key]||0)+parseSum(r[COL.sum]);
   });
-  const keys=Object.keys(md).sort();
+  const keys=Object.keys(md).sort().filter(chartKeyAllowed);
   const labels=keys.map(k=>{const[y,m]=k.split('-');return MONTHS_RU[+m-1].slice(0,3)+' '+String(y).slice(2);});
   const dealsData=keys.map(k=>md[k]);
   const avgData=keys.map(k=>md[k]>0?Math.round(ms[k]/md[k]/1000):0);
@@ -1818,7 +1837,7 @@ function renderDynConversion(){
     if(dc)ensure(dc.getFullYear()+'-'+String(dc.getMonth()+1).padStart(2,'0'))[dir].c++;
     if(isPaidRow(r)){const dp=parseDate(r[COL.datePaid]);if(dp)ensure(dp.getFullYear()+'-'+String(dp.getMonth()+1).padStart(2,'0'))[dir].p++;}
   });
-  const keys=Object.keys(data).sort();
+  const keys=Object.keys(data).sort().filter(chartKeyAllowed);
   const labels=keys.map(k=>{const[y,m]=k.split('-');return MONTHS_RU[+m-1].slice(0,3)+' '+String(y).slice(2);});
   const colors={1:'#185FA5',2:'#BA7517',3:'#3B6D11',4:'#A32D2D'};
   const datasets=[1,2,3,4].map(dir=>({
@@ -2536,6 +2555,7 @@ async function init(){
     selectedMops=new Set(allMops);
     activeMop=null;
     buildMopChips();
+    buildChartYearBtns();
     render();
     document.getElementById('sdot').className='dot';
     document.getElementById('stxt').textContent='Данные актуальны';
