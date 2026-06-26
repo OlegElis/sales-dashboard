@@ -1402,27 +1402,33 @@ function render(){
   });
 
   // Встречи, сделки и день-в-день по направлениям (без тех.)
+  // ВАЖНО: встречи считаем по дате СОЗДАНИЯ в периоде, а сделки - по дате
+  // ОПЛАТЫ в периоде (независимо друг от друга). Иначе «сд» по направлениям
+  // недосчитывает сделки, оплаченные в периоде, но со встречей из прошлого
+  // периода, и не сходится с общим числом сделок.
   const meetDir={1:0,2:0,3:0,4:0};
   const dealDir={1:0,2:0,3:0,4:0};
   const sdDir={1:0,2:0,3:0,4:0};
+  function dirInPeriod(d){
+    if(!d||d.getFullYear()!==y)return false;
+    if(activeMonths.size>0&&!activeMonths.has(d.getMonth()+1))return false;
+    if(isSingleMonth&&daysPassed!==null&&d.getDate()>daysPassed)return false;
+    return true;
+  }
   allRows.forEach(r=>{
     const name=r[COL.responsible];
     if(!name||!selectedMops.has(name)||isTechMop(name))return;
     const dir=parseInt((r[COL.direction]||'').replace('#',''));
     if(![1,2,3,4].includes(dir))return;
     const dc=parseDate(r[COL.dateCreated]);
-    if(!dc||dc.getFullYear()!==y)return;
-    if(activeMonths.size>0&&!activeMonths.has(dc.getMonth()+1))return;
-    if(isSingleMonth&&daysPassed!==null&&dc.getDate()>daysPassed)return;
-    meetDir[dir]++;
-    if(isPaidRow(r)){
-      const dp=parseDate(r[COL.datePaid]);
-      if(!dp||dp.getFullYear()!==y)return;
-      if(activeMonths.size>0&&!activeMonths.has(dp.getMonth()+1))return;
-      if(isSingleMonth&&daysPassed!==null&&dp.getDate()>daysPassed)return;
+    const dp=parseDate(r[COL.datePaid]);
+    const meetIn=dirInPeriod(dc);
+    const paidIn=isPaidRow(r)&&dirInPeriod(dp);
+    if(meetIn)meetDir[dir]++;
+    if(paidIn){
       dealDir[dir]++;
-      // день в день: дата создания = дата оплаты
-      if(dc&&dp.getDate()===dc.getDate()&&dp.getMonth()===dc.getMonth()&&dp.getFullYear()===dc.getFullYear())sdDir[dir]++;
+      // день в день: создана и оплачена в один день (и оба в периоде)
+      if(meetIn&&dc&&dp.getDate()===dc.getDate()&&dp.getMonth()===dc.getMonth()&&dp.getFullYear()===dc.getFullYear())sdDir[dir]++;
     }
   });
 
