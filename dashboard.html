@@ -1761,11 +1761,11 @@ function setChartMode(mode){
   renderChart();
 }
 // разрешён ли месяц (ключ "ГГГГ-ММ") при текущем выборе года графика
-function chartKeyAllowed(k){const yr=+k.slice(0,4);return chartYear===0?yr>=CHART_FROM_YEAR:yr===chartYear;}
+function chartKeyAllowed(k){const yr=+k.slice(0,4);return chartYear===0?true:yr===chartYear;}
 function buildChartYearBtns(){
   const wrap=document.getElementById('dyn-year-btns');
   if(!wrap)return;
-  const opts=[{label:'С '+CHART_FROM_YEAR,val:0}].concat(getAvailableYears().map(y=>({label:String(y),val:y})));
+  const opts=[{label:'Все',val:0}].concat(getAvailableYears().map(y=>({label:String(y),val:y})));
   wrap.innerHTML='';
   opts.forEach(o=>{
     const b=document.createElement('div');
