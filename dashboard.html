@@ -1752,27 +1752,33 @@ function render(){
 let myChartDaily=null;
 
 let chartMode='volume'; // 'volume' | 'conversion'
-let chartYear=0;        // 0 = с 2025 по сегодня; иначе конкретный год
-const CHART_FROM_YEAR=2025;
+let chartYears=new Set(); // пусто = Все; иначе набор выбранных годов (мультивыбор)
 function setChartMode(mode){
   chartMode=mode;
   document.getElementById('dynmode-volume').classList.toggle('active',mode==='volume');
   document.getElementById('dynmode-conv').classList.toggle('active',mode==='conversion');
   renderChart();
 }
-// разрешён ли месяц (ключ "ГГГГ-ММ") при текущем выборе года графика
-function chartKeyAllowed(k){const yr=+k.slice(0,4);return chartYear===0?true:yr===chartYear;}
+// разрешён ли месяц (ключ "ГГГГ-ММ") при текущем выборе годов графика
+function chartKeyAllowed(k){const yr=+k.slice(0,4);return chartYears.size===0?true:chartYears.has(yr);}
 function buildChartYearBtns(){
   const wrap=document.getElementById('dyn-year-btns');
   if(!wrap)return;
-  const opts=[{label:'Все',val:0}].concat(getAvailableYears().map(y=>({label:String(y),val:y})));
   wrap.innerHTML='';
-  opts.forEach(o=>{
+  // «Все» - сбрасывает выбор
+  const allBtn=document.createElement('div');
+  allBtn.className='mbtn'+(chartYears.size===0?' active':'');
+  allBtn.style.cssText='font-size:10px;padding:2px 8px;';
+  allBtn.textContent='Все';
+  allBtn.onclick=()=>{chartYears.clear();buildChartYearBtns();renderChart();};
+  wrap.appendChild(allBtn);
+  // года - переключаются независимо (можно выбрать несколько)
+  getAvailableYears().forEach(y=>{
     const b=document.createElement('div');
-    b.className='mbtn'+(chartYear===o.val?' active':'');
+    b.className='mbtn'+(chartYears.has(y)?' active':'');
     b.style.cssText='font-size:10px;padding:2px 8px;';
-    b.textContent=o.label;
-    b.onclick=()=>{chartYear=o.val;buildChartYearBtns();renderChart();};
+    b.textContent=String(y);
+    b.onclick=()=>{ if(chartYears.has(y))chartYears.delete(y); else chartYears.add(y); buildChartYearBtns(); renderChart(); };
     wrap.appendChild(b);
   });
 }
